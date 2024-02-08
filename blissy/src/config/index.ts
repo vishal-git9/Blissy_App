@@ -1,0 +1,1 @@
+export const ApiEndPoint = "http://13.232.225.65:3000/"

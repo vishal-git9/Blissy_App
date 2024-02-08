@@ -1,0 +1,1 @@
+export const serverBaseUrl : string | undefined = process.env.NEXT_SERVER_BASE_URL
