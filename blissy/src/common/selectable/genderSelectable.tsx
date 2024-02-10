@@ -5,7 +5,7 @@ import colors from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 
 interface GenderSelectProps {
-  selectedGender: 'male' | 'female' | null;
+  selectedGender: string;
   onSelectGender: (gender: 'male' | 'female') => void;
 }
 

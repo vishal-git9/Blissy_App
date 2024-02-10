@@ -9,6 +9,7 @@ export default {
     light: '#EEEEEE',
     dark: '#333',
     gray: '#868787',
+    lightGray:"#D3D3D3",
     red: '#ff2f68',
     lightRed: '#ff4f7e',
     lightRed2: '#FA8072',

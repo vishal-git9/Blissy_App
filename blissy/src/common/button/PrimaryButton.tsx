@@ -7,8 +7,9 @@ import { TouchableOpacity, Text, StyleSheet, StyleProp, ViewStyle, TextStyle } f
 interface PrimaryButtonProps {
   handleFunc: () => void;
   styles?: StyleProp<ViewStyle>;
-  textStyles? : StyleProp<ViewStyle>;
+  textStyles? : StyleProp<TextStyle>;
   label?: string;
+  disabled?:boolean
 }
 
 export const PrimaryButton: React.FC<PrimaryButtonProps> = (props) => {
@@ -16,6 +17,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = (props) => {
     <TouchableOpacity
       style={[styles.loginBtn, props.styles]}
       onPress={props.handleFunc}
+      disabled={props.disabled}
     >
       <Text
         style={[styles.loginText, { color: 'white', elevation: 10 },props.textStyles]}

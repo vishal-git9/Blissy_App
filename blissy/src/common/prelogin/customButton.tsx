@@ -14,19 +14,20 @@ import {
     withSpring,
     withTiming,
   } from 'react-native-reanimated';
-  import {useNavigation} from '@react-navigation/native';
   import {OnboardingData} from '../../mockdata/preloginData';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
   
   type Props = {
     dataLength: number;
     flatListIndex: SharedValue<number>;
     flatListRef: AnimatedRef<FlatList<OnboardingData>>;
     x: SharedValue<number>;
+    navigation:NativeStackNavigationProp<RootStackParamList>
   };
   
-  const CustomButton = ({flatListRef, flatListIndex, dataLength, x}: Props) => {
+  const CustomButton = ({flatListRef, flatListIndex, dataLength, x,navigation}: Props) => {
     const {width: SCREEN_WIDTH} = useWindowDimensions();
-    const navigation = useNavigation();
     const buttonAnimationStyle = useAnimatedStyle(() => {
       return {
         width:

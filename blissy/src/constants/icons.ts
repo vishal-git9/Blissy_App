@@ -12,6 +12,7 @@ import Octicons from 'react-native-vector-icons/Octicons';
 import Foundation from 'react-native-vector-icons/Foundation';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
+import { ViewStyle } from 'react-native';
 
 export const Icons = {
     MaterialCommunityIcons,
@@ -29,16 +30,24 @@ export const Icons = {
     Fontisto
 }
 
-const Icon = ({ type, name, color, size = 24, style }) => {
+interface IconProps {
+    type?: React.ComponentType<any>;
+    name?: string;
+    color?: string;
+    size?: number;
+    style?: ViewStyle;
+  }
+  
+  const Icon: React.FC<IconProps> = ({ type, name, color, size = 24, style }) => {
     const fontSize = 24;
-    const Tag = type;
+    const Tag = type || MaterialIcons; // Default to MaterialIcons if type is not provided
     return (
-        <>
-            {type && name && (
-                <Tag name={name} size={size || fontSize} color={color} style={style} />
-            )}
-        </>
-    )
-}
+      <>
+        {type && name && (
+          <Tag name={name} size={size || fontSize} color={color} style={style}/>
+        )}
+      </>
+    );
+  };
 
 export default Icon

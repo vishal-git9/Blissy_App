@@ -1,12 +1,40 @@
 // Form4.tsx
-import React from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
-
-const Form4: React.FC = () => {
+import React, {Dispatch, useRef} from 'react';
+import {Text} from 'react-native';
+import {View, TextInput, StyleSheet} from 'react-native';
+import colors from '../../constants/colors';
+import {fonts} from '../../constants/fonts';
+import {actuatedNormalize} from '../../constants/PixelScaling';
+import LabelInputComponent from '../inputs/labelInput';
+import {Action} from '../../container/Registration/Registration';
+import GenderSelect from '../selectable/genderSelectable';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import Modal from 'react-native-modal';
+import Slider from '@react-native-community/slider';
+import * as Animatable from "react-native-animatable"
+import { LabelWithDesc } from '../labels/label1';
+interface Form2Props {
+  state: {
+    gender: string;
+  };
+  dispatch: Dispatch<Action>;
+}
+const Form4: React.FC<Form2Props> = ({state,dispatch}) => {
+  const animatableRef = useRef<Animatable.View>(null);
   return (
-    <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="Form 1 Input" />
-    </View>
+      <Animatable.View
+        ref={animatableRef}
+        easing={'ease-in-cubic'}
+        animation="slideInLeft"
+        duration={500}>
+          <View style={[styles.inputForm]}>
+            <LabelWithDesc label="What's Your Gender?" sublabel='gender let us find your type'/>
+        <GenderSelect
+          selectedGender={state.gender}
+          onSelectGender={gender => dispatch({type:"gender",payload:gender})}
+        />
+      </View>
+      </Animatable.View>
   );
 };
 
@@ -23,6 +51,10 @@ const styles = StyleSheet.create({
     borderColor: 'gray',
     borderRadius: 5,
     paddingHorizontal: 10,
+  },
+  inputForm: {
+    rowGap: actuatedNormalize(25),
+    marginTop: actuatedNormalize(20),
   },
 });
 

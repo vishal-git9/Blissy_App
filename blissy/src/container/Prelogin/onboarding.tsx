@@ -6,11 +6,17 @@ import Animated, {
   useAnimatedRef,
 } from 'react-native-reanimated';
 import data, {OnboardingData} from '../../mockdata/preloginData';
-import RenderItem from './RenderItem';
-import Pagination from './Pagination';
-import CustomButton from './customButton';
+import RenderItem from '../../common/prelogin/RenderItem';
+import Pagination from '../../common/prelogin/Pagination';
+import CustomButton from '../../common/prelogin/customButton';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
 
-const OnboardingScreen: React.FC = () => {
+export interface NavigationStackProps{
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+}
+
+const OnboardingScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   const flatListRef = useAnimatedRef<FlatList<OnboardingData>>();
   const x = useSharedValue(0);
   const flatListIndex = useSharedValue(0);
@@ -55,6 +61,7 @@ const OnboardingScreen: React.FC = () => {
       <View style={styles.bottomContainer}>
         <Pagination data={data} x={x} />
         <CustomButton
+        navigation={navigation}
           flatListRef={flatListRef}
           flatListIndex={flatListIndex}
           dataLength={data.length}

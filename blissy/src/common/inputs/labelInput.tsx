@@ -1,12 +1,12 @@
 import React, { Dispatch, useState } from 'react';
 import { TextInput, HelperText } from 'react-native-paper';
-import { KeyboardTypeOptions, View } from 'react-native';
+import { KeyboardTypeOptions, View, ViewStyle } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { fonts } from '../../constants/fonts';
 import Styles from '../../constants/styles';
 import colors from '../../constants/colors';
 import { StyleSheet } from 'react-native';
-import { Icon, IconButtonProps } from 'react-native-vector-icons/Icon';
+import { Icon } from 'react-native-vector-icons/Icon';
 import { Action } from '../../container/Registration/Registration';
 
 interface LabelInputProps {
@@ -25,6 +25,7 @@ interface LabelInputProps {
   editable?: boolean;
   hasEye?: boolean;
   secure?: boolean;
+  labelStyle?:ViewStyle;
 }
 
 const LabelInputComponent: React.FC<LabelInputProps> = ({
@@ -43,11 +44,12 @@ const LabelInputComponent: React.FC<LabelInputProps> = ({
   editable,
   hasEye,
   secure,
+  labelStyle
 }) => {
   const [eye, setEye] = useState(false);
 console.log(name,"name")
   return (
-    <View style={{}}>
+    <View style={[labelStyle]}>
       <TextInput
         style={[styles.input, Styles.neuoMorphism]}
         placeholder={placeholder || name}
@@ -92,7 +94,7 @@ console.log(name,"name")
           )
         }
         placeholderTextColor={'grey'}
-        onChangeText={text => onChangeText({type:type,text:text})}
+        onChangeText={text => onChangeText({type:type,payload:text})}
         keyboardType={keyboardType}
         maxLength={maxLength}
         secureTextEntry={secure && !eye}

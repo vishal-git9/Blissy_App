@@ -5,13 +5,13 @@ import colors from '../../constants/colors';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { NavigationStackProps } from '../../container/Prelogin/onboarding';
 
-interface RouteBackButtonProps {
-  onPress: () => void;
+interface BackButtonProps {
+  onpress: () => void;
 }
 
-const RouteBackButton: React.FC<RouteBackButtonProps> = ({ onPress }) => {
+const PrevStepButton: React.FC<BackButtonProps> = ({ onpress }) => {
   return (
-    <TouchableOpacity onPressIn={onPress} style={styles.container}>
+    <TouchableOpacity onPressIn={onpress} style={styles.container}>
       <View style={styles.button}>
         <FontAwesome5 name="angle-left" size={15} color="white" />
       </View>
@@ -40,4 +40,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RouteBackButton;
+export default PrevStepButton;
