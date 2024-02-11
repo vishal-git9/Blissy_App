@@ -16,7 +16,7 @@ interface Form2Props {
 }
 const Form3: React.FC<Form2Props> = ({state,dispatch}) => {
   const animatableRef = useRef<Animatable.View>(null);
-  const [selectedlanguage,setSelectedlanguage] = useState<string[]>(['English'])
+  const [selectedlanguage,setSelectedlanguage] = useState<string[]>(state.language || ['English'])
   const handlelanguageSelect = (language:string)=>{
     if (selectedlanguage.includes(language)) {
       setSelectedlanguage(selectedlanguage.filter(item => item !== language));
@@ -39,7 +39,7 @@ const Form3: React.FC<Form2Props> = ({state,dispatch}) => {
           sublabel="language helps in finding regional matches"
         />
         <InterestSelect
-          selectedInterests={['English']}
+          selectedInterests={state.language || ['English']}
           interestCardStyle={{}}
           interests={[
             {text: 'English'},

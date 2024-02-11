@@ -21,6 +21,7 @@ import {Snackbar} from 'react-native-paper';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../AppNavigation/navigatorType';
 import {NavigationStackProps} from '../Prelogin/onboarding';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
@@ -112,9 +113,15 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleCompleteModal = () => {
     setCompleteModal(true);
-    console.log(state, 'state of the user');
+  };
+
+  const handleSubmitUserProfile = async() => {
+    //call api here
+    setCompleteModal(false);
+    await AsyncStorage.setItem('isRegistered','true');
+    navigation.navigate('Home');
   };
 
   const validateForm = (state: State) => {
@@ -163,7 +170,10 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
       contentContainerStyle={styles.container}
       resetScrollToCoords={{x: 0, y: 0}}
       scrollEnabled={true}>
-      <RouteBackButton onPress={()=>navigation.popToTop()} />
+      {steps !== 1 && (
+        <RouteBackButton onPress={() => setSteps(steps => steps - 1)} />
+      )}
+
       <HelloModal
         modalTitleStyle={{marginTop: actuatedNormalize(-20)}}
         onPressPrimaryButton={() => {
@@ -179,7 +189,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
       />
       <HelloModal
         onPressPrimaryButton={() => {
-          setCompleteModal(false);
+          handleSubmitUserProfile();
           console.log('hey there navigating to the homepage');
         }}
         title={`You're all set`}
@@ -248,7 +258,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
                   steps === 1
                     ? handleUserName
                     : steps === 5
-                    ? handleSubmit
+                    ? handleCompleteModal
                     : validateStepsForm
                 }
               />

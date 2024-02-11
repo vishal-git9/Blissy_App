@@ -1,1 +1,1 @@
-export const serverBaseUrl : string | undefined = process.env.NEXT_SERVER_BASE_URL
+export const serverBaseUrl : string | undefined = "http://ec2-3-109-216-100.ap-south-1.compute.amazonaws.com:4500/api/"

@@ -28,20 +28,22 @@ interface OTPInputProps {
   changeMobileNumber:()=>void;
   setProgressDuration: (a: number) => void;
   dispatch:Dispatch<Action>;
+  modalState:boolean;
 }
 
 const OTPInput: React.FC<OTPInputProps> = ({
   progressDuration,
   setProgressDuration,
   dispatch,
-  changeMobileNumber
+  changeMobileNumber,
+  modalState
 }) => {
   const {width: SCREEN_WIDTH} = useWindowDimensions();
   console.log("at the otp screen")
   return (
     <>
     <Modal
-      isVisible={true}
+      isVisible={modalState}
       style={styles.modal}
       backdropColor="transparent"
       animationInTiming={1000}

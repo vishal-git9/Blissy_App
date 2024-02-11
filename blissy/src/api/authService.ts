@@ -1,29 +1,30 @@
 import {API} from "./Api"
 
 
-interface sendOtpInterface {
+interface loginInterface {
     mobileNumber:string;
+    otp?:number;
+    
 }
 
-interface verifyOtpInterface {
 
-}
-
-const AuthApi = API.injectEndpoints({
+export const AuthApi = API.injectEndpoints({
     endpoints:(builder)=>({
-        getOtp:builder.mutation<sendOtpInterface,Partial<sendOtpInterface>>({
+        getOtp:builder.mutation<loginInterface,Partial<loginInterface>>({
             query:(body)=>({
                 url:"auth/otp/generate",
+                method:'POST',
                 body
             })
         }),
-        verifyOtp:builder.mutation<verifyOtpInterface,Partial<verifyOtpInterface>>({
+        verifyOtp:builder.mutation<any,Partial<loginInterface>>({
             query:(body)=>({
                 url:"auth/otp/verify",
+                method:'POST',
                 body
             })
         }),
     })
 })
 
-export const {useGetOtpMutation} = AuthApi
+export const {useGetOtpMutation,useVerifyOtpMutation} = AuthApi

@@ -17,7 +17,7 @@ interface Form2Props {
 
 const Form2: React.FC<Form2Props> = ({state, dispatch}) => {
   const animatableRef = useRef<Animatable.View>(null);
-  const [selectedInterest,setSelectedInterest] = useState<string[]>(['Music'])
+  const [selectedInterest,setSelectedInterest] = useState<string[]>(state.interest || ['Music'])
 
   const handleInterestSelect = (interest:string)=>{
     if (selectedInterest.includes(interest)) {
@@ -47,7 +47,7 @@ const Form2: React.FC<Form2Props> = ({state, dispatch}) => {
         </Text> */}
         <LabelWithDesc label='Select Your Interest' sublabel='Interest helps in finding better matches'/>
       <InterestSelect
-        selectedInterests={["Music"]}
+        selectedInterests={state.interest || ["Music"]}
         interests={[
           {iconName: 'school', text: 'Education'},
           {iconName: 'music-note', text: 'Music'},

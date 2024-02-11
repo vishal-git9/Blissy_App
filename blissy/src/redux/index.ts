@@ -1,11 +1,26 @@
-import { configureStore } from "@reduxjs/toolkit";
-import  IsUISlice  from "./uiSlice";
-import {API} from "../api/Api"
-const store = configureStore({
-    reducer: { [API.reducerPath]:API.reducer},
-    middleware:(getDefaultMiddleware)=>getDefaultMiddleware().concat(API.middleware)
+import {combineReducers, configureStore} from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {persistReducer, persistStore}  from "redux-persist"
+import IsUISlice, { AuthSlice } from './uiSlice';
+import {API} from '../api/Api';
+const rootReducer = combineReducers({
+  [API.reducerPath]: API.reducer,
+  Auth:AuthSlice.reducer
+});
+const persistConfig = {
+  key: 'root',
+  storage: AsyncStorage,
+};
+
+const persistedReducer = persistReducer(persistConfig,rootReducer)
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: getDefaultMiddleware =>
+    getDefaultMiddleware({serializableCheck:false}).concat(API.middleware),
 });
 
-export type RootState = ReturnType<typeof store.getState>
+
+export const persistor = persistStore(store)
+export type IRootState = ReturnType<typeof rootReducer>;
 // export type AppDispatch = typeof store.dispatch
-export default store;

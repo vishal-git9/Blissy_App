@@ -31,6 +31,7 @@ interface LoginScreenProps {
   };
   dispatch: Dispatch<Action>;
   navigation: NativeStackNavigationProp<RootStackParamList>;
+  modalState:boolean;
 }
 
 const MobileInput: React.FC<LoginScreenProps> = ({
@@ -38,13 +39,14 @@ const MobileInput: React.FC<LoginScreenProps> = ({
   navigation,
   dispatch,
   state,
+  modalState
 }) => {
   const {width: SCREEN_WIDTH} = useWindowDimensions();
 
   return (
     <>
       <Modal
-        isVisible={true}
+        isVisible={modalState}
         style={styles.modal}
         backdropColor="transparent"
         animationInTiming={700}
@@ -98,6 +100,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
               type={'mobileNumber'}
               labelStyle={{width: '100%'}}
               name={'name'}
+              maxLength={10}
               placeholder="+91"
               keyboardType={'number-pad'}
               // errorText={'Name is part of our alogrithm'}

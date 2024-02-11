@@ -1,14 +1,17 @@
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React, {useEffect, useReducer, useRef, useState} from 'react';
-import {StyleSheet, View, useWindowDimensions} from 'react-native';
-import {RootStackParamList} from '../../AppNavigation/navigatorType';
-import {useNavigation} from '@react-navigation/native';
+import {Keyboard, StyleSheet} from 'react-native';
 import {Action} from '../Registration/Registration';
 import MobileInput from '../../common/login/LoginInput';
 import OTPInput from '../../common/login/otpInput';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import { NavigationStackProps } from '../Prelogin/onboarding';
-import RouteBackButton from '../../common/button/BackButton';
+import { useGetOtpMutation, useVerifyOtpMutation } from '../../api/authService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSelector } from 'react-redux';
+import { AuthSelector } from '../../redux/uiSlice';
+import { useGetUserQuery } from '../../api/userService';
+import { TextInput } from 'react-native-paper';
 
 export const validateMobileNumber = (mobile:string) => {
   console.log(mobile,"mobile")
@@ -39,26 +42,44 @@ export const reducerAction = (state: LoginInterface, action: Action) => {
   }
 };
 export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
-  console.log("---------login screen")
-  // const {width: SCREEN_WIDTH} = useWindowDimensions();
   const [state, dispatch] = useReducer(reducerAction, intialState);
   const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
-  // const [getOtp] = useGetOtpMutation();
+  const [modalState,setModalState] = useState<boolean>(true)
+   const [getOtp,{error,data,isLoading}] = useGetOtpMutation();
+   const {token,isAuthenticated,user} = useSelector(AuthSelector)
+   const {data:userData,isLoading:userLoading,refetch} = useGetUserQuery()
+   const [OtpVerify,{error:verifyOtpErr,data:verifyOtpData,isLoading:verifyOtpLoading}] = useVerifyOtpMutation()
   const handleSubmitMobileNumber = async () => {
-    setIsOtpSent(true);
-    // try {
-    //   await getOtp({mobileNumber});
-    // } catch (error) {}
+      const res = await getOtp({mobileNumber:`+91${state.mobileNumber}`});
+      console.log(res,"---res-----")
+      if('data' in res){
+        console.log(data,"data of MobileNumber")
+        setIsOtpSent(true);
+      }else if('error' in res){
+        console.log(error)
+      }
   };
 
   const [progressDuration, setProgressDuration] = useState(30);
   const timerRef = useRef<NodeJS.Timeout>();
-  const handleOtpSubmit = () => {
-    clearInterval(timerRef.current);
-    navigation.navigate('Registration');
-    console.log('Verifying OTP:', state.OTP);
+  const handleOtpSubmit = async() => {
+    const res = await OtpVerify({mobileNumber:`+91${state.mobileNumber}`,otp:parseInt(state.OTP)});
+    if('data' in res){
+      console.log(res,"data of OTP")
+      const isNewuser = await refetch().then(res=>res.data.data.user.isNewUser)
+      // fetch user details
+      clearInterval(timerRef.current);
+      setModalState(false)
+      console.log(user?.isNewUser,"---user isnewuser")
+      if(isNewuser){
+        navigation.navigate('Registration');  
+      }else{
+        navigation.navigate('Home');  
+      }
+    }else if('error' in res){
+      console.log(verifyOtpErr,"error of otp")
+    }
   };
-
   
   useEffect(() => {
     // Start the timer when isOtpSent is true
@@ -81,9 +102,11 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
   useEffect(() => {
     if (state.OTP.length === 4) {
       // Call OTP verification function here
+      Keyboard.dismiss();
       handleOtpSubmit()
     }
   }, [state.OTP]);
+
 
   console.log(isOtpSent,"---isotpsent---")
   return (
@@ -94,6 +117,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
       style={styles.container}>
       {!isOtpSent ? (
         <MobileInput
+        modalState={modalState}
           state={state}
           dispatch={dispatch}
           navigation={navigation}
@@ -101,6 +125,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
         />
       ) : (
         <OTPInput
+        modalState={modalState}
           changeMobileNumber={() => setIsOtpSent(false)}
           dispatch={dispatch}
           progressDuration={progressDuration}

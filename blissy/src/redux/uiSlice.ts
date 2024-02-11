@@ -1,23 +1,55 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { AuthApi } from "../api/authService";
+import { IRootState } from ".";
+import { UserApi } from "../api/userService";
 
+
+export interface UserInterface {
+    mobileNumber: String;
+  role: string;
+  name: String;
+  isNewUser: Boolean;
+  username: String;
+  age: Number;
+  interest: [String];
+  language: [String];
+  profilePic: String;
+  isActive: Boolean;
+}
 export interface IsUIState {
-    isNewUser:boolean;
+    token:string;
+    user:null | UserInterface;
+    isAuthenticated:boolean
 }
 
 const initialState : IsUIState = {
-    isNewUser:false
+    token:'',
+    user:null,
+    isAuthenticated:false
 }
 
 
-export const IsUISlice = createSlice({
-    name:"UI",
+export const AuthSlice = createSlice({
+    name:"Auth",
     initialState,
     reducers:{
-        setIsNewUser:(state,action) => {
-            state.isNewUser = action.payload
-        }
+        setUsertoken:(state,action) => {
+            state.token = action.payload
+        },
+        logoutUser: ()=> initialState
+    },
+    extraReducers:(builder)=>{
+        builder.addMatcher(AuthApi.endpoints.verifyOtp.matchFulfilled,(state,{payload})=>{
+            const {token} = payload.data
+            state.token = token
+            state.isAuthenticated= true
+        })
+        builder.addMatcher(UserApi.endpoints.getUser.matchFulfilled,(state,{payload})=>{
+            state.user = payload.data.user
+        })
     }
 })
 
-export const {setIsNewUser} = IsUISlice.actions
-export default IsUISlice.reducer
+export const {setUsertoken,logoutUser} = AuthSlice.actions
+export const AuthSelector = (state:IRootState)=>state.Auth
+export default AuthSlice.reducer

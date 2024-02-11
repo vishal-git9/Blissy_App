@@ -5,40 +5,41 @@
  * @format
  */
 
-import React from 'react';
-import {
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {StatusBar, StyleSheet, Text, useColorScheme, View} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-
-import {
-  Colors,
-} from 'react-native/Libraries/NewAppScreen';
-import MainNavigator from './src/AppNavigation/MainNavigator';
+import {PersistGate} from "redux-persist/integration/react"
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 import colors from './src/constants/colors';
+import {Provider} from 'react-redux';
+import { store,persistor } from './src/redux';
+import { Navigator } from './src/AppNavigation/Navigator';
 
-
-function App() {
+const App:React.FC = ()=> {
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+
+  useEffect(() => {
+  }, []);
+
   return (
-    <SafeAreaProvider style={backgroundStyle}>
-      <View style={[styles.AppContainer,backgroundStyle]}>
-        <StatusBar
-          barStyle={'light-content'}
-          backgroundColor={colors.secondary}
-        />
-        <MainNavigator />
-      </View>
-    </SafeAreaProvider>
+    <Provider store={store}>
+    <PersistGate persistor={persistor} loading={null}>
+      <SafeAreaProvider style={backgroundStyle}>
+        <View style={[styles.AppContainer, backgroundStyle]}>
+          <StatusBar
+            barStyle={'light-content'}
+            backgroundColor={colors.secondary}
+          />
+          <Navigator/>
+        </View>
+      </SafeAreaProvider>
+      </PersistGate>
+    </Provider>
   );
 }
 

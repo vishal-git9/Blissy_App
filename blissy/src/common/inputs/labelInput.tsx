@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         width: '100%',
         fontFamily:fonts.NexaXBold,
-        borderWidth:1,
+        borderWidth:0.5,
         borderRadius:20,
         borderTopRightRadius:20,
         borderTopLeftRadius:20

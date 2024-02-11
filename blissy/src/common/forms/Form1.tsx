@@ -1,17 +1,14 @@
 // Form1.tsx
 import React, {Dispatch, useRef} from 'react';
-import {Text} from 'react-native';
-import {View, TextInput, StyleSheet} from 'react-native';
-import colors from '../../constants/colors';
-import {fonts} from '../../constants/fonts';
+import {View, StyleSheet} from 'react-native';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import LabelInputComponent from '../inputs/labelInput';
 import {Action} from '../../container/Registration/Registration';
 import * as Animatable from 'react-native-animatable';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import Modal from 'react-native-modal';
-import Slider from '@react-native-community/slider';
 import { LabelWithDesc } from '../labels/label1';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
 
 interface Form1Props {
   state: {
