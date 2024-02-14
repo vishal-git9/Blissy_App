@@ -21,9 +21,9 @@ import LabelInputComponent from '../inputs/labelInput';
 import {Action} from '../../container/Registration/Registration';
 import {validateMobileNumber} from '../../container/login/login';
 import {Button} from 'react-native';
+import { Loader } from '../loader/loader';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
-
 interface LoginScreenProps {
   handleOtp: () => void;
   state: {
@@ -32,6 +32,7 @@ interface LoginScreenProps {
   dispatch: Dispatch<Action>;
   navigation: NativeStackNavigationProp<RootStackParamList>;
   modalState:boolean;
+  isLoading:boolean;
 }
 
 const MobileInput: React.FC<LoginScreenProps> = ({
@@ -39,7 +40,8 @@ const MobileInput: React.FC<LoginScreenProps> = ({
   navigation,
   dispatch,
   state,
-  modalState
+  modalState,
+  isLoading
 }) => {
   const {width: SCREEN_WIDTH} = useWindowDimensions();
 
@@ -54,7 +56,8 @@ const MobileInput: React.FC<LoginScreenProps> = ({
         hasBackdrop={false}
         // statusBarTranslucent={true}
         animationOut="slideOutDown">
-         <RouteBackButton onPress={()=>navigation.goBack()} />
+          {!isLoading && <RouteBackButton onPress={()=>navigation.goBack()} /> }
+          {isLoading && <View style={styles.loaderContainer}><Loader size={50}/></View>}
         <LottieView
           source={require('../../../assets/animation/AnimationMobile.json')}
           style={{
@@ -102,7 +105,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
               name={'name'}
               maxLength={10}
               placeholder="+91"
-              keyboardType={'number-pad'}
+              keyboardType={'numeric'}
               // errorText={'Name is part of our alogrithm'}
               onChangeText={dispatch}
               IconProvider={FontAwesome}
@@ -153,21 +156,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: actuatedNormalize(10),
     borderBottomLeftRadius: actuatedNormalize(10),
   },
-  otpStyles: {
-    backgroundColor: 'black',
-    elevation: 2,
-    borderWidth: 0,
-    color: 'white',
-    height: 60,
-    width: 60,
-    padding: actuatedNormalize(5),
-    borderTopRightRadius: actuatedNormalize(10),
-    borderTopLeftRadius: actuatedNormalize(10),
-    borderBottomRightRadius: actuatedNormalize(10),
-    borderBottomLeftRadius: actuatedNormalize(10),
-    borderColor: 'white',
-    borderBottomWidth: 0,
-  },
   img: {
     height: screenHeight,
     width: screenWidth,
@@ -188,4 +176,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     paddingHorizontal: actuatedNormalize(20),
   },
+  loaderContainer:{
+    position:"absolute",
+    zIndex:2,
+    flex:1,
+    height:screenHeight,
+    width:screenWidth,
+    justifyContent:"center",
+    alignItems:"center",
+     backgroundColor:colors.darkOverlayColor2
+  }
 });

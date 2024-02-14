@@ -1,6 +1,6 @@
 import {useNavigation} from '@react-navigation/native';
 import {useEffect, useReducer, useState} from 'react';
-import {Dimensions, Text, View, useWindowDimensions} from 'react-native';
+import {BackHandler, Dimensions, Text, View, useWindowDimensions} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import RouteBackButton from '../../common/button/BackButton';
 import StepperFormAnimation from '../../common/forms/StepperFormAnimation';
@@ -163,6 +163,11 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
     setError(res);
     // ToastAndroid.show('Added Successfully !', ToastAndroid.SHORT);
   }, [state]);
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true)
+    return () => backHandler.remove()
+  }, [])
 
   console.log(state, '--registration state---');
   return (

@@ -1,6 +1,6 @@
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import React, {useEffect, useReducer, useRef, useState} from 'react';
-import {Keyboard, StyleSheet} from 'react-native';
+import {Keyboard, StyleSheet, View} from 'react-native';
 import {Action} from '../Registration/Registration';
 import MobileInput from '../../common/login/LoginInput';
 import OTPInput from '../../common/login/otpInput';
@@ -12,6 +12,8 @@ import { useSelector } from 'react-redux';
 import { AuthSelector } from '../../redux/uiSlice';
 import { useGetUserQuery } from '../../api/userService';
 import { TextInput } from 'react-native-paper';
+import { Loader } from '../../common/loader/loader';
+import { actuatedNormalize } from '../../constants/PixelScaling';
 
 export const validateMobileNumber = (mobile:string) => {
   console.log(mobile,"mobile")
@@ -108,7 +110,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
   }, [state.OTP]);
 
 
-  console.log(isOtpSent,"---isotpsent---")
+  console.log(isLoading,"---isloading---",verifyOtpLoading,'verifyotploading')
   return (
     <KeyboardAwareScrollView
       contentContainerStyle={styles.container}
@@ -117,6 +119,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
       style={styles.container}>
       {!isOtpSent ? (
         <MobileInput
+        isLoading={isLoading}
         modalState={modalState}
           state={state}
           dispatch={dispatch}
@@ -125,6 +128,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
         />
       ) : (
         <OTPInput
+        isLoading={verifyOtpLoading}
         modalState={modalState}
           changeMobileNumber={() => setIsOtpSent(false)}
           dispatch={dispatch}
@@ -139,5 +143,13 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position:'relative'
   },
+  loaderContainer:{
+    position:"absolute",
+    backgroundColor:"red",
+    zIndex:200,
+    top:actuatedNormalize(250),
+    left:actuatedNormalize(150),
+  }
 });

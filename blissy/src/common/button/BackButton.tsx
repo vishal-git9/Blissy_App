@@ -3,7 +3,6 @@ import { TouchableOpacity, View, StyleSheet, Button } from 'react-native';
 import FontAwesome5  from 'react-native-vector-icons/FontAwesome5';
 import colors from '../../constants/colors';
 import { actuatedNormalize } from '../../constants/PixelScaling';
-import { NavigationStackProps } from '../../container/Prelogin/onboarding';
 
 interface RouteBackButtonProps {
   onPress: () => void;

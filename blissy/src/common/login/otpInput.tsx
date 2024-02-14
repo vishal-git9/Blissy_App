@@ -13,13 +13,10 @@ import {actuatedNormalize} from '../../constants/PixelScaling';
 import {fonts} from '../../constants/fonts';
 import colors from '../../constants/colors';
 import ProgressBar from './ProgressBar';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import OTPTextInput from 'react-native-otp-textinput';
-import {PrimaryButton} from '../button/PrimaryButton';
-import {RootStackParamList} from '../../AppNavigation/navigatorType';
 import RouteBackButton from '../button/BackButton';
 import { Action } from '../../container/Registration/Registration';
-import PrevStepButton from '../button/prevStepButton';
+import { Loader } from '../loader/loader';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
@@ -29,6 +26,7 @@ interface OTPInputProps {
   setProgressDuration: (a: number) => void;
   dispatch:Dispatch<Action>;
   modalState:boolean;
+  isLoading:boolean;
 }
 
 const OTPInput: React.FC<OTPInputProps> = ({
@@ -36,7 +34,8 @@ const OTPInput: React.FC<OTPInputProps> = ({
   setProgressDuration,
   dispatch,
   changeMobileNumber,
-  modalState
+  modalState,
+  isLoading
 }) => {
   const {width: SCREEN_WIDTH} = useWindowDimensions();
   console.log("at the otp screen")
@@ -49,7 +48,8 @@ const OTPInput: React.FC<OTPInputProps> = ({
       animationInTiming={1000}
       animationIn="slideInUp"
       animationOut="slideOutDown">
-       <PrevStepButton onpress={changeMobileNumber} />
+       <RouteBackButton onPress={changeMobileNumber} />
+       {isLoading && <View style={styles.loaderContainer}><Loader size={50}/></View>}
       <LottieView
         source={require('../../../assets/animation/AnimationMobile.json')}
         style={{
@@ -175,6 +175,16 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     paddingHorizontal: actuatedNormalize(20),
   },
+  loaderContainer:{
+    position:"absolute",
+    zIndex:2,
+    flex:1,
+    height:screenHeight,
+    width:screenWidth,
+    justifyContent:"center",
+    alignItems:"center",
+     backgroundColor:colors.darkOverlayColor2
+  }
 });
 
 export default OTPInput;
