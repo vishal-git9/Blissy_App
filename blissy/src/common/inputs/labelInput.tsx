@@ -1,13 +1,18 @@
-import React, { Dispatch, useState } from 'react';
-import { TextInput, HelperText } from 'react-native-paper';
-import { KeyboardTypeOptions, View, ViewStyle } from 'react-native';
+import React, {Dispatch, useState} from 'react';
+import {TextInput, HelperText} from 'react-native-paper';
+import {KeyboardTypeOptions, View, ViewStyle} from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { fonts } from '../../constants/fonts';
+import {fonts} from '../../constants/fonts';
 import Styles from '../../constants/styles';
 import colors from '../../constants/colors';
-import { StyleSheet } from 'react-native';
-import { Icon } from 'react-native-vector-icons/Icon';
-import { Action } from '../../container/Registration/Registration';
+import {StyleSheet} from 'react-native';
+import {Icon} from 'react-native-vector-icons/Icon';
+import {Action} from '../../container/Registration/Registration';
+
+export const validateMobileNumber = (mobile: string) => {
+  const MobileRegex = /^[6-9]\d{0,9}$/;
+  return MobileRegex.test(mobile);
+};
 
 interface LabelInputProps {
   maxLength?: number;
@@ -25,7 +30,8 @@ interface LabelInputProps {
   editable?: boolean;
   hasEye?: boolean;
   secure?: boolean;
-  labelStyle?:ViewStyle;
+  validate?: boolean;
+  labelStyle?: ViewStyle;
 }
 
 const LabelInputComponent: React.FC<LabelInputProps> = ({
@@ -44,10 +50,23 @@ const LabelInputComponent: React.FC<LabelInputProps> = ({
   editable,
   hasEye,
   secure,
-  labelStyle
+  validate = false,
+  labelStyle,
 }) => {
   const [eye, setEye] = useState(false);
-console.log(name,"name")
+
+  const validateMobile = (value: string) => {
+    const newvalue = value.trim();
+    if (newvalue === '') {
+      onChangeText({type, payload: newvalue});
+    } else {
+      if (validateMobileNumber(newvalue)) {
+        onChangeText({type, payload: newvalue});
+      } else {
+        return;
+      }
+    }
+  };
   return (
     <View style={[labelStyle]}>
       <TextInput
@@ -56,7 +75,7 @@ console.log(name,"name")
         underlineColor={colors.transparent}
         cursorColor={colors.primary}
         activeUnderlineColor={colors.transparent}
-        contentStyle={{ fontFamily: fonts.NexaBold,color:colors.white }}
+        contentStyle={{fontFamily: fonts.NexaBold, color: colors.white}}
         value={value}
         editable={editable}
         left={
@@ -64,18 +83,22 @@ console.log(name,"name")
             <TextInput.Icon
               style={[
                 Styles.neuoMorphism,
-                { backgroundColor: colors.primary, elevation: 15 },
+                {backgroundColor: colors.primary, elevation: 15},
               ]}
               color={colors.green2}
               icon={() => (
-                <IconProvider name={IconName || ''} size={20} color={colors.white} />
+                <IconProvider
+                  name={IconName || ''}
+                  size={20}
+                  color={colors.white}
+                />
               )}
             />
           )
         }
         id={id}
         theme={{
-          colors: { primary: colors.primary },
+          colors: {primary: colors.primary},
         }}
         mode="flat"
         right={
@@ -94,14 +117,18 @@ console.log(name,"name")
           )
         }
         placeholderTextColor={'grey'}
-        onChangeText={text => onChangeText({type:type,payload:text})}
+        onChangeText={text =>
+          !validate
+            ? onChangeText({type: type, payload: text})
+            : validateMobile(text)
+        }
         keyboardType={keyboardType}
         maxLength={maxLength}
         secureTextEntry={secure && !eye}
       />
       {errorText && (
         <HelperText
-          style={{ fontFamily: fonts.NexaRegular, fontSize: 10 }}
+          style={{fontFamily: fonts.NexaRegular, fontSize: 10}}
           type="error"
           visible={true}>
           {errorText}
@@ -113,15 +140,14 @@ console.log(name,"name")
 
 export default LabelInputComponent;
 
-
 const styles = StyleSheet.create({
-    input: {
-        backgroundColor: 'transparent',
-        width: '100%',
-        fontFamily:fonts.NexaXBold,
-        borderWidth:0.5,
-        borderRadius:20,
-        borderTopRightRadius:20,
-        borderTopLeftRadius:20
-      },
-})
+  input: {
+    backgroundColor: 'transparent',
+    width: '100%',
+    fontFamily: fonts.NexaXBold,
+    borderWidth: 0.5,
+    borderRadius: 20,
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
+  },
+});

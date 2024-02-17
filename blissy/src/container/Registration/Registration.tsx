@@ -121,7 +121,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
     //call api here
     setCompleteModal(false);
     await AsyncStorage.setItem('isRegistered','true');
-    navigation.navigate('Home');
+    navigation.navigate('Drawer');
   };
 
   const validateForm = (state: State) => {

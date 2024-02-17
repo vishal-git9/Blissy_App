@@ -19,9 +19,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../AppNavigation/navigatorType';
 import LabelInputComponent from '../inputs/labelInput';
 import {Action} from '../../container/Registration/Registration';
-import {validateMobileNumber} from '../../container/login/login';
-import {Button} from 'react-native';
-import { Loader } from '../loader/loader';
+import {Loader} from '../loader/loader';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 interface LoginScreenProps {
@@ -31,8 +29,8 @@ interface LoginScreenProps {
   };
   dispatch: Dispatch<Action>;
   navigation: NativeStackNavigationProp<RootStackParamList>;
-  modalState:boolean;
-  isLoading:boolean;
+  modalState: boolean;
+  isLoading: boolean;
 }
 
 const MobileInput: React.FC<LoginScreenProps> = ({
@@ -41,7 +39,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
   dispatch,
   state,
   modalState,
-  isLoading
+  isLoading,
 }) => {
   const {width: SCREEN_WIDTH} = useWindowDimensions();
 
@@ -56,8 +54,12 @@ const MobileInput: React.FC<LoginScreenProps> = ({
         hasBackdrop={false}
         // statusBarTranslucent={true}
         animationOut="slideOutDown">
-          {!isLoading && <RouteBackButton onPress={()=>navigation.goBack()} /> }
-          {isLoading && <View style={styles.loaderContainer}><Loader size={50}/></View>}
+        {!isLoading && <RouteBackButton onPress={() => navigation.goBack()} />}
+        {isLoading && (
+          <View style={styles.loaderContainer}>
+            <Loader size={50} />
+          </View>
+        )}
         <LottieView
           source={require('../../../assets/animation/AnimationMobile.json')}
           style={{
@@ -105,6 +107,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
               name={'name'}
               maxLength={10}
               placeholder="+91"
+              validate={true}
               keyboardType={'numeric'}
               // errorText={'Name is part of our alogrithm'}
               onChangeText={dispatch}
@@ -112,11 +115,10 @@ const MobileInput: React.FC<LoginScreenProps> = ({
               IconName={'phone'}
             />
             <PrimaryButton
-              disabled={!validateMobileNumber(state.mobileNumber)}
+              disabled={state.mobileNumber.length < 10}
               styles={{
-                backgroundColor: !validateMobileNumber(state.mobileNumber)
-                  ? colors.gray
-                  : colors.primary,
+                backgroundColor:
+                  state.mobileNumber.length < 10 ? colors.gray : colors.primary,
               }}
               handleFunc={() => handleOtp()}
               label="GET OTP"
@@ -166,24 +168,24 @@ const styles = StyleSheet.create({
   modal: {
     justifyContent: 'flex-end',
     margin: 0,
-    position:'relative',
-    zIndex:1,
+    position: 'relative',
+    zIndex: 1,
   },
   modalContent: {
-    backgroundColor: '#191A19',
+    backgroundColor: colors.dark,
     height: screenHeight / 3,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: actuatedNormalize(20),
   },
-  loaderContainer:{
-    position:"absolute",
-    zIndex:2,
-    flex:1,
-    height:screenHeight,
-    width:screenWidth,
-    justifyContent:"center",
-    alignItems:"center",
-     backgroundColor:colors.darkOverlayColor2
-  }
+  loaderContainer: {
+    position: 'absolute',
+    zIndex: 2,
+    flex: 1,
+    height: screenHeight,
+    width: screenWidth,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.darkOverlayColor2,
+  },
 });

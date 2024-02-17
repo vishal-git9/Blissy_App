@@ -15,12 +15,6 @@ import { TextInput } from 'react-native-paper';
 import { Loader } from '../../common/loader/loader';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 
-export const validateMobileNumber = (mobile:string) => {
-  console.log(mobile,"mobile")
-  const MobileRegex = /^[6-9]{1}[0-9]{9}$/;
-  return MobileRegex.test(mobile);
-};
-
 interface LoginInterface {
   mobileNumber: string;
   OTP: string;
@@ -76,7 +70,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
       if(isNewuser){
         navigation.navigate('Registration');  
       }else{
-        navigation.navigate('Home');  
+        navigation.navigate('Drawer');  
       }
     }else if('error' in res){
       console.log(verifyOtpErr,"error of otp")
@@ -110,7 +104,10 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
   }, [state.OTP]);
 
 
+
+
   console.log(isLoading,"---isloading---",verifyOtpLoading,'verifyotploading')
+  console.log(state,"State of login")
   return (
     <KeyboardAwareScrollView
       contentContainerStyle={styles.container}

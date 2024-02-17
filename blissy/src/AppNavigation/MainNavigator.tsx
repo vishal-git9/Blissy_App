@@ -6,6 +6,9 @@ import {Registration} from '../container/Registration/Registration';
 import {RootStackParamList} from './navigatorType';
 import {LoginScreen} from '../container/login/login';
 import {HomeScreen} from '../container/Home/HomeScreen';
+import { HealerList } from '../common/healerList/healerlist';
+import { Healerdetails } from '../common/healerList/healerdetails';
+import {DrawerNavigator} from './Drawer';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -39,7 +42,9 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Registration" component={Registration} />
-        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Healerlist" component={HealerList} />
+        <Stack.Screen name="Healerdetails" component={Healerdetails} />
+        <Stack.Screen name="Drawer" component={DrawerNavigator} />
       </Stack.Navigator>
     </NavigationContainer>
   );
