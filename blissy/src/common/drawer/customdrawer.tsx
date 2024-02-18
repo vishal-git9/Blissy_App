@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -6,100 +6,197 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  useWindowDimensions,
 } from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerItemList,
 } from '@react-navigation/drawer';
-
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Entypo from 'react-native-vector-icons/Entypo';
 import colors from '../../constants/colors';
-import {actuatedNormalize} from '../../constants/PixelScaling';
+import {SCREEN_HEIGHT, actuatedNormalize} from '../../constants/PixelScaling';
 import {fonts} from '../../constants/fonts';
+import * as Animatable from 'react-native-animatable';
+import Styles from '../../constants/styles';
+import {ModalComponent} from '../modals/modalcomponent';
+import {LabelWithIcon} from './iconlabel';
+import { DrawerUserInterface, ProfileBox } from './profilebox';
+
+const user: DrawerUserInterface = {
+  mobileNumber: "1234567890",
+  role: "user",
+  name: "John Doe",
+  username: "johndoe",
+  age: 30,
+  gender: "male",
+  interest: ["Music", "Sports", "Cooking"],
+  language: ["English", "Spanish"],
+  profilePic: 'https://randomuser.me/api/portraits/men/1.jpg',
+  coins: "100",
+};
+
 const CustomDrawer: React.FC<any> = props => {
+  const [ConfirmModal, setConfirmModal] = useState<boolean>(false);
+  const confirmModalBody = (
+    <Animatable.View
+      animation={'bounceIn'}
+      duration={500}
+      easing={'ease-in'}
+      style={styles.modalCardCont}>
+      <View style={styles.modalChildContainer}>
+        <View style={[styles.cardStyle]}>
+          <Animatable.Text
+            animation="bounceIn"
+            duration={500}
+            delay={500}
+            style={styles.textStyle}
+            iterationCount={2}>
+            Really want to Log Out ?
+          </Animatable.Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-around',
+              width: '100%',
+            }}>
+            <TouchableOpacity
+              onPress={() => {
+                setConfirmModal(false);
+              }}>
+              <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                <Animatable.View
+                  style={[
+                    Styles.neuoMorphism,
+                    {borderRadius: 50, backgroundColor: 'white', padding: 5},
+                  ]}
+                  animation="rotate"
+                  delay={500}
+                  iterationCount={1}>
+                  <Entypo name={'cross'} color={'red'} size={35} />
+                </Animatable.View>
+                {/* <Text style={styles.textStyle}>Try Again</Text> */}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setConfirmModal(false);
+                console.log('Logged out');
+                // dispatch(userLogOut());
+                // navigation.replace('Login');
+                // console.log('Yes');
+              }}>
+              <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                <Animatable.View
+                  animation="rotate"
+                  delay={600}
+                  style={[
+                    Styles.neuoMorphism,
+                    {borderRadius: 50, backgroundColor: 'white', padding: 5},
+                  ]}
+                  iterationCount={1}>
+                  <Entypo name={'check'} color={'green'} size={35} />
+                </Animatable.View>
+                {/* <Text style={styles.textStyle}>Go Ahead</Text> */}
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Animatable.View>
+  );
+
   return (
     <View style={{flex: 1, marginTop: actuatedNormalize(15)}}>
       <DrawerContentScrollView {...props}>
-        <View style={styles.shadowBox}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-            <Image
-              source={{uri: 'https://randomuser.me/api/portraits/men/1.jpg'}}
-              style={{
-                height: 80,
-                width: 80,
-                borderRadius: 40,
-                marginBottom: 10,
-              }}
-            />
-            <View style={{flexDirection:"row",columnGap:actuatedNormalize(5)}}>
-              <Text
-                style={{
-                  color: colors.white,
-                  fontSize: actuatedNormalize(14),
-                  fontFamily: fonts.NexaRegular,
-                  marginRight: actuatedNormalize(5),
-                }}>
-                280
-              </Text>
-              <FontAwesome5 name="coins" size={14} color={colors.yellow} />
-            </View>
-          </View>
-          <Text
+        <ProfileBox {...user}/>
+        <View style={{flex: 1, marginTop: actuatedNormalize(15)}}>
+          <View
             style={{
-              color: colors.white,
-              fontSize: actuatedNormalize(18),
-              fontFamily: fonts.NexaRegular,
-              marginBottom: actuatedNormalize(5),
+              flexDirection: 'row',
+              alignItems: 'center',
+              width: '90%',
+              alignSelf: 'center',
+              columnGap: actuatedNormalize(10),
             }}>
-            John Doe
-          </Text>
-          <View style={{flexDirection: 'row'}}>
             <Text
               style={{
                 color: colors.gray,
-                fontSize: actuatedNormalize(14),
+                fontSize: actuatedNormalize(16),
                 fontFamily: fonts.NexaRegular,
-                marginRight: actuatedNormalize(5),
               }}>
-              9106517547
+              For You
             </Text>
+            <View
+              style={{
+                flex: 1,
+                borderTopWidth: 0.5,
+                borderTopColor: colors.gray,
+              }}
+            />
           </View>
-        </View>
-        <View style={{flex: 1, paddingTop: 10}}>
-          <DrawerItemList {...props} />
+
+          {/* Drawer item list */}
+          <View style={{marginTop: actuatedNormalize(10)}}>
+            <DrawerItemList {...props} />
+          </View>
+
+          {/* communication */}
+          <View style={{width: '90%', alignSelf: 'center'}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                columnGap: actuatedNormalize(10),
+                marginTop: actuatedNormalize(10),
+              }}>
+              <Text
+                style={{
+                  color: colors.gray,
+                  fontSize: actuatedNormalize(16),
+                  fontFamily: fonts.NexaRegular,
+                }}>
+                Communication
+              </Text>
+              <View
+                style={{
+                  flex: 1,
+                  borderTopWidth: 0.5,
+                  borderTopColor: colors.gray,
+                }}
+              />
+            </View>
+            <View
+              style={{
+                rowGap: actuatedNormalize(20),
+                marginTop: actuatedNormalize(20),
+              }}>
+              <LabelWithIcon iconName="bug" label="Report a Problem" />
+              <LabelWithIcon iconName="pencil" label="Write a Review" />
+            </View>
+          </View>
         </View>
       </DrawerContentScrollView>
-      <View style={{padding: actuatedNormalize(20), borderTopWidth: 1, borderTopColor: colors.gray}}>
-        <TouchableOpacity onPress={() => {}} style={{paddingVertical: 15}}>
-          <View style={{flexDirection: 'row', alignItems: 'center',columnGap:actuatedNormalize(5)}}>
-            <Ionicons name="share-social-outline" size={22} color={colors.white} />
-            <Text
-              style={{
-                fontSize: actuatedNormalize(16),
-                fontFamily: fonts.NexaRegular,
-                marginLeft: actuatedNormalize(5),
-                color:colors.gray
-              }}>
-              Tell a Friend
-            </Text>
+      <View
+        style={{
+          padding: actuatedNormalize(20),
+          borderTopWidth: 0.5,
+          borderTopColor: colors.gray,
+        }}>
+          <View style={{rowGap:actuatedNormalize(20)}}>
+          <LabelWithIcon iconName="share-social-outline" label="Tell a Friend" />
+        <LabelWithIcon
+          onPress={() => setConfirmModal(true)}
+          iconName="exit-outline"
+          label="Sign Out"
+        />
           </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => {}} style={{paddingVertical: 15}}>
-          <View style={{flexDirection: 'row', alignItems: 'center',columnGap:actuatedNormalize(5)}}>
-            <Ionicons name="exit-outline" size={22} color={colors.white} />
-            <Text
-              style={{
-                fontSize: actuatedNormalize(16),
-                fontFamily: fonts.NexaRegular,
-                marginLeft: actuatedNormalize(5),
-                color:colors.gray
-              }}>
-              Sign Out
-            </Text>
-          </View>
-        </TouchableOpacity>
+        
       </View>
+      <ModalComponent
+        children={confirmModalBody}
+        modalVisible={ConfirmModal}
+        setModalVisible={setConfirmModal}
+      />
     </View>
   );
 };
@@ -112,6 +209,39 @@ const styles = StyleSheet.create({
     width: '90%',
     alignSelf: 'center',
     elevation: 5, // Add elevation for shadow
+  },
+  cardStyle: {
+    backgroundColor: colors.dark,
+    padding: 22,
+    flexDirection: 'column',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    height: '100%',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+  },
+  textStyle: {
+    color: colors.lightGray,
+    fontSize: actuatedNormalize(18),
+    marginBottom: actuatedNormalize(12),
+    fontFamily: fonts.NexaBold,
+  },
+  iconStyle: {
+    marginBottom: actuatedNormalize(12),
+  },
+  Modalview: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
+  modalCardCont: {
+    flex: 1,
+    width: '100%',
+    bottom: actuatedNormalize(-20),
+    alignSelf: 'center',
+    justifyContent: 'flex-end',
+  },
+  modalChildContainer: {
+    height: SCREEN_HEIGHT / 4,
   },
 });
 

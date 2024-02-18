@@ -1,4 +1,4 @@
-import React, { Dispatch } from 'react';
+import React, {Dispatch} from 'react';
 import {
   View,
   Text,
@@ -15,18 +15,21 @@ import colors from '../../constants/colors';
 import ProgressBar from './ProgressBar';
 import OTPTextInput from 'react-native-otp-textinput';
 import RouteBackButton from '../button/BackButton';
-import { Action } from '../../container/Registration/Registration';
-import { Loader } from '../loader/loader';
+import {Action} from '../../container/Registration/Registration';
+import {Loader} from '../loader/loader';
+import {FetchBaseQueryError} from '@reduxjs/toolkit/query';
+import { SerializedError } from '@reduxjs/toolkit';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
 interface OTPInputProps {
   progressDuration: number;
-  changeMobileNumber:()=>void;
+  changeMobileNumber: () => void;
   setProgressDuration: (a: number) => void;
-  dispatch:Dispatch<Action>;
-  modalState:boolean;
-  isLoading:boolean;
+  dispatch: Dispatch<Action>;
+  modalState: boolean;
+  isLoading: boolean;
+  isError: FetchBaseQueryError | SerializedError | undefined;
 }
 
 const OTPInput: React.FC<OTPInputProps> = ({
@@ -35,108 +38,128 @@ const OTPInput: React.FC<OTPInputProps> = ({
   dispatch,
   changeMobileNumber,
   modalState,
-  isLoading
+  isLoading,
+  isError,
 }) => {
   const {width: SCREEN_WIDTH} = useWindowDimensions();
-  console.log("at the otp screen")
+  console.log('at the otp screen');
   return (
     <>
-    <Modal
-      isVisible={modalState}
-      style={styles.modal}
-      backdropColor="transparent"
-      animationInTiming={1000}
-      animationIn="slideInUp"
-      animationOut="slideOutDown">
-       <RouteBackButton onPress={changeMobileNumber} />
-       {isLoading && <View style={styles.loaderContainer}><Loader size={50}/></View>}
-      <LottieView
-        source={require('../../../assets/animation/AnimationMobile.json')}
-        style={{
-          width: SCREEN_WIDTH * 0.9,
-          height: SCREEN_WIDTH * 0.9,
-          alignSelf: 'center',
-        }}
-        autoPlay
-        loop
-      />
-      <View
-        style={{
-          alignSelf: 'center',
-          paddingHorizontal: actuatedNormalize(20),
-          gap: actuatedNormalize(5),
-          marginBottom: actuatedNormalize(20),
-        }}>
-        <Text
+      <Modal
+        isVisible={modalState}
+        style={styles.modal}
+        backdropColor="transparent"
+        animationInTiming={1000}
+        animationIn="slideInUp"
+        animationOut="slideOutDown">
+        <RouteBackButton onPress={changeMobileNumber} />
+        {isLoading && (
+          <View style={styles.loaderContainer}>
+            <Loader size={50} />
+          </View>
+        )}
+        {isError && (
+          <View style={styles.loaderContainer}>
+            <LottieView
+              source={require('../../../assets/animation/wrong.json')}
+              style={{
+                width: SCREEN_WIDTH * 0.9,
+                height: SCREEN_WIDTH * 0.9,
+                alignSelf: 'center',
+              }}
+              autoPlay
+              loop
+            />
+            <Text style={{color:colors.white,fontFamily:fonts.NexaXBold,fontSize:actuatedNormalize(20),marginTop:actuatedNormalize(-50)}}>Wrong OTP</Text>
+          </View>
+        )}
+        <LottieView
+          source={require('../../../assets/animation/AnimationMobile.json')}
           style={{
-            fontFamily: fonts.NexaBold,
-            // color: '#868787',
-            color: 'white',
-            fontSize: actuatedNormalize(26),
+            width: SCREEN_WIDTH * 0.9,
+            height: SCREEN_WIDTH * 0.9,
             alignSelf: 'center',
-          }}>
-          {'Enter Your OTP'}
-        </Text>
-        <View></View>
-        <Text
-          style={{
-            fontFamily: fonts.NexaBold,
-            color: '#868787',
-            textAlign: 'center',
-            fontSize: actuatedNormalize(12),
-            alignSelf: 'center',
-            lineHeight: actuatedNormalize(20),
-          }}>
-          {`Enter OTP we sent to 910XXXX547 This code will expire in ${progressDuration}s`}
-        </Text>
-
-        <ProgressBar duration={30} progressDuration={progressDuration} />
-      </View>
-      <View
-        style={[
-          styles.modalContent,
-          {
-            justifyContent: 'center',
-            alignItems: 'center',
-            rowGap: actuatedNormalize(15),
-          },
-        ]}>
-        <OTPTextInput
-          containerStyle={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            columnGap: actuatedNormalize(5),
           }}
-          inputCount={4}
-          autoFocus
-          handleTextChange={text => dispatch({type:"OTP",payload:text})}
-          textInputStyle={styles.otpStyles}
+          autoPlay
+          loop
         />
-        {/* <PrimaryButton
+        <View
+          style={{
+            alignSelf: 'center',
+            paddingHorizontal: actuatedNormalize(20),
+            gap: actuatedNormalize(5),
+            marginBottom: actuatedNormalize(20),
+          }}>
+          <Text
+            style={{
+              fontFamily: fonts.NexaBold,
+              // color: '#868787',
+              color: 'white',
+              fontSize: actuatedNormalize(26),
+              alignSelf: 'center',
+            }}>
+            {'Enter Your OTP'}
+          </Text>
+          <View></View>
+          <Text
+            style={{
+              fontFamily: fonts.NexaBold,
+              color: '#868787',
+              textAlign: 'center',
+              fontSize: actuatedNormalize(12),
+              alignSelf: 'center',
+              lineHeight: actuatedNormalize(20),
+            }}>
+            {`Enter OTP we sent to 910XXXX547 This code will expire in ${progressDuration}s`}
+          </Text>
+
+          <ProgressBar duration={30} progressDuration={progressDuration} />
+        </View>
+        <View
+          style={[
+            styles.modalContent,
+            {
+              justifyContent: 'center',
+              alignItems: 'center',
+              rowGap: actuatedNormalize(15),
+            },
+          ]}>
+          <OTPTextInput
+            containerStyle={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              columnGap: actuatedNormalize(5),
+            }}
+            inputCount={4}
+            autoFocus
+            handleTextChange={text => dispatch({type: 'OTP', payload: text})}
+            textInputStyle={styles.otpStyles}
+          />
+          {/* <PrimaryButton
           handleFunc={() => {
             clearInterval(timer);
           }}
           label="Verify"
         /> */}
-        {progressDuration === 0 && (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignSelf: 'center',
-              columnGap: actuatedNormalize(10),
-            }}>
-            <Text style={{color: '#868787', fontFamily: fonts.NexaRegular}}>
-              Didn't receive the code?
-            </Text>
-            <TouchableWithoutFeedback onPress={() => setProgressDuration(30)}>
-              <Text style={{color: '#1E5128', fontFamily: fonts.NexaXBold}}>
-                Resend OTP
+          {progressDuration === 0 && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignSelf: 'center',
+                columnGap: actuatedNormalize(10),
+              }}>
+              <Text style={{color: '#868787', fontFamily: fonts.NexaRegular}}>
+                Didn't receive the code?
               </Text>
-            </TouchableWithoutFeedback>
-          </View>
-        )}
-      </View>
-    </Modal>
+              <TouchableWithoutFeedback onPress={() => setProgressDuration(30)}>
+                <Text style={{color: '#1E5128', fontFamily: fonts.NexaXBold}}>
+                  Resend OTP
+                </Text>
+              </TouchableWithoutFeedback>
+            </View>
+          )}
+        </View>
+      </Modal>
     </>
   );
 };
@@ -175,16 +198,16 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     paddingHorizontal: actuatedNormalize(20),
   },
-  loaderContainer:{
-    position:"absolute",
-    zIndex:2,
-    flex:1,
-    height:screenHeight,
-    width:screenWidth,
-    justifyContent:"center",
-    alignItems:"center",
-     backgroundColor:colors.darkOverlayColor2
-  }
+  loaderContainer: {
+    position: 'absolute',
+    zIndex: 2,
+    flex: 1,
+    height: screenHeight,
+    width: screenWidth,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.darkOverlayColor2,
+  },
 });
 
 export default OTPInput;

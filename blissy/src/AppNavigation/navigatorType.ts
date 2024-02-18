@@ -8,5 +8,6 @@ export type RootStackParamList = {
     Healerdetails:{ item: ProfileData };
     Healerlist:undefined;
     Drawer:undefined;
+    Connection:undefined;
   };
   

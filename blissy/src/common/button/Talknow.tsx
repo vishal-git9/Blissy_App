@@ -4,10 +4,10 @@ import { actuatedNormalize } from '../../constants/PixelScaling';
 import colors from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 
-const TalkNowButton = () => {
+const TalkNowButton:React.FC<{label:string,onPress:()=>void}> = ({label,onPress}) => {
   return (
-    <TouchableOpacity style={styles.buttonContainer}>
-      <Text style={styles.buttonText}>Call Now</Text>
+    <TouchableOpacity style={styles.buttonContainer} onPress={onPress}>
+      <Text style={styles.buttonText}>{label}</Text>
     </TouchableOpacity>
   );
 };

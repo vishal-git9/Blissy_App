@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   loaderContainer: {
     position: 'absolute',
-    zIndex: 2,
+    zIndex: 5,
     flex: 1,
     height: screenHeight,
     width: screenWidth,

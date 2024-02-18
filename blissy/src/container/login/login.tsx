@@ -33,6 +33,9 @@ export const reducerAction = (state: LoginInterface, action: Action) => {
         [key]: action.payload,
       };
     }
+    case "RESET" : 
+      return intialState
+    
     default:
       return state;
   }
@@ -44,7 +47,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
    const [getOtp,{error,data,isLoading}] = useGetOtpMutation();
    const {token,isAuthenticated,user} = useSelector(AuthSelector)
    const {data:userData,isLoading:userLoading,refetch} = useGetUserQuery()
-   const [OtpVerify,{error:verifyOtpErr,data:verifyOtpData,isLoading:verifyOtpLoading}] = useVerifyOtpMutation()
+   const [OtpVerify,{error:verifyOtpErr,data:verifyOtpData,isLoading:verifyOtpLoading,reset}] = useVerifyOtpMutation()
   const handleSubmitMobileNumber = async () => {
       const res = await getOtp({mobileNumber:`+91${state.mobileNumber}`});
       console.log(res,"---res-----")
@@ -106,7 +109,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
 
 
 
-  console.log(isLoading,"---isloading---",verifyOtpLoading,'verifyotploading')
+  console.log(isLoading,"---isloading---",verifyOtpErr,'verifyotploading')
   console.log(state,"State of login")
   return (
     <KeyboardAwareScrollView
@@ -125,9 +128,15 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
         />
       ) : (
         <OTPInput
+        isError={verifyOtpErr}
         isLoading={verifyOtpLoading}
         modalState={modalState}
-          changeMobileNumber={() => setIsOtpSent(false)}
+          changeMobileNumber={() => {
+            dispatch({type:"OTP",payload:""})
+            setIsOtpSent(false)
+            reset()
+            clearInterval(timerRef.current)
+          }}
           dispatch={dispatch}
           progressDuration={progressDuration}
           setProgressDuration={setProgressDuration}

@@ -33,7 +33,8 @@ const App:React.FC = ()=> {
         <View style={[styles.AppContainer, backgroundStyle]}>
           <StatusBar
             barStyle={'light-content'}
-            backgroundColor={colors.secondary}
+            animated={true}
+            backgroundColor={colors.black}
           />
           <Navigator/>
         </View>

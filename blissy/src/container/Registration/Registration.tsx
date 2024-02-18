@@ -40,7 +40,7 @@ const screenWidth = Dimensions.get('window').width;
 
 export interface Action {
   type: string;
-  payload: string | string[] | number; // Change the type of text as per your requirement
+  payload?: string | string[] | number; // Change the type of text as per your requirement
 }
 
 interface State {

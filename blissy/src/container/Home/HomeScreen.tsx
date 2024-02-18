@@ -9,8 +9,34 @@ import {ToggleButton} from '../../common/tab/switch';
 import {FlatList} from 'react-native';
 import ProfileCard from '../../common/cards/healercard';
 import {HealerMockData} from '../../mockdata/healerData';
-import {actuatedNormalize} from '../../constants/PixelScaling';
+import {
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+  actuatedNormalize,
+} from '../../constants/PixelScaling';
+import OfferBadge from '../../common/badge';
+import * as Animatable from "react-native-animatable"
+import LottieView from 'lottie-react-native';
+import {RoundedIconContainer} from '../../common/button/rounded';
+import TalkNowButton from '../../common/button/Talknow';
 
+const iconsLabel = [
+  {
+    id: 1,
+    label: 'chats',
+    iconName: 'chatbox-ellipses',
+  },
+  {
+    id: 2,
+    label: 'calls',
+    iconName: 'call',
+  },
+  {
+    id: 3,
+    label: 'coupons',
+    iconName: 'gift',
+  },
+];
 export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   const [data, setData] = useState(HealerMockData.slice(0, 10)); // Initial data for first 10 cards
   const [value, setValue] = useState<string>('healers');
@@ -39,8 +65,10 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
       <ToggleButton value={value} setValue={setValue} />
       {value === 'healers' ? (
         <View style={styles.healerContainer}>
+          <OfferBadge />
           <FlatList
             data={data}
+            showsVerticalScrollIndicator={false}
             renderItem={({item}) => <ProfileCard {...item} />}
             keyExtractor={(item, index) => index.toString()}
             onEndReached={loadMoreData} // Load more data when user reaches the end
@@ -49,7 +77,20 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
         </View>
       ) : (
         <View style={styles.peopleContainer}>
-          <Text style={{color:colors.white}}>This is People screen</Text>
+          <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+            {iconsLabel.map((item,id) => (
+              <Animatable.View animation='bounceIn' key={item.id} delay={id * 500}>
+                <RoundedIconContainer
+                  onpress={() => console.log('first')}
+                  label={item.label}
+                  iconName={item.iconName}
+                />
+              </Animatable.View>
+            ))}
+          </View>
+          <View style={{flex:1,alignItems:"center",justifyContent:"center",width:"90%",alignSelf:"center"}}>
+          <TalkNowButton label='Connect Now' onPress={()=>navigation.navigate("Connection")} />
+          </View>
         </View>
       )}
     </View>
@@ -62,14 +103,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   healerContainer: {
-    marginTop: actuatedNormalize(40),
+    marginTop: actuatedNormalize(30),
     width: '90%',
+    rowGap: actuatedNormalize(20),
     paddingBottom: actuatedNormalize(200),
   },
-  peopleContainer:{
+  peopleContainer: {
+    flex: 1,
     marginTop: actuatedNormalize(40),
     width: '90%',
-    justifyContent:"center",
-    alignItems:"center"
-  }
+  },
 });

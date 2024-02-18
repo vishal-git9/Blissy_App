@@ -9,6 +9,7 @@ import {HomeScreen} from '../container/Home/HomeScreen';
 import { HealerList } from '../common/healerList/healerlist';
 import { Healerdetails } from '../common/healerList/healerdetails';
 import {DrawerNavigator} from './Drawer';
+import { Connection } from '../container/Connection/connection';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -45,6 +46,7 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="Healerlist" component={HealerList} />
         <Stack.Screen name="Healerdetails" component={Healerdetails} />
         <Stack.Screen name="Drawer" component={DrawerNavigator} />
+        <Stack.Screen name="Connection" component={Connection} />
       </Stack.Navigator>
     </NavigationContainer>
   );
