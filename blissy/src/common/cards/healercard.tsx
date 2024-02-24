@@ -20,6 +20,7 @@ interface Props {
   calls: string;
   ratingCount: number;
   imageUrl: string;
+  shouldAnimate?:boolean
 }
 
 const ProfileCard: React.FC<Props> = ({
@@ -33,9 +34,10 @@ const ProfileCard: React.FC<Props> = ({
   ratingCount,
   imageUrl,
   id,
+  shouldAnimate
 }) => {
   return (
-    <Animatable.View style={{}} animation={'bounceInLeft'} delay={id * 500}>
+    <Animatable.View style={{}} animation={shouldAnimate ? 'bounceInLeft' : undefined} useNativeDriver={true}  iterationCount={1} delay={id * 500}>
       <Card style={styles.card} elevation={5}>
         {/* <Card.Cover source={{ uri: imageUrl }} /> */}
         <Card.Content>

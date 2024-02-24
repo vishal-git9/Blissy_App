@@ -1,6 +1,6 @@
-import React, {Dispatch, SetStateAction, useState} from 'react';
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
 import colors from '../../constants/colors';
+import React, { Dispatch, SetStateAction, useState, useRef, useEffect } from 'react';
+import { StyleSheet, TouchableOpacity, View, Animated } from 'react-native';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
@@ -14,19 +14,38 @@ export const ToggleButton = ({
   value: string;
   setValue: Dispatch<SetStateAction<string>>;
 }) => {
+  const indicatorPosition = useRef(new Animated.Value(value === 'healers' ? 0 : 1)).current;
+
+  useEffect(() => {
+    Animated.timing(indicatorPosition, {
+      toValue: value === 'healers' ? 0 : 1,
+      duration: 300,
+      useNativeDriver: false, // 'true' if you're animating opacity or translation; 'false' for layout props
+    }).start();
+  }, [value]);
+
+  const indicatorStyle = {
+    ...styles.indicator,
+    backgroundColor: value === 'healers' ? colors.primary : colors.primary,
+    transform: [{
+      translateX: indicatorPosition.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, actuatedNormalize(150)], // Adjust based on your button width and container padding
+      }),
+    }],
+  };
+
   return (
     <View style={styles.container}>
-      <View>
-        <TouchableOpacity
-          onPress={() => setValue('healers')}
-          style={[
-            styles.button,
-            {
-              backgroundColor:
-                value === 'healers' ? colors.primary : colors.transparent,
-            },
-          ]}>
-          <Feather
+      <Animated.View style={indicatorStyle} />
+      {/* Your existing TouchableOpacity for "healers" */}
+      <TouchableOpacity
+        onPress={() => setValue('healers')}
+        style={[
+          styles.button,
+        ]}>
+        {/* Existing content */}
+        <Feather
             name="smile"
             size={24}
             color={value === 'healers' ? colors.white : colors.black}
@@ -38,16 +57,12 @@ export const ToggleButton = ({
             }}>
             Healers
           </Text>
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
+      {/* Your existing TouchableOpacity for "random" */}
       <TouchableOpacity
         onPress={() => setValue('random')}
         style={[
-          styles.button,
-          {
-            backgroundColor:
-              value === 'random' ? colors.primary : colors.transparent,
-          },
+          styles.button
         ]}>
         <AntDesign
           name="API"
@@ -79,7 +94,7 @@ const styles = StyleSheet.create({
     marginTop: actuatedNormalize(40),
   },
   button: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.transparent,
     height: actuatedNormalize(50),
     width: actuatedNormalize(150),
     flexDirection: 'row',
@@ -87,5 +102,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: actuatedNormalize(10),
     columnGap: actuatedNormalize(10),
+  },
+  indicator: {
+    position: 'absolute',
+    left:actuatedNormalize(10),
+    width: actuatedNormalize(150), // Match your button width
+    height: actuatedNormalize(50), // Match your button height
+    borderRadius: actuatedNormalize(10), // Match your button border radius
+    // Additional styling for the indicator as needed
   },
 });

@@ -5,8 +5,8 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
-import {StatusBar, StyleSheet, Text, useColorScheme, View} from 'react-native';
+import React from 'react';
+import { StatusBar, StyleSheet, useColorScheme, View} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {PersistGate} from "redux-persist/integration/react"
 import {Colors} from 'react-native/Libraries/NewAppScreen';
@@ -22,9 +22,16 @@ const App:React.FC = ()=> {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-
-  useEffect(() => {
-  }, []);
+  // useEffect(() => {
+  //   const backHandler = BackHandler.addEventListener(
+  //     'hardwareBackPress',
+  //     () => {
+  //       console.log("first navigate")
+  //       return true; // Return true to prevent default behavior (going back)
+  //     },
+  //   );
+  //   return () => backHandler.remove();
+  // }, []);
 
   return (
     <Provider store={store}>

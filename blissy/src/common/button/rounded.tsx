@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Assuming you're using Expo
 import colors from '../../constants/colors';
 import {actuatedNormalize} from '../../constants/PixelScaling';
@@ -9,11 +9,13 @@ export const RoundedIconContainer: React.FC<{
   iconName: string;
   label?: string | undefined;
   onpress:()=>void;
-}> = ({iconName, label,onpress}) => {
+  size?:number;
+  iconStyles?:StyleProp<ViewStyle>
+}> = ({iconName, label,onpress,iconStyles,size}) => {
   return (
     <TouchableOpacity onPress={onpress} style={{justifyContent: 'center', alignItems: 'center',rowGap:actuatedNormalize(5)}}>
-      <View style={styles.iconContainer}>
-        <Ionicons name={iconName} size={32} color={colors.white} />
+      <View style={[styles.iconContainer,iconStyles]}>
+        <Ionicons name={iconName} size={size || 32} color={colors.white} />
       </View>
       {label && <Text style={styles.icontext}>{label}</Text>}
     </TouchableOpacity>

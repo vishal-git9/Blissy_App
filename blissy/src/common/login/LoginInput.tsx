@@ -14,7 +14,7 @@ import {fonts} from '../../constants/fonts';
 import LottieView from 'lottie-react-native';
 import colors from '../../constants/colors';
 import {PrimaryButton} from '../button/PrimaryButton';
-import RouteBackButton from '../button/BackButton';
+import {RouteBackButton} from '../button/BackButton';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../AppNavigation/navigatorType';
 import LabelInputComponent from '../inputs/labelInput';
@@ -55,76 +55,81 @@ const MobileInput: React.FC<LoginScreenProps> = ({
         // statusBarTranslucent={true}
         animationOut="slideOutDown">
         {!isLoading && <RouteBackButton onPress={() => navigation.goBack()} />}
-        {isLoading && (
+        {isLoading ? (
           <View style={styles.loaderContainer}>
             <Loader size={50} />
           </View>
-        )}
-        <LottieView
-          source={require('../../../assets/animation/AnimationMobile.json')}
-          style={{
-            width: SCREEN_WIDTH * 0.9,
-            height: SCREEN_WIDTH * 0.9,
-            alignSelf: 'center',
-          }}
-          autoPlay
-          loop
-        />
-        <View
-          style={{
-            alignSelf: 'center',
-            paddingHorizontal: actuatedNormalize(20),
-            gap: actuatedNormalize(5),
-            marginBottom: actuatedNormalize(20),
-          }}>
-          <Text
-            style={{
-              fontFamily: fonts.NexaBold,
-              color: colors.white,
-              fontSize: actuatedNormalize(26),
-              alignSelf: 'center',
-            }}>
-            {'Enter Your Number'}
-          </Text>
-          <Text
-            style={{
-              fontFamily: fonts.NexaBold,
-              color: '#868787',
-              textAlign: 'center',
-              fontSize: actuatedNormalize(12),
-              alignSelf: 'center',
-              lineHeight: actuatedNormalize(20),
-            }}>
-            {''}
-          </Text>
-        </View>
-        <View style={styles.modalContent}>
-          <View style={styles.inputContainer}>
-            <LabelInputComponent
-              value={state.mobileNumber}
-              type={'mobileNumber'}
-              labelStyle={{width: '100%'}}
-              name={'name'}
-              maxLength={10}
-              placeholder="+91"
-              validate={true}
-              keyboardType={'numeric'}
-              // errorText={'Name is part of our alogrithm'}
-              onChangeText={dispatch}
-              IconProvider={FontAwesome}
-              IconName={'phone'}
-            />
-            <PrimaryButton
-              disabled={state.mobileNumber.length < 10}
-              styles={{
-                backgroundColor:
-                  state.mobileNumber.length < 10 ? colors.gray : colors.primary,
+        ) : (
+          <>
+            <LottieView
+              source={require('../../../assets/animation/AnimationMobile.json')}
+              style={{
+                width: SCREEN_WIDTH * 0.9,
+                height: SCREEN_WIDTH * 0.9,
+                alignSelf: 'center',
               }}
-              handleFunc={() => handleOtp()}
-              label="GET OTP"
+              autoPlay
+              loop
             />
-          </View>
-        </View>
+            <View
+              style={{
+                alignSelf: 'center',
+                paddingHorizontal: actuatedNormalize(20),
+                gap: actuatedNormalize(5),
+                marginBottom: actuatedNormalize(20),
+              }}>
+              <Text
+                style={{
+                  fontFamily: fonts.NexaBold,
+                  color: colors.white,
+                  fontSize: actuatedNormalize(26),
+                  alignSelf: 'center',
+                }}>
+                {'Enter Your Number'}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: fonts.NexaBold,
+                  color: '#868787',
+                  textAlign: 'center',
+                  fontSize: actuatedNormalize(12),
+                  alignSelf: 'center',
+                  lineHeight: actuatedNormalize(20),
+                }}>
+                {''}
+              </Text>
+            </View>
+            <View style={styles.modalContent}>
+              <View style={styles.inputContainer}>
+                <LabelInputComponent
+                  value={state.mobileNumber}
+                  type={'mobileNumber'}
+                  labelStyle={{width: '100%'}}
+                  name={'name'}
+                  maxLength={10}
+                  placeholder="+91"
+                  validate={true}
+                  keyboardType={'numeric'}
+                  // errorText={'Name is part of our alogrithm'}
+                  onChangeText={dispatch}
+                  IconProvider={FontAwesome}
+                  IconName={'phone'}
+                />
+                <PrimaryButton
+                  disabled={state.mobileNumber.length < 10}
+                  styles={{
+                    backgroundColor: 
+                      state.mobileNumber.length < 10
+                        ? colors.gray
+                        : colors.primary,
+                  }}
+                  handleFunc={() => handleOtp()}
+                  label="GET OTP"
+                />
+              </View>
+            </View>
+          </>
+        )}
       </Modal>
     </>
   );

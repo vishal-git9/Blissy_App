@@ -14,17 +14,19 @@ import {fonts} from '../../constants/fonts';
 import colors from '../../constants/colors';
 import ProgressBar from './ProgressBar';
 import OTPTextInput from 'react-native-otp-textinput';
-import RouteBackButton from '../button/BackButton';
+import {RouteBackButton} from '../button/BackButton';
 import {Action} from '../../container/Registration/Registration';
 import {Loader} from '../loader/loader';
 import {FetchBaseQueryError} from '@reduxjs/toolkit/query';
-import { SerializedError } from '@reduxjs/toolkit';
+import {SerializedError} from '@reduxjs/toolkit';
+import {PrimaryButton} from '../button/PrimaryButton';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
 interface OTPInputProps {
   progressDuration: number;
   changeMobileNumber: () => void;
+  retry: () => void;
   setProgressDuration: (a: number) => void;
   dispatch: Dispatch<Action>;
   modalState: boolean;
@@ -40,6 +42,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
   modalState,
   isLoading,
   isError,
+  retry,
 }) => {
   const {width: SCREEN_WIDTH} = useWindowDimensions();
   console.log('at the otp screen');
@@ -48,6 +51,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
       <Modal
         isVisible={modalState}
         style={styles.modal}
+        hasBackdrop={false}
         backdropColor="transparent"
         animationInTiming={1000}
         animationIn="slideInUp"
@@ -58,7 +62,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
             <Loader size={50} />
           </View>
         )}
-        {isError && (
+        {isError ? (
           <View style={styles.loaderContainer}>
             <LottieView
               source={require('../../../assets/animation/wrong.json')}
@@ -70,95 +74,122 @@ const OTPInput: React.FC<OTPInputProps> = ({
               autoPlay
               loop
             />
-            <Text style={{color:colors.white,fontFamily:fonts.NexaXBold,fontSize:actuatedNormalize(20),marginTop:actuatedNormalize(-50)}}>Wrong OTP</Text>
+            <Text
+              style={{
+                color: colors.white,
+                fontFamily: fonts.NexaXBold,
+                fontSize: actuatedNormalize(20),
+                marginTop: actuatedNormalize(-50),
+              }}>
+              Wrong OTP
+            </Text>
+            <PrimaryButton
+              label="Re-Enter"
+              styles={{
+                width: '50%',
+                backgroundColor: colors.transparent,
+                borderWidth: 1,
+                borderColor: colors.bag1Bg,
+                marginTop: actuatedNormalize(20),
+              }}
+              handleFunc={retry}
+            />
           </View>
-        )}
-        <LottieView
-          source={require('../../../assets/animation/AnimationMobile.json')}
-          style={{
-            width: SCREEN_WIDTH * 0.9,
-            height: SCREEN_WIDTH * 0.9,
-            alignSelf: 'center',
-          }}
-          autoPlay
-          loop
-        />
-        <View
-          style={{
-            alignSelf: 'center',
-            paddingHorizontal: actuatedNormalize(20),
-            gap: actuatedNormalize(5),
-            marginBottom: actuatedNormalize(20),
-          }}>
-          <Text
-            style={{
-              fontFamily: fonts.NexaBold,
-              // color: '#868787',
-              color: 'white',
-              fontSize: actuatedNormalize(26),
-              alignSelf: 'center',
-            }}>
-            {'Enter Your OTP'}
-          </Text>
-          <View></View>
-          <Text
-            style={{
-              fontFamily: fonts.NexaBold,
-              color: '#868787',
-              textAlign: 'center',
-              fontSize: actuatedNormalize(12),
-              alignSelf: 'center',
-              lineHeight: actuatedNormalize(20),
-            }}>
-            {`Enter OTP we sent to 910XXXX547 This code will expire in ${progressDuration}s`}
-          </Text>
+        ) : (
+          <>
+            <LottieView
+              source={require('../../../assets/animation/AnimationMobile.json')}
+              style={{
+                width: SCREEN_WIDTH * 0.9,
+                height: SCREEN_WIDTH * 0.9,
+                alignSelf: 'center',
+              }}
+              autoPlay
+              loop
+            />
+            <View
+              style={{
+                alignSelf: 'center',
+                paddingHorizontal: actuatedNormalize(20),
+                gap: actuatedNormalize(5),
+                marginBottom: actuatedNormalize(20),
+              }}>
+              <Text
+                style={{
+                  fontFamily: fonts.NexaBold,
+                  // color: '#868787',
+                  color: 'white',
+                  fontSize: actuatedNormalize(26),
+                  alignSelf: 'center',
+                }}>
+                {'Enter Your OTP'}
+              </Text>
+              <View></View>
+              <Text
+                style={{
+                  fontFamily: fonts.NexaBold,
+                  color: '#868787',
+                  textAlign: 'center',
+                  fontSize: actuatedNormalize(12),
+                  alignSelf: 'center',
+                  lineHeight: actuatedNormalize(20),
+                }}>
+                {`Enter OTP we sent to 910XXXX547 This code will expire in ${progressDuration}s`}
+              </Text>
 
-          <ProgressBar duration={30} progressDuration={progressDuration} />
-        </View>
-        <View
-          style={[
-            styles.modalContent,
-            {
-              justifyContent: 'center',
-              alignItems: 'center',
-              rowGap: actuatedNormalize(15),
-            },
-          ]}>
-          <OTPTextInput
-            containerStyle={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              columnGap: actuatedNormalize(5),
-            }}
-            inputCount={4}
-            autoFocus
-            handleTextChange={text => dispatch({type: 'OTP', payload: text})}
-            textInputStyle={styles.otpStyles}
-          />
-          {/* <PrimaryButton
+              <ProgressBar duration={30} progressDuration={progressDuration} />
+            </View>
+            <View
+              style={[
+                styles.modalContent,
+                {
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  rowGap: actuatedNormalize(15),
+                },
+              ]}>
+              <OTPTextInput
+                containerStyle={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  columnGap: actuatedNormalize(5),
+                }}
+                inputCount={4}
+                autoFocus
+                handleTextChange={text =>
+                  dispatch({type: 'OTP', payload: text})
+                }
+                textInputStyle={styles.otpStyles}
+              />
+              {/* <PrimaryButton
           handleFunc={() => {
             clearInterval(timer);
           }}
           label="Verify"
         /> */}
-          {progressDuration === 0 && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignSelf: 'center',
-                columnGap: actuatedNormalize(10),
-              }}>
-              <Text style={{color: '#868787', fontFamily: fonts.NexaRegular}}>
-                Didn't receive the code?
-              </Text>
-              <TouchableWithoutFeedback onPress={() => setProgressDuration(30)}>
-                <Text style={{color: '#1E5128', fontFamily: fonts.NexaXBold}}>
-                  Resend OTP
-                </Text>
-              </TouchableWithoutFeedback>
+              {progressDuration === 0 && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignSelf: 'center',
+                    columnGap: actuatedNormalize(10),
+                  }}>
+                  <Text
+                    style={{color: '#868787', fontFamily: fonts.NexaRegular}}>
+                    Didn't receive the code?
+                  </Text>
+                  <TouchableWithoutFeedback
+                    onPress={() => setProgressDuration(30)}>
+                    <Text
+                      style={{color: '#1E5128', fontFamily: fonts.NexaXBold}}>
+                      Resend OTP
+                    </Text>
+                  </TouchableWithoutFeedback>
+                </View>
+              )}
             </View>
-          )}
-        </View>
+          </>
+        )}
       </Modal>
     </>
   );

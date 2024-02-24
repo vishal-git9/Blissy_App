@@ -17,6 +17,13 @@ const RouteBackButton: React.FC<RouteBackButtonProps> = ({ onPress }) => {
     </TouchableOpacity>
   );
 };
+const RouteBackButton2: React.FC<RouteBackButtonProps> = ({ onPress }) => {
+  return (
+    <TouchableOpacity onPressIn={onPress} style={styles.container2}>
+        <FontAwesome5 name="arrow-left" size={actuatedNormalize(18)} color="white" />
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -37,6 +44,9 @@ const styles = StyleSheet.create({
     justifyContent:"center",
     alignItems:"center"
   },
+  container2:{
+
+  }
 });
 
-export default RouteBackButton;
+export  {RouteBackButton,RouteBackButton2};

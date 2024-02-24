@@ -44,10 +44,15 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
   const [state, dispatch] = useReducer(reducerAction, intialState);
   const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
   const [modalState,setModalState] = useState<boolean>(true)
-   const [getOtp,{error,data,isLoading}] = useGetOtpMutation();
+  const [progressDuration, setProgressDuration] = useState(30);
+  const timerRef = useRef<NodeJS.Timeout>();
+   const [getOtp,{error,data,isLoading,reset:resetMobile}] = useGetOtpMutation();
    const {token,isAuthenticated,user} = useSelector(AuthSelector)
-   const {data:userData,isLoading:userLoading,refetch} = useGetUserQuery()
+   const {data:userData,isLoading:userLoading,refetch,} = useGetUserQuery()
    const [OtpVerify,{error:verifyOtpErr,data:verifyOtpData,isLoading:verifyOtpLoading,reset}] = useVerifyOtpMutation()
+
+
+
   const handleSubmitMobileNumber = async () => {
       const res = await getOtp({mobileNumber:`+91${state.mobileNumber}`});
       console.log(res,"---res-----")
@@ -59,8 +64,6 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
       }
   };
 
-  const [progressDuration, setProgressDuration] = useState(30);
-  const timerRef = useRef<NodeJS.Timeout>();
   const handleOtpSubmit = async() => {
     const res = await OtpVerify({mobileNumber:`+91${state.mobileNumber}`,otp:parseInt(state.OTP)});
     if('data' in res){
@@ -71,7 +74,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
       setModalState(false)
       console.log(user?.isNewUser,"---user isnewuser")
       if(isNewuser){
-        navigation.navigate('Registration');  
+        navigation.navigate('Registration',{});  
       }else{
         navigation.navigate('Drawer');  
       }
@@ -108,9 +111,6 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
 
 
 
-
-  console.log(isLoading,"---isloading---",verifyOtpErr,'verifyotploading')
-  console.log(state,"State of login")
   return (
     <KeyboardAwareScrollView
       contentContainerStyle={styles.container}
@@ -137,6 +137,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
             reset()
             clearInterval(timerRef.current)
           }}
+          retry = {()=> reset()}
           dispatch={dispatch}
           progressDuration={progressDuration}
           setProgressDuration={setProgressDuration}

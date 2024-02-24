@@ -72,9 +72,9 @@ const CustomDrawer: React.FC<any> = props => {
                   animation="rotate"
                   delay={500}
                   iterationCount={1}>
-                  <Entypo name={'cross'} color={'red'} size={35} />
+                  <Entypo name={'emoji-happy'} color={colors.primary} size={35} />
                 </Animatable.View>
-                {/* <Text style={styles.textStyle}>Try Again</Text> */}
+                <Text style={[styles.textStyle,{marginTop:actuatedNormalize(5)}]}>No</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity
@@ -94,9 +94,9 @@ const CustomDrawer: React.FC<any> = props => {
                     {borderRadius: 50, backgroundColor: 'white', padding: 5},
                   ]}
                   iterationCount={1}>
-                  <Entypo name={'check'} color={'green'} size={35} />
+                  <Entypo name={'emoji-sad'} color={colors.red} size={35} />
                 </Animatable.View>
-                {/* <Text style={styles.textStyle}>Go Ahead</Text> */}
+                <Text style={[styles.textStyle,{marginTop:actuatedNormalize(5)}]}>Yes</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     elevation: 5, // Add elevation for shadow
   },
   cardStyle: {
-    backgroundColor: colors.dark,
+    backgroundColor: colors.black,
     padding: 22,
     flexDirection: 'column',
     justifyContent: 'space-around',

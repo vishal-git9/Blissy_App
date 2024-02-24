@@ -3,8 +3,6 @@ import React, { Dispatch, useEffect, useRef, useState } from 'react';
 import {View, TextInput, StyleSheet, Text} from 'react-native';
 import InterestSelect from '../selectable/interestSelectable';
 import * as Animatable from 'react-native-animatable';
-import colors from '../../constants/colors';
-import { fonts } from '../../constants/fonts';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { LabelWithDesc } from '../labels/label1';
 import { Action } from '../../container/Registration/Registration';

@@ -7,12 +7,10 @@ import {Action} from '../../container/Registration/Registration';
 import * as Animatable from 'react-native-animatable';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { LabelWithDesc } from '../labels/label1';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../AppNavigation/navigatorType';
 
 interface Form1Props {
   state: {
-    username: string;
+    name: string;
   };
   dispatch: Dispatch<Action>;
 }
@@ -23,8 +21,8 @@ const Form1: React.FC<Form1Props> = ({state, dispatch}) => {
       <View style={[styles.inputForm, {marginTop: actuatedNormalize(25)}]}>
         <LabelWithDesc label="What's Your Name?" sublabel='it will appear to other user while talking'/>
         <LabelInputComponent
-          value={state.username}
-          type={'username'}
+          value={state.name}
+          type={'name'}
           name={'name'}
           // errorText={'Name is part of our alogrithm'}
           onChangeText={dispatch}

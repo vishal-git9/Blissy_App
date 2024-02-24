@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import colors from '../../constants/colors';
-import RouteBackButton from '../../common/button/BackButton';
+import {RouteBackButton} from '../../common/button/BackButton';
 import {NavigationStackProps} from '../Prelogin/onboarding';
 import LottieView from 'lottie-react-native';
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../constants/PixelScaling';
+import CallingScreen from './callingscreen';
 
 export const Connection: React.FC<NavigationStackProps> = ({navigation}) => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -19,7 +20,7 @@ export const Connection: React.FC<NavigationStackProps> = ({navigation}) => {
   return (
     <View style={styles.container}>
       <RouteBackButton onPress={() => navigation.goBack()} />
-      <Text style={styles.text}>Connection Found</Text>
+      {!loading &&       <CallingScreen navigation={navigation}/> }
       {loading && (
         <LottieView
           source={require('../../../assets/animation/networking3.json')}
@@ -39,8 +40,6 @@ export const Connection: React.FC<NavigationStackProps> = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   text: {
     color: colors.white,

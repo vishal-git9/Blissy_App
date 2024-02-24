@@ -2,7 +2,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useEffect, useReducer, useState} from 'react';
 import {BackHandler, Dimensions, Text, View, useWindowDimensions} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import RouteBackButton from '../../common/button/BackButton';
+import {RouteBackButton} from '../../common/button/BackButton';
 import StepperFormAnimation from '../../common/forms/StepperFormAnimation';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import React from 'react';
@@ -22,6 +22,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../AppNavigation/navigatorType';
 import {NavigationStackProps} from '../Prelogin/onboarding';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePostUserMutation } from '../../api/userService';
 
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
@@ -43,17 +44,17 @@ export interface Action {
   payload?: string | string[] | number; // Change the type of text as per your requirement
 }
 
-interface State {
-  username: string;
+export interface UserState {
+  name: string;
   gender: string;
   language: string[];
   interest: string[];
   age: number;
-  // Define the structure of your state as needed
+  profilePic?:string
 }
 
 interface error1 {
-  username?: string;
+  name?: string;
 }
 interface error2 {
   interest?: string;
@@ -69,15 +70,16 @@ interface error4 {
 //   age:string;
 // }
 
-const initialState: State = {
-  username: '',
+const initialState: UserState = {
+  name: '',
   gender: 'male',
   language: ['English'],
   interest: ['Music'],
   age: 16,
+  profilePic:"https://randomuser.me/api/portraits/men/1.jpg"
 };
 
-export const reducerAction = (state: State, action: Action) => {
+export const reducerAction = (state: UserState, action: Action) => {
   const key = action.type;
   switch (action.type) {
     case action.type: {
@@ -99,6 +101,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
   const [errorSnackbar, setErrorSnackbar] = useState<boolean>(false);
   const {width: SCREEN_WIDTH} = useWindowDimensions();
   const [steps, setSteps] = useState<number>(1);
+  const [postUser,{isLoading,isError,data}] = usePostUserMutation()
   const [completeModal, setCompleteModal] = useState<boolean>(false);
 
   const handleUserName = () => {
@@ -119,19 +122,26 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
 
   const handleSubmitUserProfile = async() => {
     //call api here
+    console.log(state,"state of the user")
+    
+    const res = await postUser(state)
+    if('data' in res){
+      console.log(res,"data of user")
+    }else if('error' in res){
+      console.log(error)
+    }
     setCompleteModal(false);
-    await AsyncStorage.setItem('isRegistered','true');
     navigation.navigate('Drawer');
   };
 
-  const validateForm = (state: State) => {
+  const validateForm = (state: UserState) => {
     const errors: error1 = {};
     const errors2: error2 = {};
     const errors3: error3 = {};
     const errors4: error4 = {};
 
-    if (state.username.trim() === '') {
-      errors.username = 'Username is required';
+    if (state.name.trim() === '') {
+      errors.name = 'name is required';
     }
     if (state.interest.length < 3) {
       errors2.interest = 'Select at least 3 Interest';
@@ -187,7 +197,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
         }}
         showLottie={true}
         lottieAnimationPath={require('../../../assets/animation/hello.json')}
-        title={`Hello ${state.username}`}
+        title={`Hello ${state.name}`}
         description="there is lot to discover out there but let's set you up first"
         visible={UsernameModal}
         onClose={() => setUsernameModal(false)}

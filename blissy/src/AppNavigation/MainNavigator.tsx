@@ -10,6 +10,11 @@ import { HealerList } from '../common/healerList/healerlist';
 import { Healerdetails } from '../common/healerList/healerdetails';
 import {DrawerNavigator} from './Drawer';
 import { Connection } from '../container/Connection/connection';
+import ChatListScreen from '../container/Connection/chatlist';
+import ChatWindowScreen from '../container/Connection/chatwindow';
+import ReviewScreen from '../container/Connection/review';
+import CallListScreen from '../container/Connection/callList';
+import GlobalBackHandler from './Globalbackhandler';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -29,7 +34,7 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         isLoggedIn
           ? isNewUser
             ? 'Registration' // If the user is logged in and is a new user, navigate to the 'Registration' screen.
-            : 'Home' // If the user is logged in but is not a new user, navigate to the 'Home' screen.
+            : 'Drawer' // If the user is logged in but is not a new user, navigate to the 'Home' screen.
           : 'Onboarding' // If the user is not logged in, navigate to the 'Onboarding' screen.
       }
         screenOptions={{
@@ -47,7 +52,12 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="Healerdetails" component={Healerdetails} />
         <Stack.Screen name="Drawer" component={DrawerNavigator} />
         <Stack.Screen name="Connection" component={Connection} />
+        <Stack.Screen name="Chatlist" component={ChatListScreen} />
+        <Stack.Screen name="Calllist" component={CallListScreen} />
+        <Stack.Screen name="ChatWindow" component={ChatWindowScreen} />
+        <Stack.Screen name="ReviewScreen" component={ReviewScreen} /> 
       </Stack.Navigator>
+      <GlobalBackHandler/>
     </NavigationContainer>
   );
 };

@@ -15,31 +15,45 @@ import {
   actuatedNormalize,
 } from '../../constants/PixelScaling';
 import OfferBadge from '../../common/badge';
-import * as Animatable from "react-native-animatable"
+import * as Animatable from 'react-native-animatable';
 import LottieView from 'lottie-react-native';
 import {RoundedIconContainer} from '../../common/button/rounded';
 import TalkNowButton from '../../common/button/Talknow';
+import ShockwavePulseButton from '../../common/button/callnow';
+import AutoLoopCarousel, {reviewsArray} from '../../common/cards/review';
 
-const iconsLabel = [
+interface iconsLabelI {
+  id: number;
+  label: string;
+  iconName: string;
+  navigate: any;
+}
+[];
+const iconsLabel: iconsLabelI[] = [
   {
     id: 1,
     label: 'chats',
     iconName: 'chatbox-ellipses',
+    navigate: 'Chatlist',
   },
   {
     id: 2,
     label: 'calls',
     iconName: 'call',
+    navigate: 'Calllist',
   },
   {
     id: 3,
     label: 'coupons',
     iconName: 'gift',
+    navigate: 'Coupons',
   },
 ];
 export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   const [data, setData] = useState(HealerMockData.slice(0, 10)); // Initial data for first 10 cards
   const [value, setValue] = useState<string>('healers');
+  const [healerAnimate, sethealerAnimate] = useState(true);
+  const [PeopleAnimate, setPeopleAnimate] = useState(true);
   // Function to load more cards
   const loadMoreData = () => {
     setData(prevData => {
@@ -59,6 +73,18 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
     return () => backHandler.remove();
   }, []);
 
+  // console.log(shouldAnimate,"shouldAnimate")
+
+  useEffect(()=>{ // calling off the animation after first render
+    const timingAnim = setTimeout(() => {
+      sethealerAnimate(false)
+    }, 5000);
+    return ()=>{
+      sethealerAnimate(false)
+      clearTimeout(timingAnim)
+    }
+  },[])
+
   return (
     <View style={styles.container}>
       <TopBar navigation={navigation} />
@@ -69,7 +95,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
           <FlatList
             data={data}
             showsVerticalScrollIndicator={false}
-            renderItem={({item}) => <ProfileCard {...item} />}
+            renderItem={({item}) => <ProfileCard shouldAnimate={healerAnimate} {...item} />}
             keyExtractor={(item, index) => index.toString()}
             onEndReached={loadMoreData} // Load more data when user reaches the end
             onEndReachedThreshold={0.1} // Load more when 90% of the list is scrolled
@@ -78,18 +104,43 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
       ) : (
         <View style={styles.peopleContainer}>
           <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
-            {iconsLabel.map((item,id) => (
-              <Animatable.View animation='bounceIn' key={item.id} delay={id * 500}>
+            {iconsLabel.map((item, id) => (
+              <Animatable.View
+              onAnimationEnd={()=>setTimeout(() => {
+                setPeopleAnimate(false)
+              }, 2000)}
+                animation={PeopleAnimate ? "bounceIn" : undefined}
+                key={item.id}
+                delay={id * 500}>
                 <RoundedIconContainer
-                  onpress={() => console.log('first')}
+                  onpress={() => navigation.navigate(item.navigate)}
                   label={item.label}
                   iconName={item.iconName}
                 />
               </Animatable.View>
             ))}
           </View>
-          <View style={{flex:1,alignItems:"center",justifyContent:"center",width:"90%",alignSelf:"center"}}>
-          <TalkNowButton label='Connect Now' onPress={()=>navigation.navigate("Connection")} />
+          <View
+            style={{
+              flex: 1,
+              alignItems: 'center',
+            justifyContent: 'flex-end',
+              width: '90%',
+              alignSelf:"center"
+            }}>
+            {/* <ShockwavePulseButton /> */}
+            
+            <TalkNowButton label='Call Now' onPress={()=>navigation.navigate("Connection")}/>
+          </View>
+          <View
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              width: '90%',
+            }}>
+            {/* <TalkNowButton label='Connect Now' onPress={()=>navigation.navigate("Connection")} /> */}
+            <AutoLoopCarousel reviews={reviewsArray} />
           </View>
         </View>
       )}

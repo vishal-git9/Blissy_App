@@ -1,6 +1,6 @@
 import {createDrawerNavigator} from '@react-navigation/drawer';
 import React from 'react';
-import {Userprofile} from '../container/DrawerScreens/Userprofile';
+import UserProfile from '../container/DrawerScreens/Userprofile';
 import {Help} from '../container/DrawerScreens/help';
 import {HomeScreen} from '../container/Home/HomeScreen';
 import colors from '../constants/colors';
@@ -10,6 +10,8 @@ import {actuatedNormalize} from '../constants/PixelScaling';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Octicons from 'react-native-vector-icons/Octicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import CallHistory from '../container/DrawerScreens/callhistory';
+import ChatHistory from '../container/DrawerScreens/chathistory';
 export const Drawer = createDrawerNavigator();
 
 export const DrawerNavigator: React.FC = () => {
@@ -53,7 +55,7 @@ export const DrawerNavigator: React.FC = () => {
           ),
         }}
         name="Profile"
-        component={Userprofile}
+        component={UserProfile}
       />
       <Drawer.Screen
         options={{
@@ -63,28 +65,18 @@ export const DrawerNavigator: React.FC = () => {
           title:"Call History"
         }}
         name="Callhistory"
-        component={Help}
+        component={CallHistory}
       />
       <Drawer.Screen
         options={{
           drawerIcon: ({}) => (
             <Ionicons name="chatbox" size={24} color={colors.white} />
           ),
-          title:"Chat room"
+          title:"Chat History"
         }}
         name="Chatroom"
-        component={Help}
+        component={ChatHistory}
       />
-         {/* <Drawer.Screen
-        options={{
-          drawerIcon: ({}) => (
-            <Ionicons name="bug" size={24} color={colors.white} />
-          ),
-          title:"Report a Problem"
-        }}
-        name="Help"
-        component={Help}
-      /> */}
     </Drawer.Navigator>
   );
 };

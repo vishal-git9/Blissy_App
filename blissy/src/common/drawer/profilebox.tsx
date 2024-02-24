@@ -21,15 +21,10 @@ export interface DrawerUserInterface {
 }
 
 export const ProfileBox: React.FC<DrawerUserInterface> = ({
-  age,
   gender,
-  interest,
-  language,
   mobileNumber,
   name,
   profilePic,
-  role,
-  username,
   coins,
 }) => {
   return (
@@ -45,18 +40,6 @@ export const ProfileBox: React.FC<DrawerUserInterface> = ({
           }}
         />
         <View style={{flexDirection: 'column', rowGap: actuatedNormalize(5)}}>
-          <View style={{flexDirection: 'row', columnGap: actuatedNormalize(5)}}>
-            <Text
-              style={{
-                color: colors.white,
-                fontSize: actuatedNormalize(14),
-                fontFamily: fonts.NexaRegular,
-                marginRight: actuatedNormalize(5),
-              }}>
-              {coins}
-            </Text>
-            <FontAwesome5 name="coins" size={14} color={colors.yellow} />
-          </View>
           <View style={{flexDirection: 'row', columnGap: actuatedNormalize(5)}}>
             <Text
               style={{
@@ -89,7 +72,7 @@ export const ProfileBox: React.FC<DrawerUserInterface> = ({
         <Icon
           name={gender === 'male' ? 'gender-male' : 'gender-female'}
           size={22}
-          color={gender === 'male' ? 'blue' : 'pink'}
+          color={gender === 'male' ? colors.skyBlue : colors.pink}
         />
       </View>
       <View style={{flexDirection: 'row'}}>
@@ -109,7 +92,7 @@ export const ProfileBox: React.FC<DrawerUserInterface> = ({
 
 const styles = StyleSheet.create({
   shadowBox: {
-    backgroundColor: '#444',
+    // backgroundColor: '#444',
     borderRadius: 10,
     padding: 10,
     width: '90%',
