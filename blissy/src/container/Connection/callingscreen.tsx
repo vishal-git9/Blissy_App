@@ -15,19 +15,29 @@ import {actuatedNormalize} from '../../constants/PixelScaling';
 import {fonts} from '../../constants/fonts';
 import AnimatedCounter from '../../common/counter/counter';
 import {NavigationStackProps} from '../Prelogin/onboarding';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const IconContainer: React.FC<NavigationStackProps> = ({navigation}) => {
+interface IconContainerProps {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+  leave:()=>void;
+  toggleMic:()=>void;
+}
+
+const IconContainer: React.FC<IconContainerProps> = ({navigation,leave,toggleMic}) => {
   return (
     <View style={styles.iconContainer}>
-      <TouchableOpacity style={[styles.icon, styles.leftIcon]}>
+      <TouchableOpacity style={[styles.icon, styles.leftIcon]} onPress={toggleMic}>
         {/* Add your left icon here */}
         <Entypo name="sound-mute" color={'black'} size={30} />
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.icon, styles.middleIcon]}
-        onPress={() =>
+        onPress={() =>{
+          leave()
           navigation.navigate('ReviewScreen', {params: {user: 'clara'}})
+        }
         }>
         {/* Add your middle icon here */}
         <MaterialIcons name="call-end" color={'white'} size={30} />
@@ -41,7 +51,7 @@ const IconContainer: React.FC<NavigationStackProps> = ({navigation}) => {
   );
 };
 
-const CallingScreen: React.FC<NavigationStackProps> = ({navigation}) => {
+const CallingScreen: React.FC<IconContainerProps> = ({navigation,leave,toggleMic}) => {
   const [seconds, setSeconds] = useState(0);
 
   return (
@@ -76,7 +86,7 @@ const CallingScreen: React.FC<NavigationStackProps> = ({navigation}) => {
       </View>
 
       {/* Action buttons */}
-      <IconContainer navigation={navigation} />
+      <IconContainer navigation={navigation} leave={leave} toggleMic={toggleMic} />
     </SafeAreaView>
   );
 };

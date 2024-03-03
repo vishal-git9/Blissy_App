@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Image } from 'react-native';
 import {
   View,
@@ -18,11 +18,21 @@ import colors from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { RouteBackButton2 } from '../../common/button/BackButton';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { socket } from '../../api/socket';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
+import { RouteProp } from '@react-navigation/native';
+
+type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ChatWindow'>;
 
 interface Message {
   id: string;
   text: string;
   sender: 'me' | 'them';
+}
+
+interface ProfileScreenProps {
+  navigation: NavigationStackProps;
+  route: ProfileScreenRouteProp;
 }
 
 // Sample starting messages
@@ -33,8 +43,10 @@ const initialMessages: Message[] = [
   { id: '4', text: "You're Welcome!", sender: 'me' },
 ];
 
-const ChatWindowScreen: React.FC<NavigationStackProps> = ({navigation}) => {
+const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
+  const { userId } = route.params;
   const [messages, setMessages] = useState(initialMessages);
+  const [currentMessage, setCurrentMessage] = useState('');
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
   const yValue = useRef(new Animated.Value(0)).current;
@@ -49,6 +61,7 @@ const ChatWindowScreen: React.FC<NavigationStackProps> = ({navigation}) => {
       };
       yValue.setValue(0); // Reset the animation
       setMessages(prevMessages => [...prevMessages, newMessage]);
+      socket.emit('sendMessage', { userId, message: currentMessage }); //calling the sockets
       setInputText('');
       flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to the end to show new message
 
@@ -78,6 +91,19 @@ const ChatWindowScreen: React.FC<NavigationStackProps> = ({navigation}) => {
         }
       : {};
 
+      useEffect(() => {
+        socket.emit('joinRoom', { userId });
+    
+        socket.on('receiveMessage', (message) => {
+          setMessages((prevMessages) => [...prevMessages, message]);
+        });
+    
+        // Cleanup on component unmount
+        return () => {
+          socket.off('receiveMessage');
+        };
+      }, []);
+
     return (
       <Animated.View
         style={[
@@ -94,7 +120,7 @@ const ChatWindowScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-            <RouteBackButton2 onPress={()=>navigation.goBack()}/>
+            <RouteBackButton2 onPress={()=>navigation.navigation.goBack()}/>
         <View style={styles.headerContent}>
           <Image source={{ uri: 'https://randomuser.me/api/portraits/men/1.jpg' }} style={styles.avatar} />
           <Text style={styles.userName}>Den Shearer</Text>

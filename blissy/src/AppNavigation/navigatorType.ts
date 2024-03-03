@@ -9,7 +9,7 @@ export type RootStackParamList = {
     Healerlist:undefined;
     Drawer:undefined;
     Connection:undefined;
-    ChatWindow:{};
+    ChatWindow:{ userId: string };
     Chatlist:undefined;
     Calllist:undefined;
     Wallet:undefined;

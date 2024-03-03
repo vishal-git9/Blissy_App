@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import {StyleSheet, Text, View, BackHandler} from 'react-native';
+import React, {useEffect, useMemo, useState} from 'react';
+import {StyleSheet, Text, View, BackHandler, Alert} from 'react-native';
 import colors from '../../constants/colors';
 import {Loader} from '../../common/loader/loader';
 import {Button} from 'react-native';
@@ -21,6 +21,11 @@ import {RoundedIconContainer} from '../../common/button/rounded';
 import TalkNowButton from '../../common/button/Talknow';
 import ShockwavePulseButton from '../../common/button/callnow';
 import AutoLoopCarousel, {reviewsArray} from '../../common/cards/review';
+import io, {Socket} from 'socket.io-client';
+import {ApiEndPoint} from '../../config';
+import MicrophonePermissionModal from '../../common/permissions/microphone';
+import WebRTCComponent from './webrtc';
+import VoiceCall from './webrtc';
 
 interface iconsLabelI {
   id: number;
@@ -54,6 +59,16 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   const [value, setValue] = useState<string>('healers');
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
+  const [permission, setpermission] = useState(false);
+  const socket = useMemo(
+    () =>
+      io(ApiEndPoint, {
+        secure: true,
+        transports: ['websocket'],
+      }),
+    [],
+  ); // Empty dependency array means this runs once on mount
+
   // Function to load more cards
   const loadMoreData = () => {
     setData(prevData => {
@@ -61,6 +76,19 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
       const newData = HealerMockData.slice(nextIndex, nextIndex + 10); // Load next 10 cards
       return [...prevData, ...newData];
     });
+  };
+
+  const handleMicrophonePermissionResult = (granted: boolean) => {
+    if (granted) {
+      Alert.alert('Microphone permission granted');
+      navigation.navigate('Connection');
+      setpermission(false)
+      // You can now proceed with microphone-related functionality
+    } else {
+      Alert.alert('Microphone permission denied');
+      setpermission(false)
+      // Handle the denial of microphone permission accordingly
+    }
   };
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -75,15 +103,28 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
 
   // console.log(shouldAnimate,"shouldAnimate")
 
-  useEffect(()=>{ // calling off the animation after first render
+  useEffect(() => {
+    // calling off the animation after first render
     const timingAnim = setTimeout(() => {
-      sethealerAnimate(false)
+      sethealerAnimate(false);
     }, 5000);
-    return ()=>{
-      sethealerAnimate(false)
-      clearTimeout(timingAnim)
-    }
-  },[])
+    return () => {
+      sethealerAnimate(false);
+      clearTimeout(timingAnim);
+    };
+  }, []);
+
+  useEffect(() => {
+    // socket.connect();
+    // socket.on('connect', () => {
+    //   console.log('Connected to socket server');
+    // });
+    // return () => {
+    //   socket.on('disconnect', () => {
+    //     console.log('user disconnected from socket');
+    //   });
+    // };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -95,7 +136,9 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
           <FlatList
             data={data}
             showsVerticalScrollIndicator={false}
-            renderItem={({item}) => <ProfileCard shouldAnimate={healerAnimate} {...item} />}
+            renderItem={({item}) => (
+              <ProfileCard shouldAnimate={healerAnimate} {...item} />
+            )}
             keyExtractor={(item, index) => index.toString()}
             onEndReached={loadMoreData} // Load more data when user reaches the end
             onEndReachedThreshold={0.1} // Load more when 90% of the list is scrolled
@@ -106,10 +149,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
           <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
             {iconsLabel.map((item, id) => (
               <Animatable.View
-              onAnimationEnd={()=>setTimeout(() => {
-                setPeopleAnimate(false)
-              }, 2000)}
-                animation={PeopleAnimate ? "bounceIn" : undefined}
+                onAnimationEnd={() =>
+                  setTimeout(() => {
+                    setPeopleAnimate(false);
+                  }, 2000)
+                }
+                animation={PeopleAnimate ? 'bounceIn' : undefined}
                 key={item.id}
                 delay={id * 500}>
                 <RoundedIconContainer
@@ -124,13 +169,21 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
             style={{
               flex: 1,
               alignItems: 'center',
-            justifyContent: 'flex-end',
+              justifyContent: 'flex-end',
               width: '90%',
-              alignSelf:"center"
+              alignSelf: 'center',
             }}>
             {/* <ShockwavePulseButton /> */}
-            
-            <TalkNowButton label='Call Now' onPress={()=>navigation.navigate("Connection")}/>
+            {permission && (
+              <MicrophonePermissionModal
+                onPermissionResult={handleMicrophonePermissionResult}
+              />
+            )}
+            {/* <TalkNowButton
+              label="Call Now"
+              onPress={() => setpermission(true)}
+            /> */}
+                  <VoiceCall navigation={navigation} socket={socket}/>
           </View>
           <View
             style={{

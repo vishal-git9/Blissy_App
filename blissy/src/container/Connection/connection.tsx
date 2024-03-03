@@ -6,8 +6,16 @@ import {NavigationStackProps} from '../Prelogin/onboarding';
 import LottieView from 'lottie-react-native';
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../constants/PixelScaling';
 import CallingScreen from './callingscreen';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
 
-export const Connection: React.FC<NavigationStackProps> = ({navigation}) => {
+interface ContainerProps {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+  leave:()=>void;
+  toggleMic:()=>void;
+}
+
+export const Connection: React.FC<ContainerProps> = ({navigation,leave,toggleMic}) => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -20,7 +28,7 @@ export const Connection: React.FC<NavigationStackProps> = ({navigation}) => {
   return (
     <View style={styles.container}>
       <RouteBackButton onPress={() => navigation.goBack()} />
-      {!loading &&       <CallingScreen navigation={navigation}/> }
+      {!loading &&       <CallingScreen toggleMic={toggleMic} leave={leave} navigation={navigation}/> }
       {loading && (
         <LottieView
           source={require('../../../assets/animation/networking3.json')}
