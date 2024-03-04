@@ -21,6 +21,9 @@ import Styles from '../../constants/styles';
 import {ModalComponent} from '../modals/modalcomponent';
 import {LabelWithIcon} from './iconlabel';
 import { DrawerUserInterface, ProfileBox } from './profilebox';
+import { useDispatch } from 'react-redux';
+import { logoutUser } from '../../redux/uiSlice';
+import { useNavigation } from '@react-navigation/native';
 
 const user: DrawerUserInterface = {
   mobileNumber: "1234567890",
@@ -37,6 +40,10 @@ const user: DrawerUserInterface = {
 
 const CustomDrawer: React.FC<any> = props => {
   const [ConfirmModal, setConfirmModal] = useState<boolean>(false);
+
+  const dispatch = useDispatch()
+  const navigation = useNavigation()
+
   const confirmModalBody = (
     <Animatable.View
       animation={'bounceIn'}
@@ -81,7 +88,7 @@ const CustomDrawer: React.FC<any> = props => {
               onPress={() => {
                 setConfirmModal(false);
                 console.log('Logged out');
-                // dispatch(userLogOut());
+                dispatch(logoutUser());
                 // navigation.replace('Login');
                 // console.log('Yes');
               }}>
