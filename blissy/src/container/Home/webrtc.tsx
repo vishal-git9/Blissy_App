@@ -1,19 +1,11 @@
 import React, {useEffect, useState, useRef} from 'react';
 import {
-  Platform,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  View,
-  Text,
-  TouchableOpacity,
   TextInput,
 } from 'react-native';
-import SocketIOClient, {Socket} from 'socket.io-client';
+import {Socket} from 'socket.io-client';
 import {
   mediaDevices,
   RTCPeerConnection,
-  RTCView,
   RTCIceCandidate,
   RTCSessionDescription,
   MediaStream,
@@ -32,17 +24,23 @@ interface AppProps {
   socket: Socket;
 }
 
+interface RTCIceMessage {
+  label:number;
+  id:string;
+  candidate:string;
+}
+
 const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [type, setType] = useState<string>('JOIN');
-  const [callerId] = useState<string>(
-    Math.floor(100000 + Math.random() * 900000).toString(),
-  );
+  // const [callerId] = useState<string>(
+  //   Math.floor(100000 + Math.random() * 900000).toString(),
+  // );
   const otherUserId = useRef<string | null>(null);
 
   const [localMicOn, setLocalMicOn] = useState<boolean>(true);
-  const [localWebcamOn, setLocalWebcamOn] = useState<boolean>(true);
+  // const [localWebcamOn, setLocalWebcamOn] = useState<boolean>(true);
 
   const peerConnection = useRef<RTCPeerConnection>(
     new RTCPeerConnection({
@@ -161,7 +159,6 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
     InCallManager.start({media: 'audio'});
     InCallManager.setKeepScreenOn(true);
     InCallManager.setForceSpeakerphoneOn(true);
-
     return () => {
       InCallManager.stop();
     };
@@ -169,8 +166,7 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
 
   function sendICEcandidate(data: {
     calleeId: string;
-    label: number;
-    rtcMessage: RTCIceCandidate;
+    rtcMessage: RTCIceMessage;
   }) {
     socket.emit('ICEcandidate', data);
   }

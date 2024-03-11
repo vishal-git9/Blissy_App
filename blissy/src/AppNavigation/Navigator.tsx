@@ -5,17 +5,17 @@ import { AuthSelector } from '../redux/uiSlice'
 import { useGetUserQuery } from '../api/userService'
 
 export const Navigator:React.FC = () => {
-    const {token,isAuthenticated,user,isRegisterd} = useSelector(AuthSelector)
+    const {token,isAuthenticated,isRegisterd,user} = useSelector(AuthSelector)
     const {data:userData,isLoading,refetch} = useGetUserQuery()
 
-    console.log(user,"----user---",isRegisterd)
+    console.log(user?.isNewUser,"----user----",isRegisterd)
     useEffect(()=>{
         if(token){
             refetch().then(res=>console.log(res))
         }
         console.log(userData,"--userdata--")
     },[token])
-  return  <MainNavigator isLoggedIn={isAuthenticated} isNewUser={!isRegisterd}/>
+  return  <MainNavigator isLoggedIn={isAuthenticated} isNewUser={user?.isNewUser!}/>
    
   
 }

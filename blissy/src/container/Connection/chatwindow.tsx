@@ -21,6 +21,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { socket } from '../../api/socket';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ChatWindow'>;
 
@@ -31,7 +32,7 @@ interface Message {
 }
 
 interface ProfileScreenProps {
-  navigation: NavigationStackProps;
+  navigation: NativeStackNavigationProp<RootStackParamList>;
   route: ProfileScreenRouteProp;
 }
 
@@ -74,6 +75,19 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
     }
   };
 
+  useEffect(() => {
+    socket.emit('joinRoom', { userId });
+
+    socket.on('receiveMessage', (message) => {
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
+
+    // Cleanup on component unmount
+    return () => {
+      socket.off('receiveMessage');
+    };
+  }, []);
+
   // Render each chat message
   const renderMessageItem = ({ item,index }: { item: Message,index: number }) => {
     const isLastMessage = index === messages.length;
@@ -90,20 +104,6 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
           })
         }
       : {};
-
-      useEffect(() => {
-        socket.emit('joinRoom', { userId });
-    
-        socket.on('receiveMessage', (message) => {
-          setMessages((prevMessages) => [...prevMessages, message]);
-        });
-    
-        // Cleanup on component unmount
-        return () => {
-          socket.off('receiveMessage');
-        };
-      }, []);
-
     return (
       <Animated.View
         style={[
@@ -120,7 +120,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-            <RouteBackButton2 onPress={()=>navigation.navigation.goBack()}/>
+            <RouteBackButton2 onPress={()=>navigation.goBack()}/>
         <View style={styles.headerContent}>
           <Image source={{ uri: 'https://randomuser.me/api/portraits/men/1.jpg' }} style={styles.avatar} />
           <Text style={styles.userName}>Den Shearer</Text>

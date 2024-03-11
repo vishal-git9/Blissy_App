@@ -1,4 +1,4 @@
-import React, {Dispatch} from 'react';
+import React, { Dispatch } from 'react';
 import {
   View,
   Text,
@@ -9,17 +9,17 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 import LottieView from 'lottie-react-native';
-import {actuatedNormalize} from '../../constants/PixelScaling';
-import {fonts} from '../../constants/fonts';
+import { actuatedNormalize } from '../../constants/PixelScaling';
+import { fonts } from '../../constants/fonts';
 import colors from '../../constants/colors';
 import ProgressBar from './ProgressBar';
 import OTPTextInput from 'react-native-otp-textinput';
-import {RouteBackButton} from '../button/BackButton';
-import {Action} from '../../container/Registration/Registration';
-import {Loader} from '../loader/loader';
-import {FetchBaseQueryError} from '@reduxjs/toolkit/query';
-import {SerializedError} from '@reduxjs/toolkit';
-import {PrimaryButton} from '../button/PrimaryButton';
+import { RouteBackButton } from '../button/BackButton';
+import { Action } from '../../container/Registration/Registration';
+import { Loader } from '../loader/loader';
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { SerializedError } from '@reduxjs/toolkit';
+import { PrimaryButton } from '../button/PrimaryButton';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
@@ -44,7 +44,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
   isError,
   retry,
 }) => {
-  const {width: SCREEN_WIDTH} = useWindowDimensions();
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
   console.log('at the otp screen');
   return (
     <>
@@ -157,7 +157,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
                 inputCount={4}
                 autoFocus
                 handleTextChange={text =>
-                  dispatch({type: 'OTP', payload: text})
+                  dispatch({ type: 'OTP', payload: text })
                 }
                 textInputStyle={styles.otpStyles}
               />
@@ -175,13 +175,16 @@ const OTPInput: React.FC<OTPInputProps> = ({
                     columnGap: actuatedNormalize(10),
                   }}>
                   <Text
-                    style={{color: '#868787', fontFamily: fonts.NexaRegular}}>
+                    style={{ color: '#868787', fontFamily: fonts.NexaRegular }}>
                     Didn't receive the code?
                   </Text>
                   <TouchableWithoutFeedback
-                    onPress={() => setProgressDuration(30)}>
+                    onPress={() => {
+                      retry()
+                      setProgressDuration(30)
+                    }}>
                     <Text
-                      style={{color: '#1E5128', fontFamily: fonts.NexaXBold}}>
+                      style={{ color: '#1E5128', fontFamily: fonts.NexaXBold }}>
                       Resend OTP
                     </Text>
                   </TouchableWithoutFeedback>
