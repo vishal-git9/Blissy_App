@@ -5,7 +5,6 @@ import OnboardingScreen from '../container/Prelogin/onboarding';
 import {Registration} from '../container/Registration/Registration';
 import {RootStackParamList} from './navigatorType';
 import {LoginScreen} from '../container/login/login';
-import {HomeScreen} from '../container/Home/HomeScreen';
 import { HealerList } from '../common/healerList/healerlist';
 import { Healerdetails } from '../common/healerList/healerdetails';
 import {DrawerNavigator} from './Drawer';
@@ -15,6 +14,7 @@ import ChatWindowScreen from '../container/Connection/chatwindow';
 import ReviewScreen from '../container/Connection/review';
 import CallListScreen from '../container/Connection/callList';
 import GlobalBackHandler from './Globalbackhandler';
+import VoiceCall from '../container/audioCall/audiocall';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -51,11 +51,11 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="Healerlist" component={HealerList} />
         <Stack.Screen name="Healerdetails" component={Healerdetails} />
         <Stack.Screen name="Drawer" component={DrawerNavigator} />
-        <Stack.Screen name="Connection" component={Connection} />
         <Stack.Screen name="Chatlist" component={ChatListScreen} />
         <Stack.Screen name="Calllist" component={CallListScreen} />
         <Stack.Screen name="ChatWindow" component={ChatWindowScreen} />
         <Stack.Screen name="ReviewScreen" component={ReviewScreen} /> 
+        <Stack.Screen name="AudioCallScreen" component={VoiceCall} /> 
       </Stack.Navigator>
       <GlobalBackHandler/>
     </NavigationContainer>

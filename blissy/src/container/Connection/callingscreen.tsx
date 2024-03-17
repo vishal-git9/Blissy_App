@@ -17,14 +17,16 @@ import AnimatedCounter from '../../common/counter/counter';
 import {NavigationStackProps} from '../Prelogin/onboarding';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { UserInterface } from '../../redux/uiSlice';
 
 interface IconContainerProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
   leave:()=>void;
   toggleMic:()=>void;
+  ConnectedUserData:UserInterface | null
 }
 
-const IconContainer: React.FC<IconContainerProps> = ({navigation,leave,toggleMic}) => {
+const IconContainer: React.FC<IconContainerProps> = ({ConnectedUserData,navigation,leave,toggleMic}) => {
   return (
     <View style={styles.iconContainer}>
       <TouchableOpacity style={[styles.icon, styles.leftIcon]} onPress={toggleMic}>
@@ -36,7 +38,7 @@ const IconContainer: React.FC<IconContainerProps> = ({navigation,leave,toggleMic
         style={[styles.icon, styles.middleIcon]}
         onPress={() =>{
           leave()
-          navigation.navigate('ReviewScreen', {params: {user: 'clara'}})
+          navigation.navigate('ReviewScreen', {name: ConnectedUserData?.name})
         }
         }>
         {/* Add your middle icon here */}
@@ -51,7 +53,7 @@ const IconContainer: React.FC<IconContainerProps> = ({navigation,leave,toggleMic
   );
 };
 
-const CallingScreen: React.FC<IconContainerProps> = ({navigation,leave,toggleMic}) => {
+const CallingScreen: React.FC<IconContainerProps> = ({navigation,leave,toggleMic,ConnectedUserData}) => {
   const [seconds, setSeconds] = useState(0);
 
   return (
@@ -59,7 +61,7 @@ const CallingScreen: React.FC<IconContainerProps> = ({navigation,leave,toggleMic
       {/* User section */}
       <View style={styles.userSection}>
         <View style={{justifyContent: 'center', alignItems: 'center'}}>
-          <Text style={styles.connectedText}>You connected with Clara</Text>
+          <Text style={styles.connectedText}>You connected with {ConnectedUserData?.name}</Text>
           <Text style={styles.timeText}>
             {Math.floor(seconds / 60)
               .toString()
@@ -76,7 +78,7 @@ const CallingScreen: React.FC<IconContainerProps> = ({navigation,leave,toggleMic
         </View>
         <View style={{justifyContent: 'center', alignItems: 'center'}}>
           <Text style={styles.knowText}>
-            Know What Clara and You have common
+            Know What {ConnectedUserData?.name} and You have common
           </Text>
           <TouchableOpacity style={styles.readReceiptsButton}>
             <Text style={styles.readReceiptsText}>View Profile</Text>
@@ -86,7 +88,7 @@ const CallingScreen: React.FC<IconContainerProps> = ({navigation,leave,toggleMic
       </View>
 
       {/* Action buttons */}
-      <IconContainer navigation={navigation} leave={leave} toggleMic={toggleMic} />
+      <IconContainer ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} toggleMic={toggleMic} />
     </SafeAreaView>
   );
 };

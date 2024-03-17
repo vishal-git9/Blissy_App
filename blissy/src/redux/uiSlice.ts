@@ -5,6 +5,7 @@ import { UserApi } from "../api/userService";
 
 
 export interface UserInterface {
+    _id:String;
     mobileNumber: String;
   role: string;
   name: String;

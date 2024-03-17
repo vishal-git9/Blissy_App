@@ -1,11 +1,10 @@
 import React, {useState, useRef} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Animated} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {IconButton} from '../../common/button/iconbutton';
 import {fonts} from '../../constants/fonts';
 import colors from '../../constants/colors';
-import {Rating} from 'react-native-ratings';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import * as Animatable from 'react-native-animatable';
 const ratingColors: {[key: number]: string} = {
@@ -20,13 +19,21 @@ const ratingColors: {[key: number]: string} = {
 };
 import StarRating from 'react-native-star-rating';
 import {RouteBackButton} from '../../common/button/BackButton';
-import {NavigationStackProps} from '../Prelogin/onboarding';
 import FaceComponent from '../../common/animation/face';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
+import { RouteProp } from '@react-navigation/native';
 
-const ReviewScreen: React.FC<NavigationStackProps> = ({navigation}) => {
-  const [rating, setRating] = useState(0);
+interface ReviewScreenProps {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+  route: RouteProp<RootStackParamList, "ReviewScreen">;
+}
+
+const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
+  const [rating, setRating] = useState(4);
   const ratingRef = useRef<Animatable.AnimatableComponent<any, any>>(null);  ;
   const color = ratingColors[rating] || colors.yellow;
+  const {name} = route.params
   return (
     <>
       <RouteBackButton onPress={() => navigation.pop(2)} />
@@ -36,7 +43,7 @@ const ReviewScreen: React.FC<NavigationStackProps> = ({navigation}) => {
         <Text style={styles.headerText2}>Great! You Talked for 12min</Text>
         </View> */}
         <FaceComponent rating={rating}/>
-        <Text style={styles.questionText}>How was the call with clara?</Text>
+        <Text style={styles.questionText}>How was the call with {name}?</Text>
 
         <View style={styles.ratingContainer}>
           <Animatable.Text
@@ -66,7 +73,7 @@ const ReviewScreen: React.FC<NavigationStackProps> = ({navigation}) => {
             activeOpacity={1}
             selectedStar={rating => {
               if (ratingRef.current) {
-                ratingRef.current.fadeIn(800); // You can use any animation method provided by the library
+                ratingRef.current.fadeIn(800);
               }
 
               setRating(rating)
@@ -89,13 +96,12 @@ const ReviewScreen: React.FC<NavigationStackProps> = ({navigation}) => {
         />
       </View> */}
         <View style={styles.buttonGroup}>
-          {/* Buttons for Rejoin and Return to home page */}
           <IconButton
             IconProvider={FontAwesome}
             iconame="repeat"
             label="Reconnect"
             iconcolor={colors.gray}
-            onpress={() => console.log('first')}
+            onpress={() => navigation.pop(2)}
             size={18}
             styles={styles.SecondaryButton}
             textSize={actuatedNormalize(18)}
@@ -106,7 +112,7 @@ const ReviewScreen: React.FC<NavigationStackProps> = ({navigation}) => {
             iconame="chat"
             label="Say Hi!"
             iconcolor={colors.white}
-            onpress={() => console.log('first')}
+            onpress={() => navigation.pop(2)}
             size={18}
             styles={styles.PrimaryButton}
             textSize={actuatedNormalize(18)}

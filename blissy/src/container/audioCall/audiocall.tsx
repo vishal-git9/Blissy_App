@@ -1,10 +1,8 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
-  StyleSheet,
-  Text,
-  TextInput,
+  StyleSheet, Text,
 } from 'react-native';
-import {Socket} from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 import {
   mediaDevices,
   RTCPeerConnection,
@@ -13,38 +11,44 @@ import {
   MediaStream,
 } from 'react-native-webrtc';
 import InCallManager from 'react-native-incall-manager';
-import TalkNowButton from '../../common/button/Talknow';
-import IncomingCallScreen from './incoming';
-import {OutgoingCallScreen} from './outgoing';
-import {Connection} from '../Connection/connection';
 import CallingScreen from '../Connection/callingscreen';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../../AppNavigation/navigatorType';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { UserInterface } from '../../redux/uiSlice';
 import colors from '../../constants/colors';
 import { View } from 'react-native';
 import { Loader } from '../../common/loader/loader';
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../../constants/PixelScaling';
+import { SCREEN_HEIGHT, SCREEN_WIDTH, actuatedNormalize } from '../../constants/PixelScaling';
 import requestBluetoothPermission from '../../utils/permission';
+import AutoScrollCarousel from '../../common/cards/autoScrollCarousel';
+import { RouteBackButton } from '../../common/button/BackButton';
+import { RouteProp } from '@react-navigation/native';
+import AnimatedBorderButton from '../../common/button/borderButton';
+import ProgressBar from '../../common/login/ProgressBar';
+import CircularImageReveal from '../../common/cards/waitingUser';
+import { fonts } from '../../constants/fonts';
 
 interface AppProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
-  socket: Socket;
+  route: RouteProp<RootStackParamList, "AudioCallScreen">;
+
 }
 
 interface RTCIceMessage {
-  label:number;
-  id:string;
-  candidate:string;
+  label: number;
+  id: string;
+  candidate: string;
 }
 
-const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
+const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-  const [type, setType] = useState<string>('JOIN');
+  const [type, setType] = useState<string>('LOADING');
+  const { socket } = route.params
   // const [callerId] = useState<string>(
   //   Math.floor(100000 + Math.random() * 900000).toString(),
   // );
+  const otherUserData = useRef<UserInterface | null>(null)
   const otherUserScoketId = useRef<string | null>(null);
 
   const [localMicOn, setLocalMicOn] = useState<boolean>(true);
@@ -66,52 +70,50 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
     }),
   );
 
-  console.log(peerConnection,"peerconnection")
 
   let remoteRTCMessage = useRef<RTCSessionDescription | null>(null);
 
   useEffect(() => {
     socket.on(
       'newCall',
-      (data: {rtcMessage: RTCSessionDescription; callerId: string}) => {
+      (data: { rtcMessage: RTCSessionDescription; callerId: string,callerData:UserInterface }) => {
         remoteRTCMessage.current = data.rtcMessage;
-        console.log("getting call from",data.callerId)
+        console.log("getting call from", data.callerId)
         otherUserScoketId.current = data.callerId;
+        otherUserData.current = data.callerData
         //setType('INCOMING_CALL');
         processAccept()
         console.log("getting the call")
       },
     );
 
-    socket.on('initiateCall',(data:{matchedUser:UserInterface,callerId:string})=>{
+    socket.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
       otherUserScoketId.current = data.callerId
-      console.log(data,"data of paired user")
+      otherUserData.current = data.matchedUser
+      console.log(data, "data of paired user")
       processCall()
     })
 
-    // if no match is found search again
-    // socket.on('matchNotFound',()=>{
-    //   console.log("retrying")
-    //   setTimeout(() => {
-    //     IntitateRandomConnection()
-    //   }, 5000);
-    // })
-
-    socket.on("callEnded",()=>{
-      navigation.navigate("ReviewScreen",{})
+    socket.on("callCancelled",(message:string)=>{
+      console.log(message,"you cancelled the call")
     })
 
-    socket.on('callAnswered', (data: {rtcMessage: RTCSessionDescription}) => {
+
+    socket.on("callEnded", () => {
+      navigation.navigate("ReviewScreen", {name:otherUserData.current?.name})
+    })
+
+    socket.on('callAnswered', (data: { rtcMessage: RTCSessionDescription }) => {
       remoteRTCMessage.current = data.rtcMessage;
       peerConnection.current.setRemoteDescription(
         new RTCSessionDescription(remoteRTCMessage.current),
       );
-      setType('WEBRTC_ROOM');
+      setType('AUDIO_ROOM');
     });
 
     socket.on(
       'ICEcandidate',
-      (data: {rtcMessage: {candidate: string; id: string; label: number}}) => {
+      (data: { rtcMessage: { candidate: string; id: string; label: number } }) => {
         let message = data.rtcMessage;
 
         peerConnection.current
@@ -161,12 +163,12 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
     });
     peerConnection.current.addEventListener(
       'icecandidate',
-      (event: {candidate: RTCIceCandidate | null}) => {
-        console.log(event.candidate,"event candidate")
+      (event: { candidate: RTCIceCandidate | null }) => {
+        console.log(event.candidate, "event candidate")
         if (event.candidate) {
           sendICEcandidate({
             calleeId: otherUserScoketId.current!, // Assuming otherUserScoketId is always set when this callback is called
-            callerId:socket.id,
+            callerId: socket.id,
             rtcMessage: {
               label: event.candidate.sdpMLineIndex!, // Non-null assertion used, ensure these are indeed non-null
               id: event.candidate.sdpMid!, // Non-null assertion used, ensure these are indeed non-null
@@ -182,16 +184,18 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
     requestBluetoothPermission()
 
     return () => {
+      console.log("removed from the screen")
       socket.off('newCall');
       socket.off('callAnswered');
       socket.off('ICEcandidate');
       socket.off("callEnded");
       socket.off("initiateCall")
+      socket.off("callCancelled")
     };
   }, []);
 
   useEffect(() => {
-    InCallManager.start({media: 'audio'});
+    InCallManager.start({ media: 'audio' });
     InCallManager.setKeepScreenOn(true);
     InCallManager.setForceSpeakerphoneOn(false); // false for audio and true for video
     return () => {
@@ -201,7 +205,7 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
 
   function sendICEcandidate(data: {
     calleeId: string;
-    callerId:string | undefined;
+    callerId: string | undefined;
     rtcMessage: RTCIceMessage;
   }) {
     socket.emit('ICEcandidate', data);
@@ -213,15 +217,15 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
       await peerConnection.current.setLocalDescription(sessionDescription);
       sendCall({
         calleeId: otherUserScoketId.current!,
-        callerId:socket.id,
+        callerId: socket.id,
         rtcMessage: sessionDescription,
       });
     } catch (error) {
-      console.log(error,"error while creating offer")
+      console.log(error, "error while creating offer")
     }
   }
 
- 
+
 
   async function processAccept() {
     try {
@@ -230,36 +234,37 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
       );
       const sessionDescription = await peerConnection.current.createAnswer();
       await peerConnection.current.setLocalDescription(sessionDescription);
-      console.log("acceptedd by",otherUserScoketId.current)
-  
+
       answerCall({
         callerId: otherUserScoketId.current!,
         // calleeId:socket.id,
         rtcMessage: sessionDescription,
       });
     } catch (error) {
-      console.log(error,"error while creating answer")
+      console.log(error, "error while creating answer")
     }
   }
 
   function answerCall(data: {
     callerId: string;
-    calleeId?:string | undefined;
+    calleeId?: string | undefined;
     rtcMessage: RTCSessionDescription;
   }) {
-    console.log(data.calleeId,"calleeId accept")
+    console.log(data.calleeId, "calleeId accept")
     socket.emit('answerCall', data);
-    setType("WEBRTC_ROOM")
+    setType("AUDIO_ROOM")
   }
 
   function sendCall(data: {
     calleeId: string;
-    callerId:string | undefined;
+    callerId: string | undefined;
     rtcMessage: RTCSessionDescription;
   }) {
-    console.log("sending call to",data.calleeId)
+    console.log("sending call to", data.calleeId)
     socket.emit('call', data);
   }
+
+  console.log(socket, "socketId")
 
   function toggleMic() {
     localMicOn ? setLocalMicOn(false) : setLocalMicOn(true);
@@ -272,22 +277,39 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
     peerConnection.current.close();
     setLocalStream(null);
     setRemoteStream(null);
-    socket.emit("callEnded",otherUserScoketId.current)
+    socket.emit("callEnded", otherUserScoketId.current)
     otherUserScoketId.current = null;
+  }
+
+  function cancelCall(){
+    peerConnection.current.close();
+    setLocalStream(null);
+    setRemoteStream(null);
+    otherUserScoketId.current = null;
+    socket.emit("cancelCall")
+    navigation.goBack()
   }
 
   switch (type) {
 
     case 'LOADING':
       return (
-        
         <View style={styles.loaderContainer}>
-        <Loader size={50} />
-      </View>
+          {/* <RouteBackButton onPress={()=>navigation.goBack()}/> */}
+          <AutoScrollCarousel />
+          <View style={{ width: "60%", alignSelf: "center", marginTop: actuatedNormalize(30), rowGap: actuatedNormalize(15) }}>
+            <CircularImageReveal />
+            <Text style={styles.waitText}>Waiting for other request...</Text>
+            <View style={{width: "70%",alignSelf:"center",marginTop:actuatedNormalize(10)}}>
+              <AnimatedBorderButton label='Cancel Call' func={cancelCall} />
+            </View>
+          </View>
+        </View>
       );
-    case 'WEBRTC_ROOM':
+    case 'AUDIO_ROOM':
       return (
         <CallingScreen
+        ConnectedUserData={otherUserData.current}
           leave={leave}
           toggleMic={toggleMic}
           navigation={navigation}
@@ -300,15 +322,16 @@ const VoiceCall: React.FC<AppProps> = ({navigation, socket}) => {
 
 const styles = StyleSheet.create({
   loaderContainer: {
-    position: 'absolute',
-    zIndex: 2,
     flex: 1,
     height: SCREEN_HEIGHT,
     width: SCREEN_WIDTH,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.darkOverlayColor2,
   },
+  waitText: {
+    fontFamily: fonts.NexaRegular,
+    fontSize: actuatedNormalize(14),
+    alignSelf: "center",
+    color: colors.lightGray
+  }
 })
 
 export default VoiceCall;

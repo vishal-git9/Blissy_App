@@ -79,6 +79,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
         navigation.navigate('Drawer');  
       }
     }else if('error' in res){
+      console.log(res,"res of otp")
       console.log(verifyOtpErr,"error of otp")
     }
   };

@@ -31,6 +31,11 @@
 <!-- For Microphone -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Our application requires access to your microphone for recording audio.</string>
+<!-- for bluetooth -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Our application uses Bluetooth to connect to nearby devices.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Our application uses Bluetooth to connect to nearby devices.</string>
 
 	<key>NSAppTransportSecurity</key>
 	<dict>

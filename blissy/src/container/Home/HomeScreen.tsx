@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
-import {StyleSheet, Text, View, BackHandler, Alert} from 'react-native';
+import {StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid} from 'react-native';
 import colors from '../../constants/colors';
 import {Loader} from '../../common/loader/loader';
 import {Button} from 'react-native';
@@ -10,8 +10,6 @@ import {FlatList} from 'react-native';
 import ProfileCard from '../../common/cards/healercard';
 import {HealerMockData} from '../../mockdata/healerData';
 import {
-  SCREEN_HEIGHT,
-  SCREEN_WIDTH,
   actuatedNormalize,
 } from '../../constants/PixelScaling';
 import OfferBadge from '../../common/badge';
@@ -19,13 +17,12 @@ import * as Animatable from 'react-native-animatable';
 import LottieView from 'lottie-react-native';
 import {RoundedIconContainer} from '../../common/button/rounded';
 import TalkNowButton from '../../common/button/Talknow';
-import ShockwavePulseButton from '../../common/button/callnow';
 import AutoLoopCarousel, {reviewsArray} from '../../common/cards/review';
-import io, {Socket} from 'socket.io-client';
+import io from 'socket.io-client';
 import {ApiEndPoint} from '../../config';
 import MicrophonePermissionModal from '../../common/permissions/microphone';
-import WebRTCComponent from './webrtc';
-import VoiceCall from './webrtc';
+import { useSelector } from 'react-redux';
+import { AuthSelector } from '../../redux/uiSlice';
 
 interface iconsLabelI {
   id: number;
@@ -57,18 +54,24 @@ const iconsLabel: iconsLabelI[] = [
 export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   const [data, setData] = useState(HealerMockData.slice(0, 10)); // Initial data for first 10 cards
   const [value, setValue] = useState<string>('healers');
+  const {user} = useSelector(AuthSelector)
+
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
   const [permission, setpermission] = useState(false);
+  console.log(user,"user")
   const socket = useMemo(
     () =>
       io(ApiEndPoint, {
         secure: true,
         transports: ['websocket'],
+         query:{
+          userId:user?._id
+        }
       }),
-    [],
+    [user?._id],
   ); // Empty dependency array means this runs once on mount
-
+console.log(socket.id)
   // Function to load more cards
   const loadMoreData = () => {
     setData(prevData => {
@@ -81,6 +84,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   const handleMicrophonePermissionResult = (granted: boolean) => {
     if (granted) {
       Alert.alert('Microphone permission granted');
+      // 
       navigation.navigate('Connection');
       setpermission(false)
       // You can now proceed with microphone-related functionality
@@ -90,6 +94,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
       // Handle the denial of microphone permission accordingly
     }
   };
+
+  const intiateRandomConnection = ()=>{
+    navigation.navigate("AudioCallScreen",{socket:socket})
+    socket.emit('connectRandom')
+  }
+  
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
@@ -100,8 +110,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
     );
     return () => backHandler.remove();
   }, []);
-
-  // console.log(shouldAnimate,"shouldAnimate")
 
   useEffect(() => {
     // calling off the animation after first render
@@ -115,15 +123,11 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   }, []);
 
   useEffect(() => {
-    // socket.connect();
-    // socket.on('connect', () => {
-    //   console.log('Connected to socket server');
-    // });
-    // return () => {
-    //   socket.on('disconnect', () => {
-    //     console.log('user disconnected from socket');
-    //   });
-    // };
+    return () => {
+      socket.on('disconnect', () => {
+        console.log('user disconnected from socket');
+      });
+    };
   }, []);
 
   return (
@@ -173,17 +177,15 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
               width: '90%',
               alignSelf: 'center',
             }}>
-            {/* <ShockwavePulseButton /> */}
             {permission && (
               <MicrophonePermissionModal
                 onPermissionResult={handleMicrophonePermissionResult}
               />
             )}
-            {/* <TalkNowButton
-              label="Call Now"
-              onPress={() => setpermission(true)}
-            /> */}
-                  <VoiceCall navigation={navigation} socket={socket}/>
+            <TalkNowButton
+              label="Connect Now"
+              onPress={intiateRandomConnection}
+            />
           </View>
           <View
             style={{
@@ -192,7 +194,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
               justifyContent: 'flex-end',
               width: '90%',
             }}>
-            {/* <TalkNowButton label='Connect Now' onPress={()=>navigation.navigate("Connection")} /> */}
             <AutoLoopCarousel reviews={reviewsArray} />
           </View>
         </View>

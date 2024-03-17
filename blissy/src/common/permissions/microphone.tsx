@@ -10,7 +10,7 @@ interface Props {
 
 const MicrophonePermissionModal: React.FC<Props> = ({ onPermissionResult }) => {
   const [visible, setVisible] = useState(false);
-
+console.log("hi")
   // Platform-specific permission name
   const microphonePermission: Permission = Platform.select({
     ios: PERMISSIONS.IOS.MICROPHONE,

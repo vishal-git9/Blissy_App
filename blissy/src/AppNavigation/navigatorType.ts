@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import { ProfileData } from "../mockdata/healerData";
 
 export type RootStackParamList = {
@@ -14,6 +15,7 @@ export type RootStackParamList = {
     Calllist:undefined;
     Wallet:undefined;
     Coupons:undefined;
-    ReviewScreen:{}
+    ReviewScreen:{name:String | undefined};
+    AudioCallScreen:{socket:Socket};
   };
   
