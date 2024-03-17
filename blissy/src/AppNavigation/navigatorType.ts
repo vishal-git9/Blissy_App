@@ -1,5 +1,6 @@
 import { Socket } from "socket.io-client";
 import { ProfileData } from "../mockdata/healerData";
+import { UserInterface } from "../redux/uiSlice";
 
 export type RootStackParamList = {
     Onboarding:undefined;
@@ -16,6 +17,6 @@ export type RootStackParamList = {
     Wallet:undefined;
     Coupons:undefined;
     ReviewScreen:{name:String | undefined};
-    AudioCallScreen:{socket:Socket};
+    AudioCallScreen:{socket:Socket,user:UserInterface|null};
   };
   

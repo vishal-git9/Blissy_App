@@ -96,7 +96,7 @@ console.log(socket.id)
   };
 
   const intiateRandomConnection = ()=>{
-    navigation.navigate("AudioCallScreen",{socket:socket})
+    navigation.navigate("AudioCallScreen",{socket:socket,user:user})
     socket.emit('connectRandom')
   }
   

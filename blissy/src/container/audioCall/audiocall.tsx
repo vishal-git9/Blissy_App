@@ -44,7 +44,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [type, setType] = useState<string>('LOADING');
-  const { socket } = route.params
+  const { socket,user } = route.params
   // const [callerId] = useState<string>(
   //   Math.floor(100000 + Math.random() * 900000).toString(),
   // );
@@ -78,7 +78,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       'newCall',
       (data: { rtcMessage: RTCSessionDescription; callerId: string,callerData:UserInterface }) => {
         remoteRTCMessage.current = data.rtcMessage;
-        console.log("getting call from", data.callerId)
+        console.log("getting call User data", data.callerData)
         otherUserScoketId.current = data.callerId;
         otherUserData.current = data.callerData
         //setType('INCOMING_CALL');
@@ -217,7 +217,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       await peerConnection.current.setLocalDescription(sessionDescription);
       sendCall({
         calleeId: otherUserScoketId.current!,
-        callerId: socket.id,
+        callerData: user,
         rtcMessage: sessionDescription,
       });
     } catch (error) {
@@ -257,7 +257,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
 
   function sendCall(data: {
     calleeId: string;
-    callerId: string | undefined;
+    callerData: UserInterface | null;
     rtcMessage: RTCSessionDescription;
   }) {
     console.log("sending call to", data.calleeId)
