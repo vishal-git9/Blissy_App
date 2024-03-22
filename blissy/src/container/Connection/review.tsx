@@ -2,6 +2,7 @@ import React, {useState, useRef} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Feather from "react-native-vector-icons/Feather"
 import {IconButton} from '../../common/button/iconbutton';
 import {fonts} from '../../constants/fonts';
 import colors from '../../constants/colors';
@@ -56,10 +57,10 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
             }}>
             {rating >= 1 && rating <=2.5
               ? 'Bad'
-              : rating >=3 && rating <= 4
+              : rating >=3 && rating < 4
               ? 'Good'
-              : rating === 5 || rating===4.5
-              ? 'Great'
+              : rating === 4 || rating===4.5
+              ? 'Great' : rating === 5 ? "Amazing"
               : null}
           </Animatable.Text>
           <StarRating
@@ -73,7 +74,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
             activeOpacity={1}
             selectedStar={rating => {
               if (ratingRef.current) {
-                ratingRef.current.fadeIn(800);
+                ratingRef.current?.fadeIn(800);
               }
 
               setRating(rating)
@@ -96,7 +97,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
         />
       </View> */}
         <View style={styles.buttonGroup}>
-          <IconButton
+          {/* <IconButton
             IconProvider={FontAwesome}
             iconame="repeat"
             label="Reconnect"
@@ -106,8 +107,8 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
             styles={styles.SecondaryButton}
             textSize={actuatedNormalize(18)}
             textcolor={colors.white}
-          />
-          <IconButton
+          /> */}
+          {/* <IconButton
             IconProvider={MaterialIcons}
             iconame="chat"
             label="Say Hi!"
@@ -115,6 +116,28 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
             onpress={() => navigation.pop(2)}
             size={18}
             styles={styles.PrimaryButton}
+            textSize={actuatedNormalize(18)}
+            textcolor={colors.white}
+          /> */}
+           <IconButton
+            IconProvider={Feather}
+            iconame="send"
+            label="Submit"
+            iconcolor={colors.white}
+            onpress={() => navigation.pop(2)}
+            size={18}
+            styles={styles.PrimaryButton}
+            textSize={actuatedNormalize(18)}
+            textcolor={colors.white}
+          />
+                    <IconButton
+            IconProvider={MaterialIcons}
+            iconame="report"
+            label="Report"
+            iconcolor={colors.white}
+            onpress={() => navigation.pop(2)}
+            size={18}
+            styles={styles.SecondaryButton}
             textSize={actuatedNormalize(18)}
             textcolor={colors.white}
           />
@@ -175,6 +198,8 @@ const styles = StyleSheet.create({
     fontSize: actuatedNormalize(20),
     alignSelf: 'center',
     fontFamily: fonts.NexaRegular,
+    textAlign:"center",
+    width:"80%"
   },
   ratingContainer: {
     width: '100%',

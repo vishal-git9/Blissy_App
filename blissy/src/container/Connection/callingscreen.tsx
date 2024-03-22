@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -18,20 +18,32 @@ import {NavigationStackProps} from '../Prelogin/onboarding';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { UserInterface } from '../../redux/uiSlice';
+import { IconButton } from '../../common/button/iconbutton';
+import ChatWindowScreen from './chatwindow';
+import UserProfile from '../DrawerScreens/Userprofile';
+import { Socket } from 'socket.io-client';
 
 interface IconContainerProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
   leave:()=>void;
   toggleMic:()=>void;
-  ConnectedUserData:UserInterface | null
+  toggleSpeaker:()=>void;
+  ConnectedUserData:UserInterface | null;
+  speakerEnabled:boolean;
+  muteEnabled:boolean;
 }
 
-const IconContainer: React.FC<IconContainerProps> = ({ConnectedUserData,navigation,leave,toggleMic}) => {
+interface CallingScreenProps extends IconContainerProps {
+  socketId:string| null;
+  socket:Socket;
+}
+
+const IconContainer: React.FC<IconContainerProps> = ({ConnectedUserData,navigation,leave,toggleMic,toggleSpeaker,speakerEnabled,muteEnabled}) => {
   return (
     <View style={styles.iconContainer}>
-      <TouchableOpacity style={[styles.icon, styles.leftIcon]} onPress={toggleMic}>
+      <TouchableOpacity style={[styles.icon, styles.leftIcon,{backgroundColor:muteEnabled ? colors.primary : colors.white}]} onPress={toggleMic}>
         {/* Add your left icon here */}
-        <Entypo name="sound-mute" color={'black'} size={30} />
+        <Entypo name="sound-mute" color={muteEnabled ? colors.white : colors.black} size={30} />
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -45,17 +57,35 @@ const IconContainer: React.FC<IconContainerProps> = ({ConnectedUserData,navigati
         <MaterialIcons name="call-end" color={'white'} size={30} />
       </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.icon, styles.rightIcon]}>
+      <TouchableOpacity style={[styles.icon, styles.rightIcon,{backgroundColor:speakerEnabled ? colors.primary : colors.white}]} onPress={toggleSpeaker}>
         {/* Add your right icon here */}
-        <Entypo name="sound" color="black" size={30} />
+        <Entypo name="sound" color={speakerEnabled ? colors.white : colors.black} size={30} />
       </TouchableOpacity>
     </View>
   );
 };
 
-const CallingScreen: React.FC<IconContainerProps> = ({navigation,leave,toggleMic,ConnectedUserData}) => {
+const CallingScreen: React.FC<CallingScreenProps> = ({navigation,leave,toggleMic,ConnectedUserData,toggleSpeaker,socketId,socket}) => {
   const [seconds, setSeconds] = useState(0);
+  const [mute,setMute] = useState(false);
+  const [speaker,setSpeaker] = useState(false)
+const [userChannel,setUserChannel] = useState<string>("Call")
 
+  const handleToggleMic = ()=>{
+    toggleMic()
+    setMute(!mute)
+  }
+  const handleToggleSpeaker = ()=>{
+    toggleSpeaker()
+    setSpeaker(!speaker)
+  }
+
+  // switch (userChannel) {
+  //   case "Chat" :
+  //     return <ChatWindowScreen navigation={navigation} />
+  //   case "Profile" :
+  //     return <UserProfile navigation={navigation}/>
+  // }
   return (
     <SafeAreaView style={styles.container}>
       {/* User section */}
@@ -76,19 +106,33 @@ const CallingScreen: React.FC<IconContainerProps> = ({navigation,leave,toggleMic
             style={styles.avatar}
           />
         </View>
-        <View style={{justifyContent: 'center', alignItems: 'center'}}>
+        <View style={{justifyContent: 'center', alignItems: 'center',width:"100%"}}>
           <Text style={styles.knowText}>
             Know What {ConnectedUserData?.name} and You have common
           </Text>
-          <TouchableOpacity style={styles.readReceiptsButton}>
+          <TouchableOpacity style={styles.readReceiptsButton}  >
             <Text style={styles.readReceiptsText}>View Profile</Text>
           </TouchableOpacity>
+            <IconButton
+            IconProvider={MaterialIcons}
+            iconame="chat"
+            label="Chat"
+            iconcolor={colors.white}
+            onpress={() => navigation.navigate("ChatWindow",{userDetails:ConnectedUserData,socketId:socketId,socket:socket})}   
+               size={18}
+            styles={styles.SecondaryButton}
+            textSize={actuatedNormalize(18)}
+            textcolor={colors.white}
+          />
+          {/* <TouchableOpacity style={styles.readReceiptsButton}>
+            <Text style={styles.readReceiptsText}>View Profile</Text>
+          </TouchableOpacity> */}
         </View>
         <AnimatedCounter seconds={seconds} setSeconds={setSeconds} />
       </View>
 
       {/* Action buttons */}
-      <IconContainer ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} toggleMic={toggleMic} />
+      <IconContainer speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker}  />
     </SafeAreaView>
   );
 };
@@ -96,12 +140,13 @@ const CallingScreen: React.FC<IconContainerProps> = ({navigation,leave,toggleMic
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black, // Replace with the actual background color
+    backgroundColor: colors.black, 
+    paddingVertical:actuatedNormalize(10)
   },
   userSection: {
     flex: 1,
+    marginTop:actuatedNormalize(50),
     alignItems: 'center',
-    justifyContent: 'center',
     rowGap: actuatedNormalize(20),
   },
   connectedText: {
@@ -132,14 +177,16 @@ const styles = StyleSheet.create({
     fontSize: actuatedNormalize(16),
     color: colors.lightGray,
     textAlign: 'center',
+    width:"80%",
+    lineHeight:actuatedNormalize(20),
     fontFamily: fonts.NexaRegular,
     marginBottom: actuatedNormalize(16),
   },
   readReceiptsButton: {
     backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    borderRadius: actuatedNormalize(10),
+    paddingHorizontal: actuatedNormalize(16),
+    paddingVertical: actuatedNormalize(10),
   },
   readReceiptsText: {
     color: colors.black,
@@ -198,6 +245,19 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     width: 50,
     height: 50,
+  },
+
+  SecondaryButton: {
+    borderRadius: actuatedNormalize(10),
+    paddingHorizontal: actuatedNormalize(16),
+    paddingVertical: actuatedNormalize(10),
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    marginTop:actuatedNormalize(10),
+    borderColor: colors.lightGray,
+    columnGap: actuatedNormalize(10),
   },
 });
 

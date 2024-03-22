@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
-  StyleSheet, Text,
+  StyleSheet, Text,Vibration
 } from 'react-native';
-import { Socket } from 'socket.io-client';
 import {
   mediaDevices,
   RTCPeerConnection,
@@ -17,14 +16,10 @@ import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { UserInterface } from '../../redux/uiSlice';
 import colors from '../../constants/colors';
 import { View } from 'react-native';
-import { Loader } from '../../common/loader/loader';
 import { SCREEN_HEIGHT, SCREEN_WIDTH, actuatedNormalize } from '../../constants/PixelScaling';
-import requestBluetoothPermission from '../../utils/permission';
 import AutoScrollCarousel from '../../common/cards/autoScrollCarousel';
-import { RouteBackButton } from '../../common/button/BackButton';
 import { RouteProp } from '@react-navigation/native';
 import AnimatedBorderButton from '../../common/button/borderButton';
-import ProgressBar from '../../common/login/ProgressBar';
 import CircularImageReveal from '../../common/cards/waitingUser';
 import { fonts } from '../../constants/fonts';
 
@@ -43,8 +38,10 @@ interface RTCIceMessage {
 const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [speaker,setSpeaker] = useState<boolean>(false)
   const [type, setType] = useState<string>('LOADING');
   const { socket,user } = route.params
+  console.log(socket.id,"socket Id audiocall")
   // const [callerId] = useState<string>(
   //   Math.floor(100000 + Math.random() * 900000).toString(),
   // );
@@ -78,19 +75,19 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       'newCall',
       (data: { rtcMessage: RTCSessionDescription; callerId: string,callerData:UserInterface }) => {
         remoteRTCMessage.current = data.rtcMessage;
-        console.log("getting call User data", data.callerData)
+        // console.log("getting call User data", data.callerData)
         otherUserScoketId.current = data.callerId;
         otherUserData.current = data.callerData
         //setType('INCOMING_CALL');
         processAccept()
-        console.log("getting the call")
+        // console.log("getting the call")
       },
     );
 
     socket.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
       otherUserScoketId.current = data.callerId
       otherUserData.current = data.matchedUser
-      console.log(data, "data of paired user")
+      // console.log(data, "data of paired user")
       processCall()
     })
 
@@ -109,6 +106,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
         new RTCSessionDescription(remoteRTCMessage.current),
       );
       setType('AUDIO_ROOM');
+      Vibration.vibrate(500);
     });
 
     socket.on(
@@ -181,10 +179,9 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       },
     );
 
-    requestBluetoothPermission()
-
     return () => {
-      console.log("removed from the screen")
+      console.log("removed from screen")
+
       socket.off('newCall');
       socket.off('callAnswered');
       socket.off('ICEcandidate');
@@ -197,11 +194,11 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   useEffect(() => {
     InCallManager.start({ media: 'audio' });
     InCallManager.setKeepScreenOn(true);
-    InCallManager.setForceSpeakerphoneOn(false); // false for audio and true for video
+    InCallManager.setForceSpeakerphoneOn(speaker); // false for audio and true for video
     return () => {
       InCallManager.stop();
     };
-  }, []);
+  }, [speaker]);
 
   function sendICEcandidate(data: {
     calleeId: string;
@@ -229,17 +226,23 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
 
   async function processAccept() {
     try {
-      peerConnection.current.setRemoteDescription(
-        new RTCSessionDescription(remoteRTCMessage.current!),
-      );
-      const sessionDescription = await peerConnection.current.createAnswer();
-      await peerConnection.current.setLocalDescription(sessionDescription);
-
-      answerCall({
-        callerId: otherUserScoketId.current!,
-        // calleeId:socket.id,
-        rtcMessage: sessionDescription,
-      });
+      if(remoteRTCMessage.current){
+        peerConnection.current.setRemoteDescription(
+          new RTCSessionDescription(remoteRTCMessage.current!),
+        );
+        const sessionDescription = await peerConnection.current.createAnswer();
+        await peerConnection.current.setLocalDescription(sessionDescription);
+  console.log("getting call from",otherUserScoketId.current)
+        answerCall({
+          callerId: otherUserScoketId.current!,
+          // calleeId:socket.id,
+          rtcMessage: sessionDescription,
+        });
+        console.log("Getting the answer message")
+      }else{
+        console.log("not getting the answer message")
+      }
+      
     } catch (error) {
       console.log(error, "error while creating answer")
     }
@@ -250,9 +253,10 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     calleeId?: string | undefined;
     rtcMessage: RTCSessionDescription;
   }) {
-    console.log(data.calleeId, "calleeId accept")
+    // console.log(data.callerId, "calleeId accept")
     socket.emit('answerCall', data);
     setType("AUDIO_ROOM")
+    Vibration.vibrate(500);
   }
 
   function sendCall(data: {
@@ -260,7 +264,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     callerData: UserInterface | null;
     rtcMessage: RTCSessionDescription;
   }) {
-    console.log("sending call to", data.calleeId)
+    // console.log("sending call to", data.calleeId)
     socket.emit('call', data);
   }
 
@@ -271,6 +275,10 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     localStream?.getAudioTracks().forEach(track => {
       localMicOn ? (track.enabled = false) : (track.enabled = true);
     });
+  }
+
+  function toggleSpeaker(){
+    setSpeaker(!speaker)
   }
 
   function leave() {
@@ -309,11 +317,16 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     case 'AUDIO_ROOM':
       return (
         <CallingScreen
-        ConnectedUserData={otherUserData.current}
+        socket={socket}
+        socketId={otherUserScoketId.current}
+          ConnectedUserData={otherUserData.current}
           leave={leave}
+          toggleSpeaker={toggleSpeaker}
           toggleMic={toggleMic}
-          navigation={navigation}
-        />
+          navigation={navigation} 
+          speakerEnabled={false} 
+          muteEnabled={false}   
+         />
       );
     default:
       return null;

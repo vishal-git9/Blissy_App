@@ -17,14 +17,6 @@ console.log("hi")
     android: PERMISSIONS.ANDROID.RECORD_AUDIO,
   }) as Permission;
 
-  useEffect(() => {
-    (async () => {
-      const result = await check(microphonePermission);
-      if (result !== RESULTS.GRANTED) {
-        setVisible(true);
-      }
-    })();
-  }, []);
 
   const handleAllow = async () => {
     const result = await request(microphonePermission);

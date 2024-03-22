@@ -23,6 +23,10 @@ import {ApiEndPoint} from '../../config';
 import MicrophonePermissionModal from '../../common/permissions/microphone';
 import { useSelector } from 'react-redux';
 import { AuthSelector } from '../../redux/uiSlice';
+import {requestBluetoothPermission, requestMicrophonePermission} from '../../utils/permission';
+import checkMicrophonePermission from '../../common/permissions/checkMicroPermission';
+import checkLocationPermission from '../../common/permissions/checkLocationPermission';
+import AnimatedBackground from '../../common/animation/animatedBackground';
 
 interface iconsLabelI {
   id: number;
@@ -85,22 +89,57 @@ console.log(socket.id)
     if (granted) {
       Alert.alert('Microphone permission granted');
       // 
-      navigation.navigate('Connection');
-      setpermission(false)
       // You can now proceed with microphone-related functionality
     } else {
-      Alert.alert('Microphone permission denied');
-      setpermission(false)
+      Alert.alert('Microphone permission denied You can not use App Services');
       // Handle the denial of microphone permission accordingly
     }
   };
 
   const intiateRandomConnection = ()=>{
     navigation.navigate("AudioCallScreen",{socket:socket,user:user})
+    console.log("emitted the event for call")
     socket.emit('connectRandom')
   }
   
   useEffect(() => {
+    const verifyMicroPhonePermissions = async () => {
+      try {
+        const result = await checkMicrophonePermission();
+        if (result === 'granted') {
+          // Permission is granted
+          console.log("Microphone permission granted");
+        } else {
+          // Handle other permission states accordingly
+          console.log("Microphone permission not granted");
+          requestMicrophonePermission()
+        //   return <MicrophonePermissionModal
+        //   onPermissionResult={handleMicrophonePermissionResult}
+        // />
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    const verifyLocationPermissions = async () => {
+      try {
+        const result = await checkLocationPermission();
+        if (result === 'granted') {
+          // Permission is granted
+          console.log("location permission granted");
+        } else {
+          // Handle other permission states accordingly
+          requestBluetoothPermission()
+          console.log("location permission not granted");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    verifyMicroPhonePermissions()
+    verifyLocationPermissions()
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
@@ -123,7 +162,9 @@ console.log(socket.id)
   }, []);
 
   useEffect(() => {
+    
     return () => {
+      console.log("removed from screen")
       socket.on('disconnect', () => {
         console.log('user disconnected from socket');
       });
@@ -131,6 +172,7 @@ console.log(socket.id)
   }, []);
 
   return (
+    // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}>
     <View style={styles.container}>
       <TopBar navigation={navigation} />
       <ToggleButton value={value} setValue={setValue} />
@@ -177,11 +219,6 @@ console.log(socket.id)
               width: '90%',
               alignSelf: 'center',
             }}>
-            {permission && (
-              <MicrophonePermissionModal
-                onPermissionResult={handleMicrophonePermissionResult}
-              />
-            )}
             <TalkNowButton
               label="Connect Now"
               onPress={intiateRandomConnection}
@@ -199,6 +236,7 @@ console.log(socket.id)
         </View>
       )}
     </View>
+    // </AnimatedBackground>
   );
 };
 

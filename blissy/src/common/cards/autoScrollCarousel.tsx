@@ -76,7 +76,7 @@ const AutoScrollCarousel: React.FC = () => {
       // Scroll to the next item
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
       setCurrentIndex(nextIndex);
-    }, 3000); // Change slides every 3 seconds
+    }, 5000); // Change slides every 3 seconds
 
     return () => clearInterval(interval); // Clean up the interval on component unmount
   }, [currentIndex]);

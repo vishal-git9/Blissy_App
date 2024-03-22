@@ -18,7 +18,6 @@ import colors from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { RouteBackButton2 } from '../../common/button/BackButton';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { socket } from '../../api/socket';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -37,22 +36,22 @@ interface ProfileScreenProps {
 }
 
 // Sample starting messages
-const initialMessages: Message[] = [
-  { id: '1', text: 'Yes sure but this is not something I like though.', sender: 'them' },
-  { id: '2', text: "Okay, No problem! We can provide you other options.", sender: 'me' },
-  { id: '3', text: "That's Great! Thanks.", sender: 'them' },
-  { id: '4', text: "You're Welcome!", sender: 'me' },
-];
+// const initialMessages: Message[] = [
+//   { id: '1', text: 'Yes sure but this is not something I like though.', sender: 'them' },
+//   { id: '2', text: "Okay, No problem! We can provide you other options.", sender: 'me' },
+//   { id: '3', text: "That's Great! Thanks.", sender: 'them' },
+//   { id: '4', text: "You're Welcome!", sender: 'me' },
+// ];
 
 const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
-  const { userId } = route.params;
-  const [messages, setMessages] = useState(initialMessages);
-  const [currentMessage, setCurrentMessage] = useState('');
+  const { userDetails,socketId ,socket} = route.params;
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
   const yValue = useRef(new Animated.Value(0)).current;
 
-  // Function to send a message
+  console.log(socket)
+  // Function to send a messagce
   const sendMessage = () => {
     if (inputText.trim()) {
       const newMessage: Message = {
@@ -62,7 +61,8 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
       };
       yValue.setValue(0); // Reset the animation
       setMessages(prevMessages => [...prevMessages, newMessage]);
-      socket.emit('sendMessage', { userId, message: currentMessage }); //calling the sockets
+      console.log("userId",socketId)
+      socket.emit('privateMessageSendSuccessful', {message: newMessage,userid:socketId }); //calling the sockets
       setInputText('');
       flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to the end to show new message
 
@@ -76,15 +76,16 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
   };
 
   useEffect(() => {
-    socket.emit('joinRoom', { userId });
 
-    socket.on('receiveMessage', (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
+    socket.on('privateMessageSuccessfulAdd', (messageObject) => {
+      console.log(messageObject,"messageobject")
+      const newMessage = {...messageObject.message,sender:"them"}
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
     });
 
     // Cleanup on component unmount
     return () => {
-      socket.off('receiveMessage');
+      socket.off('privateMessageSuccessfulAdd');
     };
   }, []);
 
@@ -123,7 +124,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
             <RouteBackButton2 onPress={()=>navigation.goBack()}/>
         <View style={styles.headerContent}>
           <Image source={{ uri: 'https://randomuser.me/api/portraits/men/1.jpg' }} style={styles.avatar} />
-          <Text style={styles.userName}>Den Shearer</Text>
+          <Text style={styles.userName}>{userDetails?.name}</Text>
         </View>
       </View>
 
@@ -176,11 +177,11 @@ const styles = StyleSheet.create({
   myMessage: {
     backgroundColor: colors.primary,
     alignSelf: 'flex-end',
-    marginRight: actuatedNormalize(10),
+    marginRight: actuatedNormalize(20),
   },
   theirMessage: {
     backgroundColor: colors.dark,
-    marginLeft: actuatedNormalize(10),
+    marginLeft: actuatedNormalize(20),
   },
   messageText: {
     fontSize: actuatedNormalize(16),

@@ -11,7 +11,7 @@ export type RootStackParamList = {
     Healerlist:undefined;
     Drawer:undefined;
     Connection:undefined;
-    ChatWindow:{ userId: string };
+    ChatWindow:{ userDetails: UserInterface | null,socketId:string | null,socket:Socket};
     Chatlist:undefined;
     Calllist:undefined;
     Wallet:undefined;
