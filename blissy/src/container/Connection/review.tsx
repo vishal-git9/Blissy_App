@@ -1,5 +1,5 @@
-import React, {useState, useRef} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useState, useRef, useEffect} from 'react';
+import {View, Text, StyleSheet, BackHandler} from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from "react-native-vector-icons/Feather"
@@ -34,7 +34,18 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
   const [rating, setRating] = useState(4);
   const ratingRef = useRef<Animatable.AnimatableComponent<any, any>>(null);  ;
   const color = ratingColors[rating] || colors.yellow;
-  const {name} = route.params
+  const {name} = route.params;
+useEffect(()=>{
+  const backHandler = BackHandler.addEventListener(
+    'hardwareBackPress',
+    () => {
+      navigation.pop(2)
+      return true;
+    },
+  );
+  return () => backHandler.remove();
+
+},[])
   return (
     <>
       <RouteBackButton onPress={() => navigation.pop(2)} />

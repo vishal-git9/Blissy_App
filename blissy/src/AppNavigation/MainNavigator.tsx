@@ -8,13 +8,13 @@ import {LoginScreen} from '../container/login/login';
 import { HealerList } from '../common/healerList/healerlist';
 import { Healerdetails } from '../common/healerList/healerdetails';
 import {DrawerNavigator} from './Drawer';
-import { Connection } from '../container/Connection/connection';
 import ChatListScreen from '../container/Connection/chatlist';
 import ChatWindowScreen from '../container/Connection/chatwindow';
 import ReviewScreen from '../container/Connection/review';
 import CallListScreen from '../container/Connection/callList';
 import GlobalBackHandler from './Globalbackhandler';
 import VoiceCall from '../container/audioCall/audiocall';
+import { ComingSoon } from '../container/comingsoon/comingsoon';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -56,6 +56,7 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="ChatWindow" component={ChatWindowScreen} />
         <Stack.Screen name="ReviewScreen" component={ReviewScreen} /> 
         <Stack.Screen name="AudioCallScreen" component={VoiceCall} /> 
+        <Stack.Screen name="ComingsoonScreen" component={ComingSoon} /> 
       </Stack.Navigator>
       <GlobalBackHandler/>
     </NavigationContainer>

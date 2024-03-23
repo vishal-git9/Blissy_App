@@ -2,6 +2,9 @@ import React from 'react';
 import { TouchableOpacity, Text, TouchableOpacityProps, StyleProp, ViewStyle } from 'react-native';
 import { Icon } from 'react-native-vector-icons/Icon'; // Replace with the actual icon provider you are using
 import { fonts } from '../../constants/fonts';
+import { Badge } from 'react-native-paper';
+import colors from '../../constants/colors';
+import { actuatedNormalize } from '../../constants/PixelScaling';
 
 interface IconButtonInterface extends TouchableOpacityProps {
   onpress: () => void;
@@ -12,7 +15,9 @@ interface IconButtonInterface extends TouchableOpacityProps {
   iconcolor: string;
   textcolor: string;
   label: string;
-  textSize:number
+  textSize:number;
+  IsBadge?:boolean;
+  BadgeCount?:number;
 }
 
 export const IconButton: React.FC<IconButtonInterface> = ({
@@ -25,6 +30,8 @@ export const IconButton: React.FC<IconButtonInterface> = ({
   textcolor,
   label,
   textSize,
+  IsBadge,
+  BadgeCount
 }) => {
   return (
     <TouchableOpacity onPress={onpress} style={styles}>
@@ -33,6 +40,7 @@ export const IconButton: React.FC<IconButtonInterface> = ({
       <Text style={{ color: textcolor, fontFamily: fonts.NexaBold,fontSize:textSize }}>
         {label}
       </Text>
+      {IsBadge &&       <Badge style={{backgroundColor:colors.primary,position:"absolute",top:actuatedNormalize(0),right:actuatedNormalize(1)}}>{BadgeCount}</Badge>}
     </TouchableOpacity>
   );
 };

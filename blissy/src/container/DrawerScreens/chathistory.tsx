@@ -38,8 +38,7 @@ const chats: Chat[] = [
 const ChatHistory: React.FC<NavigationStackProps> = ({navigation}) => {
   const renderChatItem = ({item}: {item: Chat}) => (
     <TouchableOpacity
-      style={styles.chatItem}
-      onPress={() => navigation.navigate('ChatWindow', {chatId: item.id})}>
+      style={styles.chatItem}>
       <Image source={{uri: item.avatar}} style={styles.avatar} />
       <View style={styles.chatDetails}>
         <Text style={styles.chatName}>{item.name}</Text>

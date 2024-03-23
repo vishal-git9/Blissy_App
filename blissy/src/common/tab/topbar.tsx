@@ -18,7 +18,7 @@ const TopBar:React.FC<NavigationStackProps> = ({ navigation }) => {
         <MaterialIcons name="segment" size={actuatedNormalize(30)} color={colors.white} style={styles.icon} />
       </TouchableOpacity>
       <View style={styles.spacer} />
-      <TouchableOpacity>
+      <TouchableOpacity onPress={()=>navigation.navigate("ComingsoonScreen",{screenName:"Wallet"})}>
         <AntDesign name="wallet" size={24} color={colors.white} style={styles.icon} />
       </TouchableOpacity>
     </View>

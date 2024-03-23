@@ -40,19 +40,19 @@ const iconsLabel: iconsLabelI[] = [
     id: 1,
     label: 'chats',
     iconName: 'chatbox-ellipses',
-    navigate: 'Chatlist',
+    navigate: 'ComingsoonScreen',
   },
   {
     id: 2,
     label: 'calls',
     iconName: 'call',
-    navigate: 'Calllist',
+    navigate: 'ComingsoonScreen',
   },
   {
     id: 3,
     label: 'coupons',
     iconName: 'gift',
-    navigate: 'Coupons',
+    navigate: 'ComingsoonScreen',
   },
 ];
 export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
@@ -204,7 +204,7 @@ console.log(socket.id)
                 key={item.id}
                 delay={id * 500}>
                 <RoundedIconContainer
-                  onpress={() => navigation.navigate(item.navigate)}
+                  onpress={() => navigation.navigate(item.navigate,{screenName:item.label})}
                   label={item.label}
                   iconName={item.iconName}
                 />

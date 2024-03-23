@@ -41,12 +41,12 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   const [speaker,setSpeaker] = useState<boolean>(false)
   const [type, setType] = useState<string>('LOADING');
   const { socket,user } = route.params
-  console.log(socket.id,"socket Id audiocall")
   // const [callerId] = useState<string>(
   //   Math.floor(100000 + Math.random() * 900000).toString(),
   // );
   const otherUserData = useRef<UserInterface | null>(null)
   const otherUserScoketId = useRef<string | null>(null);
+
 
   const [localMicOn, setLocalMicOn] = useState<boolean>(true);
   // const [localWebcamOn, setLocalWebcamOn] = useState<boolean>(true);

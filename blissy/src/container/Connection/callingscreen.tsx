@@ -22,6 +22,7 @@ import { IconButton } from '../../common/button/iconbutton';
 import ChatWindowScreen from './chatwindow';
 import UserProfile from '../DrawerScreens/Userprofile';
 import { Socket } from 'socket.io-client';
+import { Badge } from 'react-native-paper';
 
 interface IconContainerProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -113,7 +114,10 @@ const [userChannel,setUserChannel] = useState<string>("Call")
           <TouchableOpacity style={styles.readReceiptsButton}  >
             <Text style={styles.readReceiptsText}>View Profile</Text>
           </TouchableOpacity>
+
             <IconButton
+            IsBadge={true}
+            BadgeCount={3}
             IconProvider={MaterialIcons}
             iconame="chat"
             label="Chat"

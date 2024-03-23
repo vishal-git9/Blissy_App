@@ -7,7 +7,7 @@ import { fonts } from '../constants/fonts';
 const OfferBadge: React.FC = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Complete your first call for free</Text>
+      <Text style={styles.text}>Healers will soon be available for you.</Text>
     </View>
   );
 };

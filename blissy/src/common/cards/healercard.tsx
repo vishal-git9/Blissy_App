@@ -42,7 +42,7 @@ const ProfileCard: React.FC<Props> = ({
         {/* <Card.Cover source={{ uri: imageUrl }} /> */}
         <Card.Content>
           <View style={styles.header}>
-            <Avatar.Image size={48} source={{uri: imageUrl}} />
+            <Avatar.Image size={48} source={{uri: imageUrl}}/>
             <View style={styles.details}>
               <Title style={{color: colors.white, fontFamily: fonts.NexaBold}}>
                 {name}

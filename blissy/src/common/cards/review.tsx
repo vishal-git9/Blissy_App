@@ -9,39 +9,39 @@ import colors from '../../constants/colors';
 export const reviewsArray: ReviewCardProps[] = [
   {
     id: 1,
-    userName: 'John Doe',
+    userName: 'Vishal',
     userDesc: 'This product is amazing! Highly recommend to everyone.',
     rating: 5,
   },
   {
     id: 2,
-    userName: 'Jane Smith',
-    userDesc: 'Good quality, but took longer to arrive than expected.',
+    userName: 'Aman',
+    userDesc: 'Good quality, but took longer to connect than expected.',
     rating: 4,
   },
   {
     id: 3,
-    userName: 'Jane clark',
-    userDesc: 'Good quality, but took longer to arrive than expected.',
-    rating: 4,
+    userName: 'Amit',
+    userDesc: 'This App is well developed talked with 20 people without any issue',
+    rating: 5,
   },
   {
     id: 4,
-    userName: 'Jannie',
-    userDesc: 'Good quality, but took longer to arrive than expected.',
+    userName: 'Shivam',
+    userDesc: 'Amazing App, been using it for couple of weeks.',
     rating: 4,
   },
   {
     id: 5,
     userName: 'kunal',
-    userDesc: 'Good quality, but took longer to arrive than expected.',
+    userDesc: 'Some features are unavailabe I hope they develop it soon.',
     rating: 4,
   },
   {
     id: 6,
     userName: 'rakhi',
-    userDesc: 'Good quality, but took longer to arrive than expected.',
-    rating: 4,
+    userDesc: 'Great Calling experience, talked with 30 people so far.',
+    rating: 5,
   },
   // Add more reviews as needed
 ];

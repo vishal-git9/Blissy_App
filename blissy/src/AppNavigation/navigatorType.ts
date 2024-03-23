@@ -18,5 +18,6 @@ export type RootStackParamList = {
     Coupons:undefined;
     ReviewScreen:{name:String | undefined};
     AudioCallScreen:{socket:Socket,user:UserInterface|null};
+    ComingsoonScreen:{screenName:string}
   };
   
