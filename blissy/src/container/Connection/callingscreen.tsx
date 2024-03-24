@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -9,20 +9,18 @@ import {
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import colors from '../../constants/colors';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import {fonts} from '../../constants/fonts';
 import AnimatedCounter from '../../common/counter/counter';
-import {NavigationStackProps} from '../Prelogin/onboarding';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { UserInterface } from '../../redux/uiSlice';
 import { IconButton } from '../../common/button/iconbutton';
-import ChatWindowScreen from './chatwindow';
-import UserProfile from '../DrawerScreens/Userprofile';
 import { Socket } from 'socket.io-client';
-import { Badge } from 'react-native-paper';
+import { useDispatch, useSelector } from 'react-redux';
+import {  MessageCountSelector, addMessage, chatScreenActiveSelector, setChatScreenActive } from '../../redux/messageSlice';
+import playNotificationSound from '../../common/sound/notification';
 
 interface IconContainerProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -67,11 +65,15 @@ const IconContainer: React.FC<IconContainerProps> = ({ConnectedUserData,navigati
 };
 
 const CallingScreen: React.FC<CallingScreenProps> = ({navigation,leave,toggleMic,ConnectedUserData,toggleSpeaker,socketId,socket}) => {
-  const [seconds, setSeconds] = useState(0);
-  const [mute,setMute] = useState(false);
-  const [speaker,setSpeaker] = useState(false)
-const [userChannel,setUserChannel] = useState<string>("Call")
-
+  const [seconds, setSeconds] = useState<number>(0);
+  const [mute,setMute] = useState<boolean>(false);
+  const [speaker,setSpeaker] = useState<boolean>(false)
+  // const [messageCount,setMessageCount] = useState<number>(0)
+// const [userChannel,setUserChannel] = useState<string>("Call")
+const isChatStateActive = useSelector(chatScreenActiveSelector)
+const messageCount = useSelector(MessageCountSelector)
+console.log(isChatStateActive)
+const dispatch = useDispatch()
   const handleToggleMic = ()=>{
     toggleMic()
     setMute(!mute)
@@ -87,6 +89,22 @@ const [userChannel,setUserChannel] = useState<string>("Call")
   //   case "Profile" :
   //     return <UserProfile navigation={navigation}/>
   // }
+
+
+  useEffect(() => {
+
+    socket.on('privateMessageSuccessfulAdd', (messageObject) => {
+      const newMessage = {...messageObject.message,sender:"them"}
+      dispatch(addMessage(newMessage));
+      playNotificationSound()
+    });
+    // Cleanup on component unmount
+    return () => {
+      socket.off('privateMessageSuccessfulAdd');
+    };
+  }, [isChatStateActive]);
+
+
   return (
     <SafeAreaView style={styles.container}>
       {/* User section */}
@@ -116,13 +134,16 @@ const [userChannel,setUserChannel] = useState<string>("Call")
           </TouchableOpacity>
 
             <IconButton
-            IsBadge={true}
-            BadgeCount={3}
+            IsBadge={ messageCount > 0 ? true : false}
+            BadgeCount={messageCount}
             IconProvider={MaterialIcons}
             iconame="chat"
             label="Chat"
             iconcolor={colors.white}
-            onpress={() => navigation.navigate("ChatWindow",{userDetails:ConnectedUserData,socketId:socketId,socket:socket})}   
+            onpress={() =>{
+              dispatch(setChatScreenActive(true))
+              navigation.navigate("ChatWindow",{userDetails:ConnectedUserData,socketId:socketId,socket:socket})
+            }}   
                size={18}
             styles={styles.SecondaryButton}
             textSize={actuatedNormalize(18)}

@@ -39,7 +39,7 @@ useEffect(()=>{
   const backHandler = BackHandler.addEventListener(
     'hardwareBackPress',
     () => {
-      navigation.pop(2)
+      navigation.navigate("Drawer")
       return true;
     },
   );
@@ -135,7 +135,7 @@ useEffect(()=>{
             iconame="send"
             label="Submit"
             iconcolor={colors.white}
-            onpress={() => navigation.pop(2)}
+            onpress={() =>navigation.navigate("Drawer")}
             size={18}
             styles={styles.PrimaryButton}
             textSize={actuatedNormalize(18)}
@@ -146,7 +146,7 @@ useEffect(()=>{
             iconame="report"
             label="Report"
             iconcolor={colors.white}
-            onpress={() => navigation.pop(2)}
+            onpress={() =>navigation.navigate("Drawer")}
             size={18}
             styles={styles.SecondaryButton}
             textSize={actuatedNormalize(18)}

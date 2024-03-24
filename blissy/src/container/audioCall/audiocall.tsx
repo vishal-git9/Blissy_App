@@ -22,6 +22,8 @@ import { RouteProp } from '@react-navigation/native';
 import AnimatedBorderButton from '../../common/button/borderButton';
 import CircularImageReveal from '../../common/cards/waitingUser';
 import { fonts } from '../../constants/fonts';
+import { useDispatch } from 'react-redux';
+import { resetMessages } from '../../redux/messageSlice';
 
 interface AppProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -39,6 +41,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [speaker,setSpeaker] = useState<boolean>(false)
+  const dispatch = useDispatch()
   const [type, setType] = useState<string>('LOADING');
   const { socket,user } = route.params
   // const [callerId] = useState<string>(
@@ -46,7 +49,6 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   // );
   const otherUserData = useRef<UserInterface | null>(null)
   const otherUserScoketId = useRef<string | null>(null);
-
 
   const [localMicOn, setLocalMicOn] = useState<boolean>(true);
   // const [localWebcamOn, setLocalWebcamOn] = useState<boolean>(true);
@@ -98,6 +100,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
 
     socket.on("callEnded", () => {
       navigation.navigate("ReviewScreen", {name:otherUserData.current?.name})
+      dispatch(resetMessages())
     })
 
     socket.on('callAnswered', (data: { rtcMessage: RTCSessionDescription }) => {
@@ -194,11 +197,10 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   useEffect(() => {
     InCallManager.start({ media: 'audio' });
     InCallManager.setKeepScreenOn(true);
-    InCallManager.setForceSpeakerphoneOn(speaker); // false for audio and true for video
     return () => {
       InCallManager.stop();
     };
-  }, [speaker]);
+  }, []);
 
   function sendICEcandidate(data: {
     calleeId: string;
@@ -232,7 +234,6 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
         );
         const sessionDescription = await peerConnection.current.createAnswer();
         await peerConnection.current.setLocalDescription(sessionDescription);
-  console.log("getting call from",otherUserScoketId.current)
         answerCall({
           callerId: otherUserScoketId.current!,
           // calleeId:socket.id,
@@ -268,7 +269,6 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     socket.emit('call', data);
   }
 
-  console.log(socket, "socketId")
 
   function toggleMic() {
     localMicOn ? setLocalMicOn(false) : setLocalMicOn(true);
@@ -279,6 +279,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
 
   function toggleSpeaker(){
     setSpeaker(!speaker)
+    InCallManager.setForceSpeakerphoneOn(!speaker); // false for audio and true for video
   }
 
   function leave() {
@@ -287,6 +288,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     setRemoteStream(null);
     socket.emit("callEnded", otherUserScoketId.current)
     otherUserScoketId.current = null;
+    dispatch(resetMessages())
   }
 
   function cancelCall(){

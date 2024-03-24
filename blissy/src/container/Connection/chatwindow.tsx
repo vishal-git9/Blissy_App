@@ -21,13 +21,16 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MessageSelector, addMessage, chatScreenActiveSelector, resetMessageCount, setChatScreenActive } from '../../redux/messageSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ChatWindow'>;
+
 
 interface Message {
   id: string;
   text: string;
-  sender: 'me' | 'them';
+  sender: string;
 }
 
 interface ProfileScreenProps {
@@ -45,23 +48,24 @@ interface ProfileScreenProps {
 
 const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
   const { userDetails,socketId ,socket} = route.params;
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
   const yValue = useRef(new Animated.Value(0)).current;
 
+  const messages = useSelector(MessageSelector);
+
+  const dispatch = useDispatch()
   console.log(socket)
   // Function to send a messagce
   const sendMessage = () => {
     if (inputText.trim()) {
-      const newMessage: Message = {
+      const newMessage = {
         id: Date.now().toString(),
         text: inputText.trim(),
         sender: 'me',
       };
       yValue.setValue(0); // Reset the animation
-      setMessages(prevMessages => [...prevMessages, newMessage]);
-      console.log("userId",socketId)
+      dispatch(addMessage(newMessage));
       socket.emit('privateMessageSendSuccessful', {message: newMessage,userid:socketId }); //calling the sockets
       setInputText('');
       flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to the end to show new message
@@ -75,19 +79,17 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
     }
   };
 
-  useEffect(() => {
+  // useEffect(() => {
 
-    socket.on('privateMessageSuccessfulAdd', (messageObject) => {
-      console.log(messageObject,"messageobject")
-      const newMessage = {...messageObject.message,sender:"them"}
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-    });
+  //   socket.on('privateMessageSuccessfulAdd', (messageObject) => {
+  //     callback(0)
+  //   });
 
-    // Cleanup on component unmount
-    return () => {
-      socket.off('privateMessageSuccessfulAdd');
-    };
-  }, []);
+  //   // Cleanup on component unmount
+  //   return () => {
+  //     socket.off('privateMessageSuccessfulAdd');
+  //   };
+  // }, []);
 
   // Render each chat message
   const renderMessageItem = ({ item,index }: { item: Message,index: number }) => {
@@ -121,10 +123,17 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-            <RouteBackButton2 onPress={()=>navigation.goBack()}/>
+            <RouteBackButton2 onPress={()=>{
+              dispatch(setChatScreenActive(false))
+              dispatch(resetMessageCount())
+              navigation.goBack()
+            }}/>
         <View style={styles.headerContent}>
           <Image source={{ uri: 'https://randomuser.me/api/portraits/men/1.jpg' }} style={styles.avatar} />
+          <View>
           <Text style={styles.userName}>{userDetails?.name}</Text>
+          <Text style={styles.userStatus}>{"online"}</Text>
+          </View>
         </View>
       </View>
 
@@ -242,6 +251,11 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: actuatedNormalize(16),
+    color:colors.white,
+    fontFamily:fonts.NexaRegular,
+  },
+  userStatus:{
+    fontSize: actuatedNormalize(14),
     color:colors.white,
     fontFamily:fonts.NexaRegular,
   },

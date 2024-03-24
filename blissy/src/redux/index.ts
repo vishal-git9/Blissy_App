@@ -3,9 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {persistReducer, persistStore}  from "redux-persist"
 import IsUISlice, { AuthSlice } from './uiSlice';
 import {API} from '../api/Api';
+import MessageSlice from './messageSlice';
 const rootReducer = combineReducers({
   [API.reducerPath]: API.reducer,
-  Auth:AuthSlice.reducer
+  Auth:AuthSlice.reducer,
+  Message:MessageSlice.reducer
 });
 const persistConfig = {
   key: 'root',

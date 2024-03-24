@@ -1,6 +1,7 @@
 import { Socket } from "socket.io-client";
 import { ProfileData } from "../mockdata/healerData";
 import { UserInterface } from "../redux/uiSlice";
+import { Dispatch, SetStateAction } from "react";
 
 export type RootStackParamList = {
     Onboarding:undefined;
