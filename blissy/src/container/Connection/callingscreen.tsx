@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  BackHandler,
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -21,6 +22,7 @@ import { Socket } from 'socket.io-client';
 import { useDispatch, useSelector } from 'react-redux';
 import {  MessageCountSelector, addMessage, chatScreenActiveSelector, setChatScreenActive } from '../../redux/messageSlice';
 import playNotificationSound from '../../common/sound/notification';
+import ProfileScreenModal from '../../common/modals/profile';
 
 interface IconContainerProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -68,9 +70,11 @@ const CallingScreen: React.FC<CallingScreenProps> = ({navigation,leave,toggleMic
   const [seconds, setSeconds] = useState<number>(0);
   const [mute,setMute] = useState<boolean>(false);
   const [speaker,setSpeaker] = useState<boolean>(false)
+  const [profileModal,setProfileModal] = useState<boolean>(false)
   // const [messageCount,setMessageCount] = useState<number>(0)
 // const [userChannel,setUserChannel] = useState<string>("Call")
 const isChatStateActive = useSelector(chatScreenActiveSelector)
+console.log(ConnectedUserData)
 const messageCount = useSelector(MessageCountSelector)
 console.log(isChatStateActive)
 const dispatch = useDispatch()
@@ -83,12 +87,25 @@ const dispatch = useDispatch()
     setSpeaker(!speaker)
   }
 
+  const handleProfileUsermodal = ()=>{
+    setProfileModal(true)
+  }
   // switch (userChannel) {
   //   case "Chat" :
   //     return <ChatWindowScreen navigation={navigation} />
   //   case "Profile" :
   //     return <UserProfile navigation={navigation}/>
   // }
+
+  useEffect(()=>{
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        return true; // Return true to prevent default behavior (going back)
+      }
+    );
+    return () => backHandler.remove();
+  })
 
 
   useEffect(() => {
@@ -108,6 +125,7 @@ const dispatch = useDispatch()
   return (
     <SafeAreaView style={styles.container}>
       {/* User section */}
+      <ProfileScreenModal onClose={()=>setProfileModal(false)} visible={profileModal} userdata={ConnectedUserData}/>
       <View style={styles.userSection}>
         <View style={{justifyContent: 'center', alignItems: 'center'}}>
           <Text style={styles.connectedText}>You connected with {ConnectedUserData?.name}</Text>
@@ -129,7 +147,7 @@ const dispatch = useDispatch()
           <Text style={styles.knowText}>
             Know What {ConnectedUserData?.name} and You have common
           </Text>
-          <TouchableOpacity style={styles.readReceiptsButton}  >
+          <TouchableOpacity style={styles.readReceiptsButton}  onPress={handleProfileUsermodal}>
             <Text style={styles.readReceiptsText}>View Profile</Text>
           </TouchableOpacity>
 
@@ -178,6 +196,7 @@ const styles = StyleSheet.create({
     fontSize: actuatedNormalize(22),
     fontFamily: fonts.NexaBold,
     color: colors.white,
+    textAlign:"center"
   },
   timeText: {
     fontSize: actuatedNormalize(16),

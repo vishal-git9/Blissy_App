@@ -21,14 +21,16 @@ export interface IsUIState {
     token:string;
     user:null | UserInterface;
     isAuthenticated:boolean
-    isRegisterd:boolean
+    isRegisterd:boolean;
+    isNewUser:boolean;
 }
 
 const initialState : IsUIState = {
     token:'',
     user:null,
     isAuthenticated:false,
-    isRegisterd:false
+    isRegisterd:false,
+    isNewUser:true
 }
 
 
@@ -52,6 +54,7 @@ export const AuthSlice = createSlice({
         })
         builder.addMatcher(UserApi.endpoints.postUser.matchFulfilled,(state,{payload})=>{
             state.isRegisterd = true
+            state.isNewUser = false
         })
     }
 })

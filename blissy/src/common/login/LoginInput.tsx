@@ -54,7 +54,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
         hasBackdrop={false}
         // statusBarTranslucent={true}
         animationOut="slideOutDown">
-        {!isLoading && <RouteBackButton onPress={() => navigation.goBack()} />}
+        {!isLoading && <RouteBackButton onPress={() => navigation.canGoBack() ?  navigation.goBack(): null}/>}
         {isLoading ? (
           <View style={styles.loaderContainer}>
             <Loader size={50} />

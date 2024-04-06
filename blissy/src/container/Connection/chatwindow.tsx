@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Image } from 'react-native';
+import { BackHandler, Image } from 'react-native';
 import {
   View,
   Text,
@@ -50,6 +50,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
   const { userDetails,socketId ,socket} = route.params;
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
+  const [istyping,setIsTyping] = useState<boolean>(false)
   const yValue = useRef(new Animated.Value(0)).current;
 
   const messages = useSelector(MessageSelector);
@@ -79,17 +80,30 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
     }
   };
 
-  // useEffect(() => {
 
-  //   socket.on('privateMessageSuccessfulAdd', (messageObject) => {
-  //     callback(0)
-  //   });
+  useEffect(()=>{
+    socket.on("notify_typing_state",()=>{
+      console.log("hi")
+      setIsTyping(true)
+    })
 
-  //   // Cleanup on component unmount
-  //   return () => {
-  //     socket.off('privateMessageSuccessfulAdd');
-  //   };
-  // }, []);
+    return ()=>{
+      socket.off("notify_typing_state")
+    }
+  },[])
+
+
+    
+  useEffect(()=>{
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        dispatch(resetMessageCount())
+        return false; // Return true to prevent default behavior (going back)
+      }
+    );
+    return () => backHandler.remove();
+  })
 
   // Render each chat message
   const renderMessageItem = ({ item,index }: { item: Message,index: number }) => {
@@ -132,7 +146,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
           <Image source={{ uri: 'https://randomuser.me/api/portraits/men/1.jpg' }} style={styles.avatar} />
           <View>
           <Text style={styles.userName}>{userDetails?.name}</Text>
-          <Text style={styles.userStatus}>{"online"}</Text>
+          <Text style={styles.userStatus}>{istyping ? "Typing...":"online"}</Text>
           </View>
         </View>
       </View>
@@ -154,7 +168,10 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
         <View style={styles.inputContainer}>
           <TextInput
             value={inputText}
-            onChangeText={setInputText}
+            onChangeText={(text)=>{
+              socket.emit("private_typing_state",socketId)
+              setInputText(text)
+            }}
             placeholder="Type here..."
             style={styles.input}
             placeholderTextColor={colors.gray}

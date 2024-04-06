@@ -116,7 +116,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       'ICEcandidate',
       (data: { rtcMessage: { candidate: string; id: string; label: number } }) => {
         let message = data.rtcMessage;
-
+console.log("getting the message")
         peerConnection.current
           .addIceCandidate(
             new RTCIceCandidate({
@@ -275,6 +275,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     localStream?.getAudioTracks().forEach(track => {
       localMicOn ? (track.enabled = false) : (track.enabled = true);
     });
+    // socket.emit("private_mute_state",otherUserScoketId.current)
   }
 
   function toggleSpeaker(){

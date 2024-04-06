@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid} from 'react-native';
 import colors from '../../constants/colors';
 import {Loader} from '../../common/loader/loader';
@@ -21,12 +21,14 @@ import AutoLoopCarousel, {reviewsArray} from '../../common/cards/review';
 import io from 'socket.io-client';
 import {ApiEndPoint} from '../../config';
 import MicrophonePermissionModal from '../../common/permissions/microphone';
-import { useSelector } from 'react-redux';
-import { AuthSelector } from '../../redux/uiSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { AuthSelector, UserInterface } from '../../redux/uiSlice';
 import {requestBluetoothPermission, requestMicrophonePermission} from '../../utils/permission';
 import checkMicrophonePermission from '../../common/permissions/checkMicroPermission';
 import checkLocationPermission from '../../common/permissions/checkLocationPermission';
 import AnimatedBackground from '../../common/animation/animatedBackground';
+import { resetMessageCount, resetMessages } from '../../redux/messageSlice';
+import { AppState } from 'react-native';
 
 interface iconsLabelI {
   id: number;
@@ -59,10 +61,11 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   const [data, setData] = useState(HealerMockData.slice(0, 10)); // Initial data for first 10 cards
   const [value, setValue] = useState<string>('healers');
   const {user} = useSelector(AuthSelector)
-
+  const dispatch = useDispatch()
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
   const [permission, setpermission] = useState(false);
+  const otherUserScoketId = useRef<string | null>(null);
   console.log(user,"user")
   const socket = useMemo(
     () =>
@@ -164,8 +167,19 @@ console.log(socket.id)
   useEffect(() => {
     
     return () => {
-      console.log("removed from screen")
+      console.log("removed from screen home screen")
+      socket.on("connect",()=>{
+        console.log("user connected",socket.id)
+      })
+
+      socket.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
+        otherUserScoketId.current = data.callerId
+        // console.log(data, "data of paired user")
+      })
       socket.on('disconnect', () => {
+        dispatch(resetMessageCount())
+        dispatch(resetMessages())
+        socket.emit("callEnded",otherUserScoketId.current)
         console.log('user disconnected from socket');
       });
     };

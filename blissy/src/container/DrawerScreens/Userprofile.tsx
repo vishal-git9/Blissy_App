@@ -11,9 +11,13 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {LabelWithIcon} from '../../common/drawer/iconlabel';
 import AvatarRingsAnimation from '../../common/animation/avatarpulse';
 import { PrimaryButton } from '../../common/button/PrimaryButton';
+import { useSelector } from 'react-redux';
+import { AuthSelector } from '../../redux/uiSlice';
 
 const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
   // Sample user data - replace with real data as needed
+
+  const {user} = useSelector(AuthSelector)
   const userData = {
     mobileNumber: '123-456-7890',
     role: 'Adventurer',
@@ -35,7 +39,7 @@ const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
     }
   };
 
-  const RenderInterestItem = ({item}: {item: string}) => (
+  const RenderInterestItem = ({item}: {item: String}) => (
     <View style={styles.interestItem}>
       <Text style={styles.interestText}>{item}</Text>
     </View>
@@ -57,14 +61,14 @@ const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
             alignItems: 'center',
             columnGap: actuatedNormalize(10),
           }}>
-          <Text style={styles.nameText}>{`${userData.name}`}</Text>
+          <Text style={styles.nameText}>{`${user?.name}`}</Text>
           <Icon
             name={userData.gender === 'male' ? 'gender-male' : 'gender-female'}
             size={22}
             color={userData.gender === 'male' ? colors.skyBlue : colors.pink}
           />
         </View>
-        <Text style={styles.detailText}>Age: {userData.age}</Text>
+        <Text style={styles.detailText}>Age: {user?.age.toString()}</Text>
         <Text style={[styles.detailText,{marginTop:actuatedNormalize(10)}]}>{`[${userData.mentalHealthIssues.join(",")}]`}</Text>
       </View>
 
@@ -95,7 +99,7 @@ const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
         <View style={styles.descContainer}>
           <LabelWithIcon iconName="tennisball" label="Interest" />
           <View style={styles.interestsContainer}>
-          {userData.interest.map((el, _) => (
+          {user?.interest.map((el, _) => (
             <RenderInterestItem item={el} key={_} />
           ))}
           </View>
@@ -103,14 +107,14 @@ const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
         <View style={styles.descContainer}>
           <LabelWithIcon iconName="text" label="Languages you speak" />
           <View style={styles.interestsContainer}>
-          {userData.language.map((el, _) => (
+          {user?.language.map((el, _) => (
             <RenderInterestItem item={el} key={_} />
           ))}
           </View>
         </View>
-        <Text style={styles.mentalHealthText}>
+        {/* <Text style={styles.mentalHealthText}>
           {userData.mentalHealthIssues}
-        </Text>
+        </Text> */}
         {/* <FlatList
           data={userData.interest}
           renderItem={renderInterestItem}
@@ -167,6 +171,8 @@ const styles = StyleSheet.create({
   },
   interestText: {
     color: colors.white,
+    fontFamily:fonts.NexaRegular,
+    fontSize:actuatedNormalize(14)
   },
   TitleContainer: {
     marginTop: actuatedNormalize(30),

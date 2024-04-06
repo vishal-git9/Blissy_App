@@ -5,17 +5,18 @@ import { AuthSelector } from '../redux/uiSlice'
 import { useGetUserQuery } from '../api/userService'
 
 export const Navigator:React.FC = () => {
-    const {token,isAuthenticated,isRegisterd,user} = useSelector(AuthSelector)
+    const {token,isAuthenticated,isRegisterd,user,isNewUser} = useSelector(AuthSelector)
     const {data:userData,isLoading,refetch} = useGetUserQuery()
 
-    console.log(user?.isNewUser,"----user----",isRegisterd)
+    console.log(isNewUser,"----user----",isRegisterd)
+    // handle is registered logic if user left the registration form after loggin in
     useEffect(()=>{
         if(token){
             refetch().then(res=>console.log(res))
         }
         console.log(userData,"--userdata--")
     },[token])
-  return  <MainNavigator isLoggedIn={isAuthenticated} isNewUser={user?.isNewUser!}/>
+  return  <MainNavigator isLoggedIn={isAuthenticated} isNewUser={isNewUser}/>
    
   
 }

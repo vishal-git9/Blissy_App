@@ -30,6 +30,7 @@ const MessageSlice = createSlice({
     },
     resetMessages: (state) => {
         state.messages = [];
+        state.messageCount = 0
       }, 
       setChatScreenActive:(state,action:PayloadAction<boolean>)=>{
         state.chatScreenActive = action.payload
