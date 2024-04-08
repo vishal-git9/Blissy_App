@@ -146,8 +146,13 @@ const OTPInput: React.FC<OTPInputProps> = ({
                   justifyContent: 'center',
                   alignItems: 'center',
                   rowGap: actuatedNormalize(15),
+                  position:"relative"
                 },
               ]}>
+                 <Text
+                      style={{ color: colors.white, fontFamily: fonts.NexaXBold,position:"absolute",top:actuatedNormalize(25),right:actuatedNormalize(25)}}>
+                      OTP: 4321
+                    </Text>
               <OTPTextInput
                 containerStyle={{
                   justifyContent: 'center',

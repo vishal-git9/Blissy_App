@@ -41,6 +41,10 @@ export const AuthSlice = createSlice({
         setUsertoken:(state,action) => {
             state.token = action.payload
         },
+        setUserState:(state,action)=>{
+            state.isNewUser = action.payload
+        }
+        ,
         logoutUser: ()=> initialState
     },
     extraReducers:(builder)=>{
@@ -51,6 +55,7 @@ export const AuthSlice = createSlice({
         })
         builder.addMatcher(UserApi.endpoints.getUser.matchFulfilled,(state,{payload})=>{
             state.user = payload.data.user
+            // state.isNewUser =payload.data.user.isNewUser
         })
         builder.addMatcher(UserApi.endpoints.postUser.matchFulfilled,(state,{payload})=>{
             state.isRegisterd = true
@@ -59,6 +64,6 @@ export const AuthSlice = createSlice({
     }
 })
 
-export const {setUsertoken,logoutUser} = AuthSlice.actions
+export const {setUsertoken,logoutUser,setUserState} = AuthSlice.actions
 export const AuthSelector = (state:IRootState)=>state.Auth
 export default AuthSlice.reducer

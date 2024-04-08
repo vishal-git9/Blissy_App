@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {PersistGate} from "redux-persist/integration/react"
@@ -14,24 +14,24 @@ import colors from './src/constants/colors';
 import {Provider} from 'react-redux';
 import { store,persistor } from './src/redux';
 import { Navigator } from './src/AppNavigation/Navigator';
+import { SplashScreenAnimated } from './src/common/splashscreen.tsx/splash';
 
 const App:React.FC = ()=> {
   const isDarkMode = useColorScheme() === 'dark';
-
+  const [hasSplash,setHasSplash] = useState(true)
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  // useEffect(() => {
-  //   const backHandler = BackHandler.addEventListener(
-  //     'hardwareBackPress',
-  //     () => {
-  //       console.log("first navigate")
-  //       return true; // Return true to prevent default behavior (going back)
-  //     },
-  //   );
-  //   return () => backHandler.remove();
-  // }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHasSplash(false)
+    }, 4200);
+
+    return ()=> clearTimeout(timer)
+  }, []);
+
+  console.log(hasSplash,"---hassplash---")
 
   return (
     <Provider store={store}>
@@ -43,7 +43,9 @@ const App:React.FC = ()=> {
             animated={true}
             backgroundColor={colors.black}
           />
-          <Navigator/>
+          {
+            hasSplash ? <SplashScreenAnimated/> : <Navigator/>
+          }
         </View>
       </SafeAreaProvider>
       </PersistGate>

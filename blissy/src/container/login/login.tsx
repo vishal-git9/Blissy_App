@@ -8,8 +8,8 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import { NavigationStackProps } from '../Prelogin/onboarding';
 import { useGetOtpMutation, useVerifyOtpMutation } from '../../api/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useSelector } from 'react-redux';
-import { AuthSelector } from '../../redux/uiSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { AuthSelector, setUserState } from '../../redux/uiSlice';
 import { useGetUserQuery } from '../../api/userService';
 import { TextInput } from 'react-native-paper';
 import { Loader } from '../../common/loader/loader';
@@ -51,7 +51,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
    const {data:userData,isLoading:userLoading,refetch,} = useGetUserQuery()
    const [OtpVerify,{error:verifyOtpErr,data:verifyOtpData,isLoading:verifyOtpLoading,reset}] = useVerifyOtpMutation()
 
-
+const reduxDispatch = useDispatch()
 
   const handleSubmitMobileNumber = async () => {
       const res = await getOtp({mobileNumber:`+91${state.mobileNumber}`});
@@ -76,7 +76,8 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
       if(isNewuser){
         navigation.navigate('Registration',{});  
       }else{
-        navigation.navigate('Drawer');  
+        navigation.navigate('Drawer');
+        reduxDispatch(setUserState(false)) 
       }
     }else if('error' in res){
       console.log(res,"res of otp")
