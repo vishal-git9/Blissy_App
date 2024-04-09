@@ -12,7 +12,9 @@ export const Navigator:React.FC = () => {
     // handle is registered logic if user left the registration form after loggin in
     useEffect(()=>{
         if(token){
-            refetch().then(res=>console.log(res))
+            console.clear()
+            console.log("hi from-----")
+            refetch().then(res=>console.log(res,"---res-----")).catch(err=>console.log(err,"error"))
         }
         console.log(userData,"--userdata--")
     },[token])

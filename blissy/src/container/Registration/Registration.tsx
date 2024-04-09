@@ -22,7 +22,8 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../AppNavigation/navigatorType';
 import {NavigationStackProps} from '../Prelogin/onboarding';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { usePostUserMutation } from '../../api/userService';
+import { useGetUserQuery, usePostUserMutation } from '../../api/userService';
+import { Loader } from '../../common/loader/loader';
 
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
@@ -102,6 +103,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
   const {width: SCREEN_WIDTH} = useWindowDimensions();
   const [steps, setSteps] = useState<number>(1);
   const [postUser,{isLoading,isError,data}] = usePostUserMutation()
+  const {data:userData,isLoading:userLoading,refetch} = useGetUserQuery()
   const [completeModal, setCompleteModal] = useState<boolean>(false);
 
   const handleUserName = () => {
@@ -188,7 +190,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
       {steps !== 1 && (
         <RouteBackButton onPress={() => setSteps(steps => steps - 1)} />
       )}
-
+      {(isLoading || userLoading) && <Loader size={50} />}
       <HelloModal
         modalTitleStyle={{marginTop: actuatedNormalize(-20)}}
         onPressPrimaryButton={() => {
@@ -205,6 +207,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
       <HelloModal
         onPressPrimaryButton={() => {
           handleSubmitUserProfile();
+          refetch()
           console.log('hey there navigating to the homepage');
         }}
         title={`You're all set`}

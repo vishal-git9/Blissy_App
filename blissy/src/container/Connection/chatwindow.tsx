@@ -68,6 +68,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
       yValue.setValue(0); // Reset the animation
       dispatch(addMessage(newMessage));
       socket.emit('privateMessageSendSuccessful', {message: newMessage,userid:socketId }); //calling the sockets
+      socket.emit("private_typing_state",{socketId,typingState:false})
       setInputText('');
       flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to the end to show new message
 
@@ -82,9 +83,9 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
 
 
   useEffect(()=>{
-    socket.on("notify_typing_state",()=>{
+    socket.on("notify_typing_state",(typingState)=>{
       console.log("hi")
-      setIsTyping(true)
+      setIsTyping(typingState)
     })
 
     return ()=>{
@@ -139,6 +140,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
         <View style={styles.header}>
             <RouteBackButton2 onPress={()=>{
               dispatch(setChatScreenActive(false))
+              socket.emit("private_typing_state",{socketId,typingState:false})
               dispatch(resetMessageCount())
               navigation.goBack()
             }}/>
@@ -169,7 +171,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
           <TextInput
             value={inputText}
             onChangeText={(text)=>{
-              socket.emit("private_typing_state",socketId)
+              socket.emit("private_typing_state",{socketId,typingState:true})
               setInputText(text)
             }}
             placeholder="Type here..."

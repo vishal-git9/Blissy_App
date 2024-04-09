@@ -66,7 +66,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
   const [permission, setpermission] = useState(false);
   const otherUserScoketId = useRef<string | null>(null);
-  console.log(user,"user")
+  console.log(user,"user home screens")
   const socket = useMemo(
     () =>
       io(ApiEndPoint, {

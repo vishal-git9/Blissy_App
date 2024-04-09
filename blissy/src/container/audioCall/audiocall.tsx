@@ -275,7 +275,6 @@ console.log("getting the message")
     localStream?.getAudioTracks().forEach(track => {
       localMicOn ? (track.enabled = false) : (track.enabled = true);
     });
-    // socket.emit("private_mute_state",otherUserScoketId.current)
   }
 
   function toggleSpeaker(){

@@ -54,6 +54,7 @@ export const AuthSlice = createSlice({
             state.isAuthenticated= true
         })
         builder.addMatcher(UserApi.endpoints.getUser.matchFulfilled,(state,{payload})=>{
+            console.log("Userr I got",payload.data)
             state.user = payload.data.user
             // state.isNewUser =payload.data.user.isNewUser
         })

@@ -47,12 +47,12 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
   const [progressDuration, setProgressDuration] = useState(30);
   const timerRef = useRef<NodeJS.Timeout>();
    const [getOtp,{error,data,isLoading,reset:resetMobile}] = useGetOtpMutation();
-   const {token,isAuthenticated,user} = useSelector(AuthSelector)
-   const {data:userData,isLoading:userLoading,refetch,} = useGetUserQuery()
+   const {token,isAuthenticated,user,isNewUser,isRegisterd} = useSelector(AuthSelector)
+   const {data:userData,isLoading:userLoading,refetch} = useGetUserQuery()
    const [OtpVerify,{error:verifyOtpErr,data:verifyOtpData,isLoading:verifyOtpLoading,reset}] = useVerifyOtpMutation()
 
 const reduxDispatch = useDispatch()
-
+console.log(user,isNewUser,isRegisterd,"------user--------")
   const handleSubmitMobileNumber = async () => {
       const res = await getOtp({mobileNumber:`+91${state.mobileNumber}`});
       console.log(res,"---res-----")
@@ -68,12 +68,12 @@ const reduxDispatch = useDispatch()
     const res = await OtpVerify({mobileNumber:`+91${state.mobileNumber}`,otp:parseInt(state.OTP)});
     if('data' in res){
       console.log(res,"data of OTP")
-      const isNewuser = await refetch().then(res=>res.data.data.user.isNewUser)
+      const isNewuser = await refetch()
       // fetch user details
       clearInterval(timerRef.current);
       setModalState(false)
-      console.log(user?.isNewUser,"---user isnewuser")
-      if(isNewuser){
+      console.log(isNewuser,"---user isnewuser")
+      if(isNewuser.data.data.user.isNewUser){
         navigation.navigate('Registration',{});  
       }else{
         navigation.navigate('Drawer');

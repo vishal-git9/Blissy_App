@@ -23,6 +23,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {  MessageCountSelector, addMessage, chatScreenActiveSelector, setChatScreenActive } from '../../redux/messageSlice';
 import playNotificationSound from '../../common/sound/notification';
 import ProfileScreenModal from '../../common/modals/profile';
+import { Snackbar } from 'react-native-paper';
 
 interface IconContainerProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -69,18 +70,21 @@ const IconContainer: React.FC<IconContainerProps> = ({ConnectedUserData,navigati
 const CallingScreen: React.FC<CallingScreenProps> = ({navigation,leave,toggleMic,ConnectedUserData,toggleSpeaker,socketId,socket}) => {
   const [seconds, setSeconds] = useState<number>(0);
   const [mute,setMute] = useState<boolean>(false);
+  const [otherUserMute,setotherUserMute] = useState<boolean>(true)
   const [speaker,setSpeaker] = useState<boolean>(false)
   const [profileModal,setProfileModal] = useState<boolean>(false)
+  const [errorSnackbar,setErrorSnackbar] = useState<boolean>(false)
   // const [messageCount,setMessageCount] = useState<number>(0)
 // const [userChannel,setUserChannel] = useState<string>("Call")
 const isChatStateActive = useSelector(chatScreenActiveSelector)
-console.log(ConnectedUserData)
+// console.log(ConnectedUserData)
 const messageCount = useSelector(MessageCountSelector)
-console.log(isChatStateActive)
+// console.log(isChatStateActive)
 const dispatch = useDispatch()
   const handleToggleMic = ()=>{
     toggleMic()
     setMute(!mute)
+    socket.emit("private_mute_state",{socketId,muteState:!mute})
   }
   const handleToggleSpeaker = ()=>{
     toggleSpeaker()
@@ -115,11 +119,25 @@ const dispatch = useDispatch()
       dispatch(addMessage(newMessage));
       playNotificationSound()
     });
+
+
+    socket.on("notify_mute_state",(muteState)=>{
+      console.log(muteState,"mutestte of the user")
+      setotherUserMute(muteState)
+      setErrorSnackbar(true)
+    })
+
+
     // Cleanup on component unmount
     return () => {
       socket.off('privateMessageSuccessfulAdd');
+      socket.off("notify_mute_state");
     };
   }, [isChatStateActive]);
+
+  console.clear()
+
+  console.log(otherUserMute,"otherusermate")
 
 
   return (
@@ -176,6 +194,29 @@ const dispatch = useDispatch()
 
       {/* Action buttons */}
       <IconContainer speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker}  />
+      <Snackbar
+            duration={otherUserMute ? 10000 : 2000}
+            visible={errorSnackbar}
+            style={{backgroundColor: colors.black}}
+            onDismiss={() => setErrorSnackbar(false)}
+            action={{
+              theme: {
+                fonts: {
+                  regular: {fontFamily: fonts.NexaRegular},
+                  medium: {fontFamily: fonts.NexaBold},
+                  light: {fontFamily: fonts.NexaBold},
+                  thin: {fontFamily: fonts.NexaRegular},
+                },
+              },
+              label: 'Okay',
+              labelStyle: {fontFamily: fonts.NexaBold},
+              onPress: () => {
+                // Do something
+                setErrorSnackbar(false);
+              },
+            }}>
+            {otherUserMute ? `${ConnectedUserData?.name} is on mute` : `${ConnectedUserData?.name} has unmute`}
+          </Snackbar>
     </SafeAreaView>
   );
 };
