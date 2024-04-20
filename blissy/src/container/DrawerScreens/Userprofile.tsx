@@ -1,23 +1,25 @@
 // UserProfileScreen.tsx
 import React from 'react';
-import {View, Text, StyleSheet, FlatList, ScrollView, Image} from 'react-native';
+import { View, Text, StyleSheet, FlatList, ScrollView, Image } from 'react-native';
 import AvatarPulse from '../../common/animation/avatarpulse';
-import {RouteBackButton} from '../../common/button/BackButton';
-import {NavigationStackProps} from '../Prelogin/onboarding';
-import {actuatedNormalize} from '../../constants/PixelScaling';
-import {fonts} from '../../constants/fonts';
+import { RouteBackButton } from '../../common/button/BackButton';
+import { NavigationStackProps } from '../Prelogin/onboarding';
+import { actuatedNormalize } from '../../constants/PixelScaling';
+import { fonts } from '../../constants/fonts';
 import colors from '../../constants/colors';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {LabelWithIcon} from '../../common/drawer/iconlabel';
+import { LabelWithIcon } from '../../common/drawer/iconlabel';
 import AvatarRingsAnimation from '../../common/animation/avatarpulse';
 import { PrimaryButton } from '../../common/button/PrimaryButton';
 import { useSelector } from 'react-redux';
 import { AuthSelector } from '../../redux/uiSlice';
 
-const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
+const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
   // Sample user data - replace with real data as needed
 
-  const {user} = useSelector(AuthSelector)
+  const { user } = useSelector(AuthSelector)
+
+  console.log(user, "useroftoday=======")
   const userData = {
     mobileNumber: '123-456-7890',
     role: 'Adventurer',
@@ -29,17 +31,17 @@ const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
     language: ['English', 'Spanish'],
     profilePic: 'https://randomuser.me/api/portraits/men/1.jpg', // Replace with actual image URL
     coins: '150',
-    userQuote:"It takes courage to grow up and become who you really are",
+    userQuote: "It takes courage to grow up and become who you really are",
     bio: "I'm an adventurous professional looking to connect with others. Love hiking and the great outdoors.",
-    mentalHealthIssues: ['Anxiety','Breakup'],
-    callStatus:{
-      totalCalls:240,
-      successfulCalls:210,
-      rating:4.5
+    mentalHealthIssues: ['Anxiety', 'Breakup'],
+    callStatus: {
+      totalCalls: 240,
+      successfulCalls: 210,
+      rating: 4.5
     }
   };
 
-  const RenderInterestItem = ({item}: {item: String}) => (
+  const RenderInterestItem = ({ item }: { item: String }) => (
     <View style={styles.interestItem}>
       <Text style={styles.interestText}>{item}</Text>
     </View>
@@ -52,7 +54,7 @@ const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
         {/* <ShockwavePulseButton>
           <Image source={{uri: userData.profilePic}} width={actuatedNormalize(100)} style={styles.avatarStyles} height={actuatedNormalize(100)}/>
         </ShockwavePulseButton> */}
-        <AvatarRingsAnimation source={userData.profilePic} width={100} height={100}/>
+        <AvatarRingsAnimation source={user?.profilePic} width={100} height={100} />
       </View>
       <View style={styles.TitleContainer}>
         <View
@@ -69,27 +71,27 @@ const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
           />
         </View>
         <Text style={styles.detailText}>Age: {user?.age.toString()}</Text>
-        <Text style={[styles.detailText,{marginTop:actuatedNormalize(10)}]}>{`[${userData.mentalHealthIssues.join(",")}]`}</Text>
+        <Text style={[styles.detailText, { marginTop: actuatedNormalize(10) }]}>{`[${userData.mentalHealthIssues.join(",")}]`}</Text>
       </View>
 
       <View style={styles.userPerformaceContainer}>
-          <View style={styles.userPerformaceContainer2}>
-            <Text style={styles.title}>Total Calls</Text>
-            <Text style={styles.number}>{userData.callStatus.totalCalls}</Text>
-          </View>
-          <View style={styles.userPerformaceContainer2}>
-            <Text style={styles.title}>Successful Calls</Text>
-            <Text style={styles.number}>{userData.callStatus.successfulCalls}</Text>
-          </View>
-          <View style={styles.userPerformaceContainer2}>
-            <Text style={styles.title}>Rating</Text>
-            <View style={{flexDirection:"row",alignItems:"center"}}>
+        <View style={styles.userPerformaceContainer2}>
+          <Text style={styles.title}>Total Calls</Text>
+          <Text style={styles.number}>{userData.callStatus.totalCalls}</Text>
+        </View>
+        <View style={styles.userPerformaceContainer2}>
+          <Text style={styles.title}>Successful Calls</Text>
+          <Text style={styles.number}>{userData.callStatus.successfulCalls}</Text>
+        </View>
+        <View style={styles.userPerformaceContainer2}>
+          <Text style={styles.title}>Rating</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={styles.number}>{userData.callStatus.rating}</Text>
-            <Icon name='star' size={actuatedNormalize(20)} color={colors.yellow}/>
-            </View>
+            <Icon name='star' size={actuatedNormalize(20)} color={colors.yellow} />
           </View>
         </View>
-      <ScrollView contentContainerStyle={styles.infoContainer}>
+      </View>
+      <ScrollView nestedScrollEnabled={true} contentContainerStyle={styles.infoContainer}>
 
         {/* details Container */}
         <View style={styles.descContainer}>
@@ -99,17 +101,30 @@ const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
         <View style={styles.descContainer}>
           <LabelWithIcon iconName="tennisball" label="Interest" />
           <View style={styles.interestsContainer}>
-          {user?.interest.map((el, _) => (
+            {/* {user?.interest.map((el, _) => (
             <RenderInterestItem item={el} key={_} />
-          ))}
+          ))} */}
+            <FlatList data={user?.interest}
+              renderItem={({ item }) => <RenderInterestItem item={item} />}
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
           </View>
         </View>
         <View style={styles.descContainer}>
           <LabelWithIcon iconName="text" label="Languages you speak" />
           <View style={styles.interestsContainer}>
-          {user?.language.map((el, _) => (
-            <RenderInterestItem item={el} key={_} />
-          ))}
+
+            {/* {user?.language.map((el, _) => (
+              <RenderInterestItem item={el} key={_} />
+            ))} */}
+            <FlatList data={user?.language}
+              renderItem={({ item }) => <RenderInterestItem item={item} />}
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+            />
           </View>
         </View>
         {/* <Text style={styles.mentalHealthText}>
@@ -123,11 +138,11 @@ const UserProfile: React.FC<NavigationStackProps> = ({navigation}) => {
           showsHorizontalScrollIndicator={false}
         /> */}
         <Text style={styles.quote}>
-      {`'${userData.userQuote}'`}
-      </Text>
+          {`'${userData.userQuote}'`}
+        </Text>
       </ScrollView>
-      
-      <PrimaryButton styles={{backgroundColor:colors.transparent,borderWidth:1,borderColor:colors.gray}} label='Edit Profile' handleFunc={()=>navigation.navigate("Registration",{params:userData})}/>
+
+      <PrimaryButton styles={{ backgroundColor: colors.transparent, borderWidth: 1, borderColor: colors.gray }} label='Edit Profile' handleFunc={() => navigation.navigate("Registration", { params: user })} />
 
       {/* Additional user info like language, coins, etc. can be added here */}
     </View>
@@ -142,22 +157,24 @@ const styles = StyleSheet.create({
   },
 
   avatarContainer: {},
-  userPerformaceContainer:{
-    flexDirection:"row",
-    width:"90%",
-    paddingHorizontal:actuatedNormalize(10),
+  userPerformaceContainer: {
+    flexDirection: "row",
+    paddingHorizontal: actuatedNormalize(10),
     marginTop: actuatedNormalize(20),
-    justifyContent:"space-between",
-    borderRadius:actuatedNormalize(10),
-    alignSelf:"center"
+    justifyContent: "space-between",
+    borderRadius: actuatedNormalize(10),
+    alignSelf: "center",
+    width: "90%",
+
   },
-  userPerformaceContainer2:{
-    justifyContent:"center",
-    alignItems:"center",
-    rowGap:actuatedNormalize(5)
+  userPerformaceContainer2: {
+    justifyContent: "center",
+    alignItems: "center",
+    rowGap: actuatedNormalize(5),
+
   },
-  avatarStyles:{
-    borderRadius:50
+  avatarStyles: {
+    borderRadius: 50
   },
   interestsContainer: {
     flexDirection: 'row',
@@ -168,11 +185,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginRight: 8,
+    flexWrap: "wrap"
   },
   interestText: {
     color: colors.white,
-    fontFamily:fonts.NexaRegular,
-    fontSize:actuatedNormalize(14)
+    fontFamily: fonts.NexaRegular,
+    fontSize: actuatedNormalize(14)
   },
   TitleContainer: {
     marginTop: actuatedNormalize(30),
@@ -194,30 +212,30 @@ const styles = StyleSheet.create({
     color: colors.gray,
   },
   mentalHealthText: {},
-  descContainer:{
-    rowGap:actuatedNormalize(10)
+  descContainer: {
+    rowGap: actuatedNormalize(10)
   },
   infoContainer: {
     flex: 1,
     marginTop: actuatedNormalize(30),
-    rowGap:actuatedNormalize(20),
+    rowGap: actuatedNormalize(20),
     width:"90%",
   },
-  number:{
-    fontFamily:fonts.NexaBold,
-    fontSize:actuatedNormalize(20),
-    color:colors.white
+  number: {
+    fontFamily: fonts.NexaBold,
+    fontSize: actuatedNormalize(20),
+    color: colors.white
   },
-  title:{
-    fontFamily:fonts.NexaRegular,
-    fontSize:actuatedNormalize(14),
-    color:colors.gray
+  title: {
+    fontFamily: fonts.NexaRegular,
+    fontSize: actuatedNormalize(14),
+    color: colors.gray
   },
-  quote:{
-    fontFamily:fonts.NexaItalic,
-    color:colors.gray,
-    fontSize:actuatedNormalize(16),
-    textAlign:"center"
+  quote: {
+    fontFamily: fonts.NexaItalic,
+    color: colors.gray,
+    fontSize: actuatedNormalize(16),
+    textAlign: "center"
   }
   // Add more styles as needed for your UI elements
 });

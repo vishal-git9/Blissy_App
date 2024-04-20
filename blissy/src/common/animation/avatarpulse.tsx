@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, View, StyleSheet, Image } from 'react-native';
 import colors from '../../constants/colors';
 
-const AvatarRingsAnimation: React.FC<{source:string,width:number,height:number}> = ({height,source,width}) => {
+const AvatarRingsAnimation: React.FC<{source:string | undefined,width:number,height:number}> = ({height,source,width}) => {
   const fadeAnim1 = useRef(new Animated.Value(0)).current;
   const fadeAnim2 = useRef(new Animated.Value(0)).current;
   const fadeAnim3 = useRef(new Animated.Value(0)).current;

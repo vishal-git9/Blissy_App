@@ -13,7 +13,7 @@ import InCallManager from 'react-native-incall-manager';
 import CallingScreen from '../Connection/callingscreen';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
-import { UserInterface } from '../../redux/uiSlice';
+import { AuthSelector, UserInterface } from '../../redux/uiSlice';
 import colors from '../../constants/colors';
 import { View } from 'react-native';
 import { SCREEN_HEIGHT, SCREEN_WIDTH, actuatedNormalize } from '../../constants/PixelScaling';
@@ -22,7 +22,7 @@ import { RouteProp } from '@react-navigation/native';
 import AnimatedBorderButton from '../../common/button/borderButton';
 import CircularImageReveal from '../../common/cards/waitingUser';
 import { fonts } from '../../constants/fonts';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { resetMessages } from '../../redux/messageSlice';
 
 interface AppProps {
@@ -40,10 +40,12 @@ interface RTCIceMessage {
 const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const {socket} = useSelector(AuthSelector)
+  console.log(socket,"socket of audiocall")
   const [speaker,setSpeaker] = useState<boolean>(false)
   const dispatch = useDispatch()
   const [type, setType] = useState<string>('LOADING');
-  const { socket,user } = route.params
+  const { user } = route.params
   // const [callerId] = useState<string>(
   //   Math.floor(100000 + Math.random() * 900000).toString(),
   // );
@@ -73,7 +75,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   let remoteRTCMessage = useRef<RTCSessionDescription | null>(null);
 
   useEffect(() => {
-    socket.on(
+    socket?.on(
       'newCall',
       (data: { rtcMessage: RTCSessionDescription; callerId: string,callerData:UserInterface }) => {
         remoteRTCMessage.current = data.rtcMessage;
@@ -86,24 +88,24 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       },
     );
 
-    socket.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
+    socket?.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
       otherUserScoketId.current = data.callerId
       otherUserData.current = data.matchedUser
       // console.log(data, "data of paired user")
       processCall()
     })
 
-    socket.on("callCancelled",(message:string)=>{
+    socket?.on("callCancelled",(message:string)=>{
       console.log(message,"you cancelled the call")
     })
 
 
-    socket.on("callEnded", () => {
+    socket?.on("callEnded", () => {
       navigation.navigate("ReviewScreen", {name:otherUserData.current?.name})
       dispatch(resetMessages())
     })
 
-    socket.on('callAnswered', (data: { rtcMessage: RTCSessionDescription }) => {
+    socket?.on('callAnswered', (data: { rtcMessage: RTCSessionDescription }) => {
       remoteRTCMessage.current = data.rtcMessage;
       peerConnection.current.setRemoteDescription(
         new RTCSessionDescription(remoteRTCMessage.current),
@@ -112,7 +114,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       Vibration.vibrate(500);
     });
 
-    socket.on(
+    socket?.on(
       'ICEcandidate',
       (data: { rtcMessage: { candidate: string; id: string; label: number } }) => {
         let message = data.rtcMessage;
@@ -169,7 +171,7 @@ console.log("getting the message")
         if (event.candidate) {
           sendICEcandidate({
             calleeId: otherUserScoketId.current!, // Assuming otherUserScoketId is always set when this callback is called
-            callerId: socket.id,
+            callerId: socket?.id,
             rtcMessage: {
               label: event.candidate.sdpMLineIndex!, // Non-null assertion used, ensure these are indeed non-null
               id: event.candidate.sdpMid!, // Non-null assertion used, ensure these are indeed non-null
@@ -183,14 +185,14 @@ console.log("getting the message")
     );
 
     return () => {
-      console.log("removed from screen")
+      console.log("removed from screen audiocall")
 
-      socket.off('newCall');
-      socket.off('callAnswered');
-      socket.off('ICEcandidate');
-      socket.off("callEnded");
-      socket.off("initiateCall")
-      socket.off("callCancelled")
+      socket?.off('newCall');
+      socket?.off('callAnswered');
+      socket?.off('ICEcandidate');
+      socket?.off("callEnded");
+      socket?.off("initiateCall")
+      socket?.off("callCancelled")
     };
   }, []);
 
@@ -207,7 +209,7 @@ console.log("getting the message")
     callerId: string | undefined;
     rtcMessage: RTCIceMessage;
   }) {
-    socket.emit('ICEcandidate', data);
+    socket?.emit('ICEcandidate', data);
   }
 
   async function processCall() {
@@ -236,7 +238,7 @@ console.log("getting the message")
         await peerConnection.current.setLocalDescription(sessionDescription);
         answerCall({
           callerId: otherUserScoketId.current!,
-          // calleeId:socket.id,
+          // calleeId:socket?.id,
           rtcMessage: sessionDescription,
         });
         console.log("Getting the answer message")
@@ -255,7 +257,7 @@ console.log("getting the message")
     rtcMessage: RTCSessionDescription;
   }) {
     // console.log(data.callerId, "calleeId accept")
-    socket.emit('answerCall', data);
+    socket?.emit('answerCall', data);
     setType("AUDIO_ROOM")
     Vibration.vibrate(500);
   }
@@ -266,7 +268,7 @@ console.log("getting the message")
     rtcMessage: RTCSessionDescription;
   }) {
     // console.log("sending call to", data.calleeId)
-    socket.emit('call', data);
+    socket?.emit('call', data);
   }
 
 
@@ -286,7 +288,7 @@ console.log("getting the message")
     peerConnection.current.close();
     setLocalStream(null);
     setRemoteStream(null);
-    socket.emit("callEnded", otherUserScoketId.current)
+    socket?.emit("callEnded", otherUserScoketId.current)
     otherUserScoketId.current = null;
     dispatch(resetMessages())
   }
@@ -296,7 +298,7 @@ console.log("getting the message")
     setLocalStream(null);
     setRemoteStream(null);
     otherUserScoketId.current = null;
-    socket.emit("cancelCall")
+    socket?.emit("cancelCall")
     navigation.goBack()
   }
 
@@ -319,7 +321,7 @@ console.log("getting the message")
     case 'AUDIO_ROOM':
       return (
         <CallingScreen
-        socket={socket}
+        socket={socket!}
         socketId={otherUserScoketId.current}
           ConnectedUserData={otherUserData.current}
           leave={leave}

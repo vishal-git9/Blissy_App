@@ -18,7 +18,7 @@ import { SplashScreenAnimated } from './src/common/splashscreen.tsx/splash';
 
 const App:React.FC = ()=> {
   const isDarkMode = useColorScheme() === 'dark';
-  const [hasSplash,setHasSplash] = useState(true)
+  const [hasSplash,setHasSplash] = useState<boolean>(true)
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };

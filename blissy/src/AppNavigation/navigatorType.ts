@@ -7,18 +7,18 @@ export type RootStackParamList = {
     Onboarding:undefined;
     Home: undefined;
     Login:undefined;
-    Registration:{};
+    Registration:{params:UserInterface | null};
     Healerdetails:{ item: ProfileData };
     Healerlist:undefined;
     Drawer:undefined;
     Connection:undefined;
-    ChatWindow:{ userDetails: UserInterface | null,socketId:string | null,socket:Socket};
+    ChatWindow:{ userDetails: UserInterface | null,socketId:string | null};
     Chatlist:undefined;
     Calllist:undefined;
     Wallet:undefined;
     Coupons:undefined;
     ReviewScreen:{name:String | undefined};
-    AudioCallScreen:{socket:Socket,user:UserInterface|null};
+    AudioCallScreen:{user:UserInterface|null};
     ComingsoonScreen:{screenName:string}
   };
   

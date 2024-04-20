@@ -22,7 +22,7 @@ import io from 'socket.io-client';
 import {ApiEndPoint} from '../../config';
 import MicrophonePermissionModal from '../../common/permissions/microphone';
 import { useDispatch, useSelector } from 'react-redux';
-import { AuthSelector, UserInterface } from '../../redux/uiSlice';
+import { AuthSelector, UserInterface, setSocket } from '../../redux/uiSlice';
 import {requestBluetoothPermission, requestMicrophonePermission} from '../../utils/permission';
 import checkMicrophonePermission from '../../common/permissions/checkMicroPermission';
 import checkLocationPermission from '../../common/permissions/checkLocationPermission';
@@ -100,7 +100,7 @@ console.log(socket.id)
   };
 
   const intiateRandomConnection = ()=>{
-    navigation.navigate("AudioCallScreen",{socket:socket,user:user})
+    navigation.navigate("AudioCallScreen",{user:user})
     console.log("emitted the event for call")
     socket.emit('connectRandom')
   }
@@ -165,24 +165,27 @@ console.log(socket.id)
   }, []);
 
   useEffect(() => {
-    
-    return () => {
       console.log("removed from screen home screen")
       socket.on("connect",()=>{
         console.log("user connected",socket.id)
+        console.log(socket,"sockeet state")
+        dispatch(setSocket(socket))
       })
 
       socket.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
         otherUserScoketId.current = data.callerId
         // console.log(data, "data of paired user")
       })
-      socket.on('disconnect', () => {
-        dispatch(resetMessageCount())
-        dispatch(resetMessages())
-        socket.emit("callEnded",otherUserScoketId.current)
-        console.log('user disconnected from socket');
-      });
-    };
+
+      return ()=>{
+        socket.off("initiateCall")
+        socket.on('disconnect', () => {
+          dispatch(resetMessageCount())
+          dispatch(resetMessages())
+          socket.emit("callEnded",otherUserScoketId.current)
+          console.log('user disconnected from socket');
+        })
+      }
   }, []);
 
   return (

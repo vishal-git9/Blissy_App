@@ -23,6 +23,7 @@ import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MessageSelector, addMessage, chatScreenActiveSelector, resetMessageCount, setChatScreenActive } from '../../redux/messageSlice';
 import { useDispatch, useSelector } from 'react-redux';
+import { AuthSelector } from '../../redux/uiSlice';
 
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ChatWindow'>;
 
@@ -47,7 +48,8 @@ interface ProfileScreenProps {
 // ];
 
 const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
-  const { userDetails,socketId ,socket} = route.params;
+  const { userDetails,socketId} = route.params;
+  const {socket} = useSelector(AuthSelector)
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
   const [istyping,setIsTyping] = useState<boolean>(false)
@@ -67,8 +69,8 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
       };
       yValue.setValue(0); // Reset the animation
       dispatch(addMessage(newMessage));
-      socket.emit('privateMessageSendSuccessful', {message: newMessage,userid:socketId }); //calling the sockets
-      socket.emit("private_typing_state",{socketId,typingState:false})
+      socket?.emit('privateMessageSendSuccessful', {message: newMessage,userid:socketId }); //calling the sockets
+      socket?.emit("private_typing_state",{socketId,typingState:false})
       setInputText('');
       flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to the end to show new message
 
@@ -83,13 +85,13 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
 
 
   useEffect(()=>{
-    socket.on("notify_typing_state",(typingState)=>{
+    socket?.on("notify_typing_state",(typingState)=>{
       console.log("hi")
       setIsTyping(typingState)
     })
 
     return ()=>{
-      socket.off("notify_typing_state")
+      socket?.off("notify_typing_state")
     }
   },[])
 
@@ -140,7 +142,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
         <View style={styles.header}>
             <RouteBackButton2 onPress={()=>{
               dispatch(setChatScreenActive(false))
-              socket.emit("private_typing_state",{socketId,typingState:false})
+              socket?.emit("private_typing_state",{socketId,typingState:false})
               dispatch(resetMessageCount())
               navigation.goBack()
             }}/>
@@ -171,7 +173,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({navigation,route}) => {
           <TextInput
             value={inputText}
             onChangeText={(text)=>{
-              socket.emit("private_typing_state",{socketId,typingState:true})
+              socket?.emit("private_typing_state",{socketId,typingState:true})
               setInputText(text)
             }}
             placeholder="Type here..."

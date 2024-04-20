@@ -2,19 +2,21 @@ import { createSlice } from "@reduxjs/toolkit";
 import { AuthApi } from "../api/authService";
 import { IRootState } from ".";
 import { UserApi } from "../api/userService";
+import { Socket } from "socket.io-client";
 
 
 export interface UserInterface {
-    _id:String;
-    mobileNumber: String;
+    _id:string;
+    mobileNumber: string;
   role: string;
-  name: String;
+  name: string;
   isNewUser: Boolean;
-  username: String;
-  age: Number;
-  interest: [String];
-  language: [String];
-  profilePic: String;
+  username: string;
+  age: number;
+  gender:string;
+  interest: [string];
+  language: [string];
+  profilePic: string;
   isActive: Boolean;
 }
 export interface IsUIState {
@@ -23,6 +25,7 @@ export interface IsUIState {
     isAuthenticated:boolean
     isRegisterd:boolean;
     isNewUser:boolean;
+    socket:Socket | null
 }
 
 const initialState : IsUIState = {
@@ -30,7 +33,8 @@ const initialState : IsUIState = {
     user:null,
     isAuthenticated:false,
     isRegisterd:false,
-    isNewUser:true
+    isNewUser:true,
+    socket:null
 }
 
 
@@ -43,6 +47,9 @@ export const AuthSlice = createSlice({
         },
         setUserState:(state,action)=>{
             state.isNewUser = action.payload
+        },
+        setSocket:(state,action)=>{
+            state.socket = action.payload
         }
         ,
         logoutUser: ()=> initialState
@@ -54,7 +61,6 @@ export const AuthSlice = createSlice({
             state.isAuthenticated= true
         })
         builder.addMatcher(UserApi.endpoints.getUser.matchFulfilled,(state,{payload})=>{
-            console.log("Userr I got",payload.data)
             state.user = payload.data.user
             // state.isNewUser =payload.data.user.isNewUser
         })
@@ -65,6 +71,6 @@ export const AuthSlice = createSlice({
     }
 })
 
-export const {setUsertoken,logoutUser,setUserState} = AuthSlice.actions
+export const {setUsertoken,logoutUser,setUserState,setSocket} = AuthSlice.actions
 export const AuthSelector = (state:IRootState)=>state.Auth
 export default AuthSlice.reducer

@@ -1,4 +1,4 @@
-import {useNavigation} from '@react-navigation/native';
+import {RouteProp, useNavigation} from '@react-navigation/native';
 import {useEffect, useReducer, useState} from 'react';
 import {BackHandler, Dimensions, Text, View, useWindowDimensions} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -67,6 +67,13 @@ interface error4 {
   gender?: string;
 }
 
+type RegistrationRouteProp = RouteProp<RootStackParamList, 'Registration'>;
+
+interface RegistrationInterface { 
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+  route:RegistrationRouteProp
+}
+
 // interface error5 {
 //   age:string;
 // }
@@ -77,7 +84,7 @@ const initialState: UserState = {
   language: ['English'],
   interest: ['Music'],
   age: 16,
-  profilePic:"https://randomuser.me/api/portraits/men/1.jpg"
+  profilePic:""
 };
 
 export const reducerAction = (state: UserState, action: Action) => {
@@ -94,8 +101,10 @@ export const reducerAction = (state: UserState, action: Action) => {
       return state;
   }
 };
-export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
-  const [state, dispatch] = useReducer(reducerAction, initialState);
+export const Registration: React.FC<RegistrationInterface> = ({navigation,route}) => {
+  const {params} = route
+  const RegistrationState = params.params || initialState
+  const [state, dispatch] = useReducer(reducerAction, RegistrationState);
   const [error, setError] = useState<(error1 | error2 | error3 | error4)[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [UsernameModal, setUsernameModal] = useState<boolean>(false);
@@ -105,6 +114,10 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
   const [postUser,{isLoading,isError,data}] = usePostUserMutation()
   const {data:userData,isLoading:userLoading,refetch} = useGetUserQuery()
   const [completeModal, setCompleteModal] = useState<boolean>(false);
+
+
+  console.clear()
+  console.log(params,"paramsofRegistration----")
 
   const handleUserName = () => {
     const errorPostion = error[steps - 1];
@@ -127,13 +140,16 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
     console.log(state,"state of the user")
     
     const res = await postUser(state)
+
+    console.log(res,"resof===")
     if('data' in res){
       console.log(res,"data of user")
+      setCompleteModal(false);
+      await refetch()
+      navigation.navigate('Drawer');
     }else if('error' in res){
       console.log(error)
     }
-    setCompleteModal(false);
-    navigation.navigate('Drawer');
   };
 
   const validateForm = (state: UserState) => {
@@ -182,6 +198,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
   }, [])
 
   console.log(state, '--registration state---');
+  console.log(isLoading, userLoading,"===loadingstate===")
   return (
     <KeyboardAwareScrollView
       contentContainerStyle={styles.container}
@@ -207,11 +224,9 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
       <HelloModal
         onPressPrimaryButton={() => {
           handleSubmitUserProfile();
-          refetch()
-          console.log('hey there navigating to the homepage');
         }}
         title={`You're all set`}
-        description="Your account set up is completed now let's start healing"
+        description={params.params ? "Your account has been updated now let's start healing" : "Your account set up is completed now let's start healing"}
         visible={completeModal}
         lottieAnimationPath={require('../../../assets/animation/verified.json')}
         showLottie={true}
@@ -271,7 +286,7 @@ export const Registration: React.FC<NavigationStackProps> = ({navigation}) => {
             </View>
             <View style={{width: '50%'}}>
               <PrimaryButton
-                label={steps === 5 ? "Let's Heal" : 'Next'}
+                label={steps === 5 ? params.params ? "Let's Update" : "Let's Heal" : 'Next'}
                 handleFunc={
                   steps === 1
                     ? handleUserName

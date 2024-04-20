@@ -1,5 +1,5 @@
 // Form4.tsx
-import React, {Dispatch, useRef} from 'react';
+import React, {Dispatch, useRef, useState} from 'react';
 import {Text} from 'react-native';
 import {View, TextInput, StyleSheet} from 'react-native';
 import colors from '../../constants/colors';
@@ -13,6 +13,8 @@ import Modal from 'react-native-modal';
 import Slider from '@react-native-community/slider';
 import * as Animatable from "react-native-animatable"
 import { LabelWithDesc } from '../labels/label1';
+import AvatarComponent from './SetAvatar';
+import { mensAvatarData, womensAvatarData } from '../../mockdata/avatardata';
 interface Form2Props {
   state: {
     gender: string;
@@ -21,6 +23,7 @@ interface Form2Props {
 }
 const Form4: React.FC<Form2Props> = ({state,dispatch}) => {
   const animatableRef = useRef<Animatable.View>(null);
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   return (
       <Animatable.View
         ref={animatableRef}
@@ -34,6 +37,10 @@ const Form4: React.FC<Form2Props> = ({state,dispatch}) => {
           onSelectGender={gender => dispatch({type:"gender",payload:gender})}
         />
       </View>
+
+      {
+        state.gender === "male" ? <AvatarComponent dispatch={dispatch} avatarData={mensAvatarData} selectedAvatar={selectedAvatar} setSelectedAvatar={setSelectedAvatar}/> : <AvatarComponent dispatch={dispatch} selectedAvatar={selectedAvatar} setSelectedAvatar={setSelectedAvatar} avatarData={womensAvatarData}/>
+      }
       </Animatable.View>
   );
 };

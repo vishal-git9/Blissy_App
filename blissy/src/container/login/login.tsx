@@ -74,7 +74,7 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
       setModalState(false)
       console.log(isNewuser,"---user isnewuser")
       if(isNewuser.data.data.user.isNewUser){
-        navigation.navigate('Registration',{});  
+        navigation.navigate('Registration',{params:null});  
       }else{
         navigation.navigate('Drawer');
         reduxDispatch(setUserState(false)) 

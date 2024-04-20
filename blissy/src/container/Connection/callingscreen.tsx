@@ -178,7 +178,7 @@ const dispatch = useDispatch()
             iconcolor={colors.white}
             onpress={() =>{
               dispatch(setChatScreenActive(true))
-              navigation.navigate("ChatWindow",{userDetails:ConnectedUserData,socketId:socketId,socket:socket})
+              navigation.navigate("ChatWindow",{userDetails:ConnectedUserData,socketId:socketId})
             }}   
                size={18}
             styles={styles.SecondaryButton}
