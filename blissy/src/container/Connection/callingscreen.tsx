@@ -135,7 +135,6 @@ const dispatch = useDispatch()
     };
   }, [isChatStateActive]);
 
-  console.clear()
 
   console.log(otherUserMute,"otherusermate")
 
@@ -156,8 +155,8 @@ const dispatch = useDispatch()
         </View>
         <View style={styles.avatarContainer}>
           <Image
-            blurRadius={10}
-            source={{uri: 'https://randomuser.me/api/portraits/women/2.jpg'}} // Replace with actual image path
+            // blurRadius={10}
+            source={{uri: ConnectedUserData?.profilePic}} // Replace with actual image path
             style={styles.avatar}
           />
         </View>

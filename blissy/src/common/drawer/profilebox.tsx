@@ -7,25 +7,24 @@ import colors from '../../constants/colors';
 import {fonts} from '../../constants/fonts';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-export interface DrawerUserInterface {
-  mobileNumber: string;
-  role: string;
-  name: String;
-  username: string;
-  age: Number;
-  gender: string;
-  interest: string[];
-  language: string[];
-  profilePic: string;
-  coins: string;
-}
+import { UserInterface } from '../../redux/uiSlice';
+// export interface DrawerUserInterface {
+//   mobileNumber: string;
+//   role: string;
+//   name: String;
+//   username: string;
+//   age: Number;
+//   gender: string;
+//   interest: string[];
+//   language: string[];
+//   profilePic: string;
+// }
 
-export const ProfileBox: React.FC<DrawerUserInterface> = ({
+export const ProfileBox: React.FC<UserInterface | any> = ({
   gender,
   mobileNumber,
   name,
   profilePic,
-  coins,
 }) => {
   return (
     <View style={styles.shadowBox}>
@@ -39,7 +38,7 @@ export const ProfileBox: React.FC<DrawerUserInterface> = ({
             marginBottom: actuatedNormalize(10),
           }}
         />
-        <View style={{flexDirection: 'column', rowGap: actuatedNormalize(5)}}>
+        {/* <View style={{flexDirection: 'column', rowGap: actuatedNormalize(5)}}>
           <View style={{flexDirection: 'row', columnGap: actuatedNormalize(5)}}>
             <Text
               style={{
@@ -48,11 +47,11 @@ export const ProfileBox: React.FC<DrawerUserInterface> = ({
                 fontFamily: fonts.NexaRegular,
                 marginRight: actuatedNormalize(5),
               }}>
-              {coins}
+              {100}
             </Text>
             <FontAwesome5 name="coins" size={14} color={colors.yellow} />
           </View>
-        </View>
+        </View> */}
       </View>
       <View
         style={{

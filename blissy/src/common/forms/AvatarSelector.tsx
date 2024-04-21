@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Image, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import colors from '../../constants/colors';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 

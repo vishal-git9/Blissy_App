@@ -65,9 +65,9 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
           }}>
           <Text style={styles.nameText}>{`${user?.name}`}</Text>
           <Icon
-            name={userData.gender === 'male' ? 'gender-male' : 'gender-female'}
+            name={user?.gender === 'male' ? 'gender-male' : 'gender-female'}
             size={22}
-            color={userData.gender === 'male' ? colors.skyBlue : colors.pink}
+            color={user?.gender === 'male' ? colors.skyBlue : colors.pink}
           />
         </View>
         <Text style={styles.detailText}>Age: {user?.age.toString()}</Text>
@@ -142,7 +142,7 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
         </Text>
       </ScrollView>
 
-      <PrimaryButton styles={{ backgroundColor: colors.transparent, borderWidth: 1, borderColor: colors.gray }} label='Edit Profile' handleFunc={() => navigation.navigate("Registration", { params: user })} />
+      <PrimaryButton styles={{ backgroundColor: colors.transparent, borderWidth: 1, borderColor: colors.gray }} label='Edit Profile' handleFunc={() => navigation?.navigate("Registration", { UserData: user })} />
 
       {/* Additional user info like language, coins, etc. can be added here */}
     </View>

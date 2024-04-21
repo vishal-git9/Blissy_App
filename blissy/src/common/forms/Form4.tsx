@@ -18,12 +18,13 @@ import { mensAvatarData, womensAvatarData } from '../../mockdata/avatardata';
 interface Form2Props {
   state: {
     gender: string;
+    profilePic:string;
   };
   dispatch: Dispatch<Action>;
 }
 const Form4: React.FC<Form2Props> = ({state,dispatch}) => {
   const animatableRef = useRef<Animatable.View>(null);
-  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(state.profilePic);
   return (
       <Animatable.View
         ref={animatableRef}

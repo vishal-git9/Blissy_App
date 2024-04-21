@@ -20,26 +20,13 @@ import * as Animatable from 'react-native-animatable';
 import Styles from '../../constants/styles';
 import {ModalComponent} from '../modals/modalcomponent';
 import {LabelWithIcon} from './iconlabel';
-import { DrawerUserInterface, ProfileBox } from './profilebox';
-import { useDispatch } from 'react-redux';
-import { logoutUser } from '../../redux/uiSlice';
-
-const user: DrawerUserInterface = {
-  mobileNumber: "1234567890",
-  role: "user",
-  name: "John Doe",
-  username: "johndoe",
-  age: 30,
-  gender: "male",
-  interest: ["Music", "Sports", "Cooking"],
-  language: ["English", "Spanish"],
-  profilePic: 'https://randomuser.me/api/portraits/men/1.jpg',
-  coins: "100",
-};
+import {ProfileBox } from './profilebox';
+import { useDispatch, useSelector } from 'react-redux';
+import { AuthSelector, logoutUser } from '../../redux/uiSlice';
 
 const CustomDrawer: React.FC<any> = props => {
   const [ConfirmModal, setConfirmModal] = useState<boolean>(false);
-
+  const { user } = useSelector(AuthSelector)
   const dispatch = useDispatch()
 
   console.log(props,"props of drawer")

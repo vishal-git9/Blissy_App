@@ -1,34 +1,36 @@
-import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid} from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid } from 'react-native';
 import colors from '../../constants/colors';
-import {Loader} from '../../common/loader/loader';
-import {Button} from 'react-native';
-import {NavigationStackProps} from '../Prelogin/onboarding';
+import { Loader } from '../../common/loader/loader';
+import { Button } from 'react-native';
+import { NavigationStackProps } from '../Prelogin/onboarding';
 import TopBar from '../../common/tab/topbar';
-import {ToggleButton} from '../../common/tab/switch';
-import {FlatList} from 'react-native';
+import { ToggleButton } from '../../common/tab/switch';
+import { FlatList } from 'react-native';
 import ProfileCard from '../../common/cards/healercard';
-import {HealerMockData} from '../../mockdata/healerData';
+import { HealerMockData } from '../../mockdata/healerData';
 import {
   actuatedNormalize,
 } from '../../constants/PixelScaling';
 import OfferBadge from '../../common/badge';
 import * as Animatable from 'react-native-animatable';
 import LottieView from 'lottie-react-native';
-import {RoundedIconContainer} from '../../common/button/rounded';
+import { RoundedIconContainer } from '../../common/button/rounded';
 import TalkNowButton from '../../common/button/Talknow';
-import AutoLoopCarousel, {reviewsArray} from '../../common/cards/review';
+import AutoLoopCarousel, { reviewsArray } from '../../common/cards/review';
 import io from 'socket.io-client';
-import {ApiEndPoint} from '../../config';
+import { ApiEndPoint } from '../../config';
 import MicrophonePermissionModal from '../../common/permissions/microphone';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthSelector, UserInterface, setSocket } from '../../redux/uiSlice';
-import {requestBluetoothPermission, requestMicrophonePermission} from '../../utils/permission';
+import { requestBluetoothPermission, requestMicrophonePermission } from '../../utils/permission';
 import checkMicrophonePermission from '../../common/permissions/checkMicroPermission';
 import checkLocationPermission from '../../common/permissions/checkLocationPermission';
 import AnimatedBackground from '../../common/animation/animatedBackground';
 import { resetMessageCount, resetMessages } from '../../redux/messageSlice';
 import { AppState } from 'react-native';
+import { SwipeButtonComponent } from '../../common/button/swipebutton';
+import { fonts } from '../../constants/fonts';
 
 interface iconsLabelI {
   id: number;
@@ -57,28 +59,28 @@ const iconsLabel: iconsLabelI[] = [
     navigate: 'ComingsoonScreen',
   },
 ];
-export const HomeScreen: React.FC<NavigationStackProps> = ({navigation}) => {
+export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [data, setData] = useState(HealerMockData.slice(0, 10)); // Initial data for first 10 cards
-  const [value, setValue] = useState<string>('healers');
-  const {user} = useSelector(AuthSelector)
+  const [value, setValue] = useState<string>('random');
+  const { user } = useSelector(AuthSelector)
   const dispatch = useDispatch()
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
   const [permission, setpermission] = useState(false);
   const otherUserScoketId = useRef<string | null>(null);
-  console.log(user,"user home screens")
+  console.log(user, "user home screens")
   const socket = useMemo(
     () =>
       io(ApiEndPoint, {
         secure: true,
         transports: ['websocket'],
-         query:{
-          userId:user?._id
+        query: {
+          userId: user?._id
         }
       }),
     [user?._id],
   ); // Empty dependency array means this runs once on mount
-console.log(socket.id)
+  console.log(socket.id)
   // Function to load more cards
   const loadMoreData = () => {
     setData(prevData => {
@@ -99,12 +101,12 @@ console.log(socket.id)
     }
   };
 
-  const intiateRandomConnection = ()=>{
-    navigation.navigate("AudioCallScreen",{user:user})
+  const intiateRandomConnection = () => {
+    navigation.navigate("AudioCallScreen", { user: user })
     console.log("emitted the event for call")
     socket.emit('connectRandom')
   }
-  
+
   useEffect(() => {
     const verifyMicroPhonePermissions = async () => {
       try {
@@ -116,9 +118,9 @@ console.log(socket.id)
           // Handle other permission states accordingly
           console.log("Microphone permission not granted");
           requestMicrophonePermission()
-        //   return <MicrophonePermissionModal
-        //   onPermissionResult={handleMicrophonePermissionResult}
-        // />
+          //   return <MicrophonePermissionModal
+          //   onPermissionResult={handleMicrophonePermissionResult}
+          // />
         }
       } catch (error) {
         console.error(error);
@@ -165,27 +167,27 @@ console.log(socket.id)
   }, []);
 
   useEffect(() => {
-      console.log("removed from screen home screen")
-      socket.on("connect",()=>{
-        console.log("user connected",socket.id)
-        console.log(socket,"sockeet state")
-        dispatch(setSocket(socket))
-      })
+    console.log("removed from screen home screen")
+    socket.on("connect", () => {
+      console.log("user connected", socket.id)
+      console.log(socket, "sockeet state")
+      dispatch(setSocket(socket))
+    })
 
-      socket.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
-        otherUserScoketId.current = data.callerId
-        // console.log(data, "data of paired user")
-      })
+    socket.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
+      otherUserScoketId.current = data.callerId
+      // console.log(data, "data of paired user")
+    })
 
-      return ()=>{
-        socket.off("initiateCall")
-        socket.on('disconnect', () => {
-          dispatch(resetMessageCount())
-          dispatch(resetMessages())
-          socket.emit("callEnded",otherUserScoketId.current)
-          console.log('user disconnected from socket');
-        })
-      }
+    return () => {
+      socket.off("initiateCall")
+      socket.on('disconnect', () => {
+        dispatch(resetMessageCount())
+        dispatch(resetMessages())
+        socket.emit("callEnded", otherUserScoketId.current)
+        console.log('user disconnected from socket');
+      })
+    }
   }, []);
 
   return (
@@ -199,7 +201,7 @@ console.log(socket.id)
           <FlatList
             data={data}
             showsVerticalScrollIndicator={false}
-            renderItem={({item}) => (
+            renderItem={({ item }) => (
               <ProfileCard shouldAnimate={healerAnimate} {...item} />
             )}
             keyExtractor={(item, index) => index.toString()}
@@ -209,7 +211,7 @@ console.log(socket.id)
         </View>
       ) : (
         <View style={styles.peopleContainer}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
             {iconsLabel.map((item, id) => (
               <Animatable.View
                 onAnimationEnd={() =>
@@ -221,7 +223,8 @@ console.log(socket.id)
                 key={item.id}
                 delay={id * 500}>
                 <RoundedIconContainer
-                  onpress={() => navigation.navigate(item.navigate,{screenName:item.label})}
+                  size={25}
+                  onpress={() => navigation.navigate(item.navigate, { screenName: item.label })}
                   label={item.label}
                   iconName={item.iconName}
                 />
@@ -236,11 +239,13 @@ console.log(socket.id)
               width: '90%',
               alignSelf: 'center',
             }}>
-            <TalkNowButton
+            {/* <TalkNowButton
               label="Connect Now"
               onPress={intiateRandomConnection}
-            />
+            /> */}
           </View>
+          <SwipeButtonComponent updateSwipeStatus={intiateRandomConnection} />
+          <Text style={styles.infoText}>Swipe to connect to random caller</Text>
           <View
             style={{
               flex: 1,
@@ -273,4 +278,12 @@ const styles = StyleSheet.create({
     marginTop: actuatedNormalize(40),
     width: '90%',
   },
+
+  infoText: {
+    fontFamily: fonts.NexaRegular,
+    color: colors.darkGray,
+    alignSelf: "center",
+    fontSize:actuatedNormalize(12),
+    marginTop: actuatedNormalize(5)
+  }
 });

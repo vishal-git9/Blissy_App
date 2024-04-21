@@ -7,7 +7,7 @@ export type RootStackParamList = {
     Onboarding:undefined;
     Home: undefined;
     Login:undefined;
-    Registration:{params:UserInterface | null};
+    Registration:{UserData:UserInterface | null};
     Healerdetails:{ item: ProfileData };
     Healerlist:undefined;
     Drawer:undefined;

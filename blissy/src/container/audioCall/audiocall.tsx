@@ -41,7 +41,6 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const {socket} = useSelector(AuthSelector)
-  console.log(socket,"socket of audiocall")
   const [speaker,setSpeaker] = useState<boolean>(false)
   const dispatch = useDispatch()
   const [type, setType] = useState<string>('LOADING');

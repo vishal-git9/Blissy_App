@@ -45,6 +45,7 @@ const Form5: React.FC<Form2Props> = ({state, dispatch}) => {
           style={{width: '100%', height: actuatedNormalize(40)}}
           minimumValue={16}
           maximumValue={50}
+          value={state.age}
           thumbTintColor={colors.primary}
           minimumTrackTintColor={colors.primary}
           maximumTrackTintColor={colors.lightGray}

@@ -1,4 +1,4 @@
-import {RouteProp, useNavigation} from '@react-navigation/native';
+import {RouteProp} from '@react-navigation/native';
 import {useEffect, useReducer, useState} from 'react';
 import {BackHandler, Dimensions, Text, View, useWindowDimensions} from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -20,12 +20,9 @@ import HelloModal from '../../common/modals/middleScreen';
 import {Snackbar} from 'react-native-paper';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../AppNavigation/navigatorType';
-import {NavigationStackProps} from '../Prelogin/onboarding';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGetUserQuery, usePostUserMutation } from '../../api/userService';
 import { Loader } from '../../common/loader/loader';
 
-const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
 // export const reducerAction = (state, action) => {
@@ -51,7 +48,7 @@ export interface UserState {
   language: string[];
   interest: string[];
   age: number;
-  profilePic?:string
+  profilePic:string
 }
 
 interface error1 {
@@ -102,9 +99,11 @@ export const reducerAction = (state: UserState, action: Action) => {
   }
 };
 export const Registration: React.FC<RegistrationInterface> = ({navigation,route}) => {
-  const {params} = route
-  const RegistrationState = params.params || initialState
-  const [state, dispatch] = useReducer(reducerAction, RegistrationState);
+  const {UserData} = route.params
+  //handle error params of undefined
+  // handle undefined is not a function
+  const RegistrationState = UserData || initialState
+  const [state, dispatch] = useReducer(reducerAction,RegistrationState);
   const [error, setError] = useState<(error1 | error2 | error3 | error4)[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [UsernameModal, setUsernameModal] = useState<boolean>(false);
@@ -116,8 +115,6 @@ export const Registration: React.FC<RegistrationInterface> = ({navigation,route}
   const [completeModal, setCompleteModal] = useState<boolean>(false);
 
 
-  console.clear()
-  console.log(params,"paramsofRegistration----")
 
   const handleUserName = () => {
     const errorPostion = error[steps - 1];
@@ -226,7 +223,7 @@ export const Registration: React.FC<RegistrationInterface> = ({navigation,route}
           handleSubmitUserProfile();
         }}
         title={`You're all set`}
-        description={params.params ? "Your account has been updated now let's start healing" : "Your account set up is completed now let's start healing"}
+        description={userData ? "Your account has been updated now let's start healing" : "Your account set up is completed now let's start healing"}
         visible={completeModal}
         lottieAnimationPath={require('../../../assets/animation/verified.json')}
         showLottie={true}
@@ -286,7 +283,7 @@ export const Registration: React.FC<RegistrationInterface> = ({navigation,route}
             </View>
             <View style={{width: '50%'}}>
               <PrimaryButton
-                label={steps === 5 ? params.params ? "Let's Update" : "Let's Heal" : 'Next'}
+                label={steps === 5 ? userData ? "Let's Update" : "Let's Heal" : 'Next'}
                 handleFunc={
                   steps === 1
                     ? handleUserName

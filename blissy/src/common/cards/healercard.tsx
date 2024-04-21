@@ -106,7 +106,7 @@ const ProfileCard: React.FC<Props> = ({
                 </Text>
               </View>
             </View>
-            <TalkNowButton label='Call Now' onPress={()=>console.log("first")}/>
+            <TalkNowButton label='Coming Soon..' onPress={()=>console.log("first")}/>
           </View>
         </Card.Content>
       </Card>

@@ -49,6 +49,7 @@ const ProfileScreenModal: React.FC<Props> = ({ visible, onClose, userdata }) => 
             animationInTiming={1000}
             animationIn="slideInUp"
             animationOut="slideOutDown"
+            animationOutTiming={1000}
             isVisible={visible}
             style={{width:"100%",alignSelf:"center"}}
         >
