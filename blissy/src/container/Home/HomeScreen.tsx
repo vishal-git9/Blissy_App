@@ -23,7 +23,7 @@ import { ApiEndPoint } from '../../config';
 import MicrophonePermissionModal from '../../common/permissions/microphone';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthSelector, UserInterface, setSocket } from '../../redux/uiSlice';
-import { requestBluetoothPermission, requestMicrophonePermission } from '../../utils/permission';
+import { requestBluetoothPermission, requestMicrophonePermission, requestMultplePermissions } from '../../utils/permission';
 import checkMicrophonePermission from '../../common/permissions/checkMicroPermission';
 import checkLocationPermission from '../../common/permissions/checkLocationPermission';
 import AnimatedBackground from '../../common/animation/animatedBackground';
@@ -108,43 +108,9 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   }
 
   useEffect(() => {
-    const verifyMicroPhonePermissions = async () => {
-      try {
-        const result = await checkMicrophonePermission();
-        if (result === 'granted') {
-          // Permission is granted
-          console.log("Microphone permission granted");
-        } else {
-          // Handle other permission states accordingly
-          console.log("Microphone permission not granted");
-          requestMicrophonePermission()
-          //   return <MicrophonePermissionModal
-          //   onPermissionResult={handleMicrophonePermissionResult}
-          // />
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
 
-    const verifyLocationPermissions = async () => {
-      try {
-        const result = await checkLocationPermission();
-        if (result === 'granted') {
-          // Permission is granted
-          console.log("location permission granted");
-        } else {
-          // Handle other permission states accordingly
-          requestBluetoothPermission()
-          console.log("location permission not granted");
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    verifyMicroPhonePermissions()
-    verifyLocationPermissions()
+    // verifyMicroPhonePermissions()
+    // verifyLocationPermissions()
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
@@ -156,6 +122,26 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
+    const verifyLocationPermissions = async () => {
+      try {
+        const locationRes = await checkLocationPermission();
+        const microphoneRes = await checkMicrophonePermission();
+        console.log(locationRes, microphoneRes, "permissions from home check")
+        if (locationRes === 'granted' && microphoneRes ==='granted') {
+          // Permission is granted
+          console.log("location permission granted");
+        } else {
+          // Handle other permission states accordingly
+          // requestBluetoothPermission()
+          requestMultplePermissions();
+          console.log("location permission not granted");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    verifyLocationPermissions();
     // calling off the animation after first render
     const timingAnim = setTimeout(() => {
       sethealerAnimate(false);

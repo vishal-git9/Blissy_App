@@ -36,7 +36,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   };
 
 const CircularImageReveal = () => {
-  const delay = 500; // Delay in milliseconds between each image reveal
+  const delay = 100; // Delay in milliseconds between each image reveal
   const shuffledImages = shuffleArray([...imageSources]); // Shuffle images to ensure uniqueness
 
   return (

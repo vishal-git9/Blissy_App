@@ -144,6 +144,7 @@ export const Registration: React.FC<RegistrationInterface> = ({navigation,route}
       setCompleteModal(false);
       await refetch()
       navigation.navigate('Drawer');
+      setSteps(1)
     }else if('error' in res){
       console.log(error)
     }

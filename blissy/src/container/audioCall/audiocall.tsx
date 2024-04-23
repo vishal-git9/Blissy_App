@@ -310,8 +310,8 @@ console.log("getting the message")
           <AutoScrollCarousel />
           <View style={{ width: "60%", alignSelf: "center", marginTop: actuatedNormalize(30), rowGap: actuatedNormalize(15) }}>
             <CircularImageReveal />
-            <Text style={styles.waitText}>Waiting for other request...</Text>
-            <View style={{width: "70%",alignSelf:"center",marginTop:actuatedNormalize(10)}}>
+            <Text style={styles.waitText}>Hang on {user?.name}! Healing awaits... </Text>
+            <View style={{width: "70%",alignSelf:"center",marginTop:actuatedNormalize(20)}}>
               <AnimatedBorderButton label='Cancel Call' func={cancelCall} />
             </View>
           </View>

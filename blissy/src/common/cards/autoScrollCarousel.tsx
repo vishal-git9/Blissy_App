@@ -3,6 +3,9 @@ import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-nativ
 import { SCREEN_HEIGHT, actuatedNormalize } from '../../constants/PixelScaling';
 import colors from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
+import ShockwavePulseButton from '../button/callnow';
+import { useSelector } from 'react-redux';
+import { AuthSelector } from '../../redux/uiSlice';
 
 const { width: windowWidth } = Dimensions.get('window');
 
@@ -62,6 +65,7 @@ const AutoScrollCarousel: React.FC = () => {
     // Add more items as needed
   ];
 
+  const { user } = useSelector(AuthSelector)
   const scrollX = useRef(new Animated.Value(0)).current; // Current scroll position
   const [currentIndex, setCurrentIndex] = useState(0); // Current index of the carousel
   const flatListRef = useRef<Animated.FlatList<CarouselItem>>(null); // Ref to the FlatList
@@ -83,6 +87,10 @@ const AutoScrollCarousel: React.FC = () => {
 
   return (
     <View>
+      <View style={[styles.itemContainer, {height:actuatedNormalize(400)} ]}>
+        <ShockwavePulseButton children={<Image source={{ uri:user?.profilePic }} style={styles.image} />}/>
+      </View>
+
       <Animated.FlatList
         ref={flatListRef}
         data={data}
@@ -108,7 +116,6 @@ const AutoScrollCarousel: React.FC = () => {
 
           return (
             <Animated.View style={[styles.itemContainer, { opacity }]}>
-              <Image source={{ uri: item.imageUrl }} style={styles.image} />
               <Text style={styles.content}>{item.content}</Text>
               <Text style={styles.subContent}>{item.subContent}</Text>
             </Animated.View>
@@ -126,8 +133,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   image: {
-    width: '100%',
-    height: actuatedNormalize(450),
+    width: actuatedNormalize(100),
+    height: actuatedNormalize(100),
+    borderRadius: actuatedNormalize(50)
   },
   content: {
     marginTop: actuatedNormalize(30),

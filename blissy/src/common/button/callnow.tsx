@@ -12,7 +12,7 @@ const ShockwavePulseButton: React.FC<{children:ReactNode}> = ({children}) => {
       setTimeout(() => {
         Animated.timing(anim, {
           toValue: 1,
-          duration: 2000,
+          duration: 1300,
           useNativeDriver: true,
         }).start(() => startPulseAnimation(anim, delay)); // Loop the animation
       }, delay);
@@ -34,7 +34,7 @@ const ShockwavePulseButton: React.FC<{children:ReactNode}> = ({children}) => {
                 {
                   scale: anim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [1, 3],
+                    outputRange: [2, 5],
                   }),
                 },
               ],
@@ -64,9 +64,9 @@ const styles = StyleSheet.create({
   },
   pulse: {
     position: 'absolute',
-    width: 60, // Match the button size
-    height: 60, // Match the button size
-    borderRadius: 30, // Ensure it's a circle
+    width: 80, // Match the button size
+    height: 80, // Match the button size
+    borderRadius: 50, // Ensure it's a circle
   },
   button: {
     width: 60,
