@@ -1,5 +1,5 @@
-import { Platform } from 'react-native';
-import {request, PERMISSIONS, Permission, requestMultiple } from 'react-native-permissions';
+import { Platform , Alert} from 'react-native';
+import {request, PERMISSIONS, Permission, requestMultiple, PermissionStatus } from 'react-native-permissions';
 
   export const requestBluetoothPermission = async () => {
 
@@ -47,7 +47,12 @@ export const requestMultplePermissions =async()=>{
   }
 
 
-  let response = await requestMultiple(permission);
+  let response:PermissionResponse = await requestMultiple(permission);
   console.log(response,"from permission ts fle")
-  // return response;
+  // Handle each permission result
+  return response;
+}
+
+interface PermissionResponse {
+  [key: string]: PermissionStatus;
 }

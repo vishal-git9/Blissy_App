@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid } from 'react-native';
+import { StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid, Linking } from 'react-native';
 import colors from '../../constants/colors';
 import { Loader } from '../../common/loader/loader';
 import { Button } from 'react-native';
@@ -31,6 +31,8 @@ import { resetMessageCount, resetMessages } from '../../redux/messageSlice';
 import { AppState } from 'react-native';
 import { SwipeButtonComponent } from '../../common/button/swipebutton';
 import { fonts } from '../../constants/fonts';
+import PermissionDenied from '../../common/permissions/permissiondenied';
+import { PermissionStatus } from 'react-native-permissions';
 
 interface iconsLabelI {
   id: number;
@@ -67,6 +69,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
   const [permission, setpermission] = useState(false);
+  const [permissionType, setpermissionType] = useState('');
   const otherUserScoketId = useRef<string | null>(null);
   console.log(user, "user home screens")
   const socket = useMemo(
@@ -90,16 +93,37 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     });
   };
 
-  const handleMicrophonePermissionResult = (granted: boolean) => {
-    if (granted) {
-      Alert.alert('Microphone permission granted');
-      // 
-      // You can now proceed with microphone-related functionality
-    } else {
-      Alert.alert('Microphone permission denied You can not use App Services');
-      // Handle the denial of microphone permission accordingly
-    }
-  };
+    const handlePermissions = (response: any) => {
+      for (const permissionKey in response) {
+        const permissionResult: PermissionStatus = response[permissionKey];
+        switch (permissionResult) {
+          case 'granted':
+            console.log(`${permissionKey} permission granted.`);
+            // Handle logic for granted permission
+            // setpermission(false);
+            break;
+          case 'denied':
+            console.log(`${permissionKey} permission denied.`);
+            // Handle logic for denied permission
+            break;
+          case 'blocked':
+            console.log(`${permissionKey} permission blocked.`);
+            // showBlockedModal(permissionKey);
+            setpermission(true)
+            if(permissionKey==="android.permission.ACCESS_FINE_LOCATION"){
+              setpermissionType('Location')
+            }else if(permissionKey==="android.permission.RECORD_AUDIO"){
+              setpermissionType("Microphone")
+            }
+            // Handle logic for blocked permission
+            break;
+          default:
+            console.log(`${permissionKey} permission unknown status.`);
+            // Handle logic for unknown status
+            break;
+        }
+      }
+    };
 
   const intiateRandomConnection = () => {
     navigation.navigate("AudioCallScreen", { user: user })
@@ -121,25 +145,27 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     return () => backHandler.remove();
   }, []);
 
-  useEffect(() => {
-    const verifyLocationPermissions = async () => {
-      try {
-        const locationRes = await checkLocationPermission();
-        const microphoneRes = await checkMicrophonePermission();
-        console.log(locationRes, microphoneRes, "permissions from home check")
-        if (locationRes === 'granted' && microphoneRes ==='granted') {
-          // Permission is granted
-          console.log("location permission granted");
-        } else {
-          // Handle other permission states accordingly
-          // requestBluetoothPermission()
-          requestMultplePermissions();
-          console.log("location permission not granted");
-        }
-      } catch (error) {
-        console.error(error);
+  const verifyLocationPermissions = async () => {
+    try {
+      const locationRes = await checkLocationPermission();
+      const microphoneRes = await checkMicrophonePermission();
+      if (locationRes === 'granted' && microphoneRes ==='granted') {
+        // Permission is granted
+        console.log(locationRes, microphoneRes, "permissions from home check if ")
+        console.log("location permission granted");
+      } else {
+        // Handle other permission states accordingly
+        // requestBluetoothPermission()
+       const response = await requestMultplePermissions();
+       handlePermissions(response);
+        console.log(response, "location permission not granted ");
+        console.log(locationRes, microphoneRes, "permissions from home check else")
       }
-    };
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
 
     verifyLocationPermissions();
     // calling off the animation after first render
@@ -243,6 +269,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
           </View>
         </View>
       )}
+      <PermissionDenied visible={permission} permissionType={permissionType} close={()=>{Linking.openSettings(); setpermission(false);}} />
     </View>
     // </AnimatedBackground>
   );
