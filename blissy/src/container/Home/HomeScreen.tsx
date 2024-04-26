@@ -27,12 +27,13 @@ import { requestBluetoothPermission, requestMicrophonePermission, requestMultple
 import checkMicrophonePermission from '../../common/permissions/checkMicroPermission';
 import checkLocationPermission from '../../common/permissions/checkLocationPermission';
 import AnimatedBackground from '../../common/animation/animatedBackground';
-import { resetMessageCount, resetMessages } from '../../redux/messageSlice';
+import { ActiveUserList, ActiveUserListSelector, getActiveUserList, resetMessageCount, resetMessages } from '../../redux/messageSlice';
 import { AppState } from 'react-native';
 import { SwipeButtonComponent } from '../../common/button/swipebutton';
 import { fonts } from '../../constants/fonts';
 import PermissionDenied from '../../common/permissions/permissiondenied';
 import { PermissionStatus } from 'react-native-permissions';
+import { useGetChatlistQuery } from '../../api/chatService';
 
 interface iconsLabelI {
   id: number;
@@ -65,7 +66,9 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [data, setData] = useState(HealerMockData.slice(0, 10)); // Initial data for first 10 cards
   const [value, setValue] = useState<string>('random');
   const { user } = useSelector(AuthSelector)
+  const {activeUserList} = useSelector(ActiveUserListSelector)
   const dispatch = useDispatch()
+  const {refetch,isError,isLoading,isSuccess,data:chatlistdata} = useGetChatlistQuery({userId:user?._id})
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
   const [permission, setpermission] = useState(false);
@@ -135,6 +138,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
     // verifyMicroPhonePermissions()
     // verifyLocationPermissions()
+    console.log(activeUserList, "Home screen activeuserList From redux")
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
@@ -180,9 +184,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
   useEffect(() => {
     console.log("removed from screen home screen")
+    refetch().then((res)=>console.log(res)).catch((err)=>console.log(err))
+
     socket.on("connect", () => {
       console.log("user connected", socket.id)
       console.log(socket, "sockeet state")
+      socket.emit("getActiveUserList")
       dispatch(setSocket(socket))
     })
 
@@ -190,9 +197,14 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       otherUserScoketId.current = data.callerId
       // console.log(data, "data of paired user")
     })
+    socket.on('activeUserList', (activeUserListres:ActiveUserList[])=>{
+      dispatch(getActiveUserList(activeUserListres))
+      console.log(activeUserListres, "activeUserList from home =")
+    })
 
     return () => {
       socket.off("initiateCall")
+      socket.off('activeUserList')
       socket.on('disconnect', () => {
         dispatch(resetMessageCount())
         dispatch(resetMessages())
@@ -201,6 +213,8 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       })
     }
   }, []);
+
+  console.log(chatlistdata,"chatlistdata")
 
   return (
     // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}>

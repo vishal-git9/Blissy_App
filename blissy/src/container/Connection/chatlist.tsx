@@ -8,6 +8,8 @@ import {Image} from 'react-native';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import {fonts} from '../../constants/fonts';
 import {Badge} from 'react-native-paper';
+import { useSelector } from 'react-redux';
+import { MessageSelector, newMessagesSelector } from '../../redux/messageSlice';
 
 interface Chat {
   id: string;
@@ -36,10 +38,12 @@ const chats: Chat[] = [
 ];
 
 const ChatListScreen: React.FC<NavigationStackProps> = ({navigation}) => {
+  const newMessages = useSelector(newMessagesSelector)
   const renderChatItem = ({item}: {item: Chat}) => (
     <TouchableOpacity
       style={styles.chatItem}
-      onPress={() => navigation.navigate('ChatWindow', {chatId: item.id})}>
+      // onPress={() => navigation.navigate('ChatWindow', {chatId: item.id})}
+      >
       <Image source={{uri: item.avatar}} style={styles.avatar} />
       <View style={styles.chatDetails}>
         <Text style={styles.chatName}>{item.name}</Text>
