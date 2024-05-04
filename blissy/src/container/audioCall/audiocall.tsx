@@ -100,7 +100,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
 
 
     socket?.on("callEnded", () => {
-      navigation.navigate("ReviewScreen", {name:otherUserData.current?.name})
+      navigation.navigate("ReviewScreen", {user:otherUserData.current,socketId:otherUserScoketId.current})
       dispatch(resetMessages())
     })
 

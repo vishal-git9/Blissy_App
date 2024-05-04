@@ -1,76 +1,151 @@
 // ChatListScreen.tsx
-import React from 'react';
-import {View, FlatList, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import {NavigationStackProps} from '../Prelogin/onboarding';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { NavigationStackProps } from '../Prelogin/onboarding';
 import colors from '../../constants/colors';
-import {RouteBackButton} from '../../common/button/BackButton';
-import {Image} from 'react-native';
-import {actuatedNormalize} from '../../constants/PixelScaling';
-import {fonts} from '../../constants/fonts';
-import {Badge} from 'react-native-paper';
-import { useSelector } from 'react-redux';
-import { MessageSelector, newMessagesSelector } from '../../redux/messageSlice';
+import { RouteBackButton } from '../../common/button/BackButton';
+import { Image } from 'react-native';
+import { actuatedNormalize } from '../../constants/PixelScaling';
+import { fonts } from '../../constants/fonts';
+import { Badge } from 'react-native-paper';
+import { useDispatch, useSelector } from 'react-redux';
+import { ActiveUserListSelector, ChatList, Message, MessageSelector, addMessage, chatListSelector, getActiveUserList, newMessagesSelector, pushChatlist } from '../../redux/messageSlice';
+import { AuthSelector } from '../../redux/uiSlice';
+import playNotificationSound from '../../common/sound/notification';
+import { formatDateTime } from '../../utils/formatedateTime';
+import { useGetChatlistQuery, useMarkReadMessageMutation } from '../../api/chatService';
+import ChatItemSkeleton from '../../common/loader/skeleton';
 
-interface Chat {
-  id: string;
-  name: string;
-  avatar: string; // URL or local source of the avatar image
-  lastMessage: string;
-  timestamp: string;
-}
+const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
+  const newMessages = useSelector(MessageSelector);
+  const chatlistdata = useSelector(chatListSelector);
+  const { socket, user } = useSelector(AuthSelector);
+  const loadItems = useRef<any[]>(new Array(5).fill(0))
+  const dispatch = useDispatch();
+  const { refetch, data: newChatlistData ,isLoading,isFetching} = useGetChatlistQuery(user?._id)
+  // const [markRead,{isError,isLoading,isSuccess}] = useMarkReadMessageMutation()
+  const { activeUserList } = useSelector(ActiveUserListSelector);
+console.log(newChatlistData,"----->chatdata",isFetching)
+  const findMyMessage = useCallback((message: Message, newChatlistdata: ChatList[]) => {
+    console.log("message---->", message);
+    console.log("newChatlistData---->", newChatlistdata);
+    try {
+      const newChatlist: ChatList[] = newChatlistdata.map((chatItem) => {
+        const partnerMessages = message.senderId === chatItem.chatPartner._id;
+        const partnerSocketId = activeUserList.find((el) => el.userId._id === chatItem.chatPartner._id);
 
-const chats: Chat[] = [
-  {
-    id: '1',
-    name: 'Den Shearer',
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg', // Replace with actual avatar image URL
-    lastMessage: 'Hey, How is it going?',
-    timestamp: '14:30',
-  },
-  {
-    id: '2',
-    name: 'Sonu Hwang',
-    avatar: 'https://randomuser.me/api/portraits/women/2.jpg', // Replace with actual avatar image URL
-    lastMessage: 'Hey, How is it going?',
-    timestamp: '14:10',
-  },
-  // ... add more chat objects as needed
-];
+        if (partnerMessages) {
+          console.log("here----->", partnerSocketId);
+          return { ...chatItem, newMessages: [...chatItem.newMessages, message], socketId: partnerSocketId?.socketId };
+        }
+        return chatItem;
+      });
 
-const ChatListScreen: React.FC<NavigationStackProps> = ({navigation}) => {
-  const newMessages = useSelector(newMessagesSelector)
-  const renderChatItem = ({item}: {item: Chat}) => (
-    <TouchableOpacity
-      style={styles.chatItem}
-      // onPress={() => navigation.navigate('ChatWindow', {chatId: item.id})}
+      console.log(newChatlist, "newChatlist--->");
+      const newMessage = { ...message, sender: "them" };
+      dispatch(addMessage(newMessage));
+      dispatch(pushChatlist(newChatlist));
+    } catch (error) {
+      console.error("An error occurred---->", error);
+      // Handle the error appropriately, such as logging or displaying an error message
+    }
+  }, [dispatch, activeUserList, chatlistdata.length]);
+
+  useEffect(() => {
+    socket?.on("privateMessageSuccessfulAdd", (newMessages) => {
+      console.log("newMessage----->", newMessages);
+      findMyMessage(newMessages, chatlistdata);
+      console.log("newMessage2----->", newMessages);
+      playNotificationSound();
+    });
+    socket?.on('newActiveUser', (user) => {
+      dispatch(getActiveUserList(user))
+      console.log(user, "activeUserList new-------->")
+    })
+    return () => {
+      socket?.off("privateMessageSuccessfulAdd")
+      socket?.off("newActiveUser")
+    }
+
+  }, [chatlistdata, socket]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      await refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
+    })
+    return unsubscribe
+
+  }, [navigation]);
+
+
+  console.log(newMessages, chatlistdata, "chatlistscreen==")
+
+  const renderChatItem = ({ item }: { item: ChatList }) => {
+
+    const newMessageIds: any[] = []
+    const FindSender = () => {
+      item.newMessages.forEach((el) => {
+        if (el.receiverId === user?._id && el.isRead === false) {
+          newMessageIds.push(el._id)
+          return;
+        }
+
+        return;
+      })
+    }
+
+    FindSender()
+
+    const socketId = activeUserList.filter((el) => el.userId._id === item.chatPartner._id)
+    console.log(item.newMessages.length, "item----->", item.newMessages, newMessageIds)
+
+
+
+    return (
+      <TouchableOpacity
+        style={styles.chatItem}
+        onPress={() => {
+          // if(newMessageIds.length > 0) {
+          //   markRead(newMessageIds)
+          // }
+          navigation.navigate('ChatWindow', { socketId: socketId[0]?.socketId, userDetails: item.chatPartner, Chats: item })
+        }}
       >
-      <Image source={{uri: item.avatar}} style={styles.avatar} />
-      <View style={styles.chatDetails}>
-        <Text style={styles.chatName}>{item.name}</Text>
-        <View style={{flexDirection:"row",columnGap:actuatedNormalize(10),alignItems:"center"}}>
-          <Text style={styles.lastMessage}>{item.lastMessage}</Text>
-          <Badge size={22} style={{backgroundColor:colors.primary,color:colors.white,fontFamily:fonts.NexaXBold}}>3</Badge>
+        <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
+        <View style={styles.chatDetails}>
+          <Text style={styles.chatName}>{item.chatPartner.name}</Text>
+          <View style={{ flexDirection: "row", columnGap: actuatedNormalize(10), alignItems: "center", marginTop: actuatedNormalize(5) }}>
+            <Text style={styles.lastMessage}>{item.newMessages[item.newMessages.length - 1].message}</Text>
+            {newMessageIds.length > 0 && <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>{newMessageIds.length}</Badge>
+            }
+          </View>
         </View>
-      </View>
-      <Text style={styles.timestamp}>{item.timestamp}</Text>
-    </TouchableOpacity>
-  );
+        <Text style={styles.timestamp}>{formatDateTime(item?.newMessages[item?.newMessages?.length - 1].createdAt)}</Text>
+      </TouchableOpacity>
+    )
+
+  }
 
   return (
     <View style={styles.container}>
-            <RouteBackButton onPress={() => navigation.goBack()} />
-      <Text style={{color:colors.white,alignSelf:"center",fontFamily:fonts.NexaBold,fontSize:actuatedNormalize(23),marginTop:actuatedNormalize(20)}}>Chats</Text>
+      <RouteBackButton onPress={() => navigation.goBack()} />
+      <Text style={{ color: colors.white, alignSelf: "center", fontFamily: fonts.NexaBold, fontSize: actuatedNormalize(23), marginTop: actuatedNormalize(20) }}>Chats</Text>
       {/* Icons can be added here */}
-      <FlatList
-        data={chats}
-        contentContainerStyle={{
-          rowGap: actuatedNormalize(10),
-          marginHorizontal: actuatedNormalize(10),
-          marginTop: actuatedNormalize(40),
-        }}
-        keyExtractor={item => item.id}
-        renderItem={renderChatItem}
-      />
+
+      {
+        isFetching ? (
+          loadItems.current.map(el => <ChatItemSkeleton />)) : (<FlatList
+            data={chatlistdata}
+            contentContainerStyle={{
+              rowGap: actuatedNormalize(10),
+              marginHorizontal: actuatedNormalize(10),
+              marginTop: actuatedNormalize(40),
+            }}
+            keyExtractor={item => item.chatPartner._id}
+            renderItem={renderChatItem}
+          />)
+      }
+
     </View>
   );
 };
@@ -78,7 +153,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop:actuatedNormalize(20)
+    marginTop: actuatedNormalize(20)
   },
   //   headerTitle: {
   //     fontSize: 24,

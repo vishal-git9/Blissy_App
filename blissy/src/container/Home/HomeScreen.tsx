@@ -27,13 +27,13 @@ import { requestBluetoothPermission, requestMicrophonePermission, requestMultple
 import checkMicrophonePermission from '../../common/permissions/checkMicroPermission';
 import checkLocationPermission from '../../common/permissions/checkLocationPermission';
 import AnimatedBackground from '../../common/animation/animatedBackground';
-import { ActiveUserList, ActiveUserListSelector, getActiveUserList, resetMessageCount, resetMessages } from '../../redux/messageSlice';
+import { ActiveUserList, ActiveUserListSelector, addMessage, getActiveUserList, pushChatlist, pushCurrentMessage, resetMessageCount, resetMessages } from '../../redux/messageSlice';
 import { AppState } from 'react-native';
 import { SwipeButtonComponent } from '../../common/button/swipebutton';
 import { fonts } from '../../constants/fonts';
 import PermissionDenied from '../../common/permissions/permissiondenied';
 import { PermissionStatus } from 'react-native-permissions';
-import { useGetChatlistQuery } from '../../api/chatService';
+import { useGetChatlistQuery, useGetNewMessageQuery } from '../../api/chatService';
 
 interface iconsLabelI {
   id: number;
@@ -47,7 +47,7 @@ const iconsLabel: iconsLabelI[] = [
     id: 1,
     label: 'chats',
     iconName: 'chatbox-ellipses',
-    navigate: 'ComingsoonScreen',
+    navigate: 'Chatlist',
   },
   {
     id: 2,
@@ -68,7 +68,8 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const { user } = useSelector(AuthSelector)
   const {activeUserList} = useSelector(ActiveUserListSelector)
   const dispatch = useDispatch()
-  const {refetch,isError,isLoading,isSuccess,data:chatlistdata} = useGetChatlistQuery({userId:user?._id})
+  const {refetch,isError,isLoading,isSuccess,data:chatlistdata} = useGetChatlistQuery(user?._id)
+  const {refetch:fetchNewMsg,isError:newMsgerr,isLoading:newMsgLoading,isSuccess:newMsgsuccess} = useGetNewMessageQuery({userId:user?._id})
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
   const [permission, setpermission] = useState(false);
@@ -184,13 +185,16 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
   useEffect(() => {
     console.log("removed from screen home screen")
-    refetch().then((res)=>console.log(res)).catch((err)=>console.log(err))
 
+    dispatch(resetMessages())
     socket.on("connect", () => {
       console.log("user connected", socket.id)
       console.log(socket, "sockeet state")
       socket.emit("getActiveUserList")
       dispatch(setSocket(socket))
+      refetch().then((res)=>dispatch(pushChatlist(res.data.chatList))).catch((err)=>console.log(err))
+      fetchNewMsg().then((res)=>dispatch(pushCurrentMessage(res.data.chat))).catch((err)=>console.log(err))
+  
     })
 
     socket.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
@@ -200,6 +204,11 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     socket.on('activeUserList', (activeUserListres:ActiveUserList[])=>{
       dispatch(getActiveUserList(activeUserListres))
       console.log(activeUserListres, "activeUserList from home =")
+    })
+
+    socket.on('newActiveUser',(user)=>{
+      dispatch(getActiveUserList(user))
+      console.log(user,"activeUserList new-------->")
     })
 
     return () => {

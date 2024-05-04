@@ -33,14 +33,14 @@ interface IconContainerProps {
   ConnectedUserData:UserInterface | null;
   speakerEnabled:boolean;
   muteEnabled:boolean;
+  socketId:string | null;
 }
 
 interface CallingScreenProps extends IconContainerProps {
-  socketId:string| null;
   socket:Socket;
 }
 
-const IconContainer: React.FC<IconContainerProps> = ({ConnectedUserData,navigation,leave,toggleMic,toggleSpeaker,speakerEnabled,muteEnabled}) => {
+const IconContainer: React.FC<IconContainerProps> = ({socketId,ConnectedUserData,navigation,leave,toggleMic,toggleSpeaker,speakerEnabled,muteEnabled}) => {
   return (
     <View style={styles.iconContainer}>
       <TouchableOpacity style={[styles.icon, styles.leftIcon,{backgroundColor:muteEnabled ? colors.primary : colors.white}]} onPress={toggleMic}>
@@ -52,7 +52,7 @@ const IconContainer: React.FC<IconContainerProps> = ({ConnectedUserData,navigati
         style={[styles.icon, styles.middleIcon]}
         onPress={() =>{
           leave()
-          navigation.navigate('ReviewScreen', {name: ConnectedUserData?.name})
+          navigation.navigate('ReviewScreen', {user: ConnectedUserData,socketId:socketId})
         }
         }>
         {/* Add your middle icon here */}
@@ -114,11 +114,13 @@ const dispatch = useDispatch()
 
   useEffect(() => {
 
-    socket.on('privateMessageSuccessfulAdd', (messageObject) => {
-      const newMessage = {...messageObject.message,sender:"them"}
-      dispatch(addMessage(newMessage));
-      playNotificationSound()
-    });
+    // socket.on('privateMessageSuccessfulAdd', (messageObject) => {
+    //   const newMessage = {...messageObject.message,sender:"them"}
+
+    //   console.log(messageObject,"messageobject------>")
+    //   dispatch(addMessage(newMessage));
+    //   playNotificationSound()
+    // });
 
 
     socket.on("notify_mute_state",(muteState)=>{
@@ -130,7 +132,6 @@ const dispatch = useDispatch()
 
     // Cleanup on component unmount
     return () => {
-      socket.off('privateMessageSuccessfulAdd');
       socket.off("notify_mute_state");
     };
   }, [isChatStateActive]);
@@ -168,7 +169,7 @@ const dispatch = useDispatch()
             <Text style={styles.readReceiptsText}>View Profile</Text>
           </TouchableOpacity>
 
-            <IconButton
+            {/* <IconButton
             IsBadge={ messageCount > 0 ? true : false}
             BadgeCount={messageCount}
             IconProvider={MaterialIcons}
@@ -177,13 +178,13 @@ const dispatch = useDispatch()
             iconcolor={colors.white}
             onpress={() =>{
               dispatch(setChatScreenActive(true))
-              navigation.navigate("ChatWindow",{userDetails:ConnectedUserData,socketId:socketId})
+              navigation.navigate("ChatWindow",{userDetails:ConnectedUserData,socketId:socketId || undefined})
             }}   
                size={18}
             styles={styles.SecondaryButton}
             textSize={actuatedNormalize(18)}
             textcolor={colors.white}
-          />
+          /> */}
           {/* <TouchableOpacity style={styles.readReceiptsButton}>
             <Text style={styles.readReceiptsText}>View Profile</Text>
           </TouchableOpacity> */}
@@ -192,7 +193,7 @@ const dispatch = useDispatch()
       </View>
 
       {/* Action buttons */}
-      <IconContainer speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker}  />
+      <IconContainer speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} socketId={socketId} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker}  />
       <Snackbar
             duration={otherUserMute ? 10000 : 2000}
             visible={errorSnackbar}

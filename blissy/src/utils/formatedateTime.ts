@@ -1,0 +1,19 @@
+import moment from "moment";
+
+export function formatDateTime(dateString: string) {
+    const date = moment(dateString);
+    const today = moment().startOf('day');
+    const yesterday = moment().subtract(1, 'day').startOf('day');
+    console.log(dateString,"date---->")
+
+    if (date.isSame(today, 'day')) {
+        // Today's date
+        return date.format('hh:mm A'); // Return time only
+    } else if (date.isSame(yesterday, 'day')) {
+        // Yesterday's date
+        return 'Yesterday';
+    } else {
+        // Any other date
+        return date.format('D MMM'); // Return day and month (e.g., "28 Apr")
+    }
+}

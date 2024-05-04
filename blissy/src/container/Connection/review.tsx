@@ -34,7 +34,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
   const [rating, setRating] = useState(4);
   const ratingRef = useRef<Animatable.AnimatableComponent<any, any>>(null);  ;
   const color = ratingColors[rating] || colors.yellow;
-  const {name} = route.params;
+  const {user,socketId} = route.params;
 useEffect(()=>{
   const backHandler = BackHandler.addEventListener(
     'hardwareBackPress',
@@ -55,7 +55,7 @@ useEffect(()=>{
         <Text style={styles.headerText2}>Great! You Talked for 12min</Text>
         </View> */}
         <FaceComponent rating={rating}/>
-        <Text style={styles.questionText}>How was the call with {name}?</Text>
+        <Text style={styles.questionText}>How was the call with {user?.name}?</Text>
 
         <View style={styles.ratingContainer}>
           <Animatable.Text
@@ -119,17 +119,17 @@ useEffect(()=>{
             textSize={actuatedNormalize(18)}
             textcolor={colors.white}
           /> */}
-          {/* <IconButton
+          <IconButton
             IconProvider={MaterialIcons}
             iconame="chat"
             label="Say Hi!"
             iconcolor={colors.white}
-            onpress={() => navigation.pop(2)}
+            onpress={() => navigation.navigate('ChatWindow',{Chats:null,socketId:socketId || undefined,userDetails:user})}
             size={18}
             styles={styles.PrimaryButton}
             textSize={actuatedNormalize(18)}
             textcolor={colors.white}
-          /> */}
+          />
            <IconButton
             IconProvider={Feather}
             iconame="send"
@@ -141,7 +141,9 @@ useEffect(()=>{
             textSize={actuatedNormalize(18)}
             textcolor={colors.white}
           />
-                    <IconButton
+                
+        </View>
+        <IconButton
             IconProvider={MaterialIcons}
             iconame="report"
             label="Report"
@@ -152,7 +154,6 @@ useEffect(()=>{
             textSize={actuatedNormalize(18)}
             textcolor={colors.white}
           />
-        </View>
       </View>
     </>
   );
