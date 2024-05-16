@@ -23,6 +23,7 @@ import {LabelWithIcon} from './iconlabel';
 import {ProfileBox } from './profilebox';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthSelector, logoutUser } from '../../redux/uiSlice';
+import { AuthApi } from '../../api/authService';
 
 const CustomDrawer: React.FC<any> = props => {
   const [ConfirmModal, setConfirmModal] = useState<boolean>(false);
@@ -75,6 +76,7 @@ const CustomDrawer: React.FC<any> = props => {
               onPress={() => {
                 setConfirmModal(false);
                 props.navigation.closeDrawer()
+                dispatch(AuthApi.util.resetApiState())
                 dispatch(logoutUser());
                 props.navigation.replace('Login');
                 // console.log('Yes');

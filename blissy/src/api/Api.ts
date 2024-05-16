@@ -1,9 +1,10 @@
 import {createApi,fetchBaseQuery} from "@reduxjs/toolkit/query/react"
-import { serverLocalUrl } from "../utils/globalVariable";
+import { serverLocalUrl ,serverBaseUrl} from "../utils/globalVariable";
 import { IRootState } from "../redux";
 
 const baseQuery = fetchBaseQuery({
     baseUrl:serverLocalUrl,
+
     prepareHeaders(headers, {getState}) {
         const {Auth} = getState() as IRootState;
         console.log(Auth.token,"---auth state")

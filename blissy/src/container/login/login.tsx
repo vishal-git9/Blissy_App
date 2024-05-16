@@ -70,6 +70,7 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
       console.log(res,"data of OTP")
       const isNewuser = await refetch()
       // fetch user details
+      console.log(isNewUser, "newUser from login---")
       clearInterval(timerRef.current);
       setModalState(false)
       console.log(isNewuser,"---user isnewuser")

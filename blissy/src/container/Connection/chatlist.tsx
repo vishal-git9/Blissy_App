@@ -15,6 +15,7 @@ import playNotificationSound from '../../common/sound/notification';
 import { formatDateTime } from '../../utils/formatedateTime';
 import { useGetChatlistQuery, useMarkReadMessageMutation } from '../../api/chatService';
 import ChatItemSkeleton from '../../common/loader/skeleton';
+import { Empty } from '../../common/Empty/Empty';
 
 const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const newMessages = useSelector(MessageSelector);
@@ -49,7 +50,7 @@ console.log(newChatlistData,"----->chatdata",isFetching)
       console.error("An error occurred---->", error);
       // Handle the error appropriately, such as logging or displaying an error message
     }
-  }, [dispatch, activeUserList, chatlistdata.length]);
+  }, [dispatch, activeUserList, chatlistdata?.length]);
 
   useEffect(() => {
     socket?.on("privateMessageSuccessfulAdd", (newMessages) => {
@@ -97,7 +98,7 @@ console.log(newChatlistData,"----->chatdata",isFetching)
     FindSender()
 
     const socketId = activeUserList.filter((el) => el.userId._id === item.chatPartner._id)
-    console.log(item.newMessages.length, "item----->", item.newMessages, newMessageIds)
+    console.log(item.newMessages?.length, "item----->", item.newMessages, newMessageIds)
 
 
 
@@ -105,7 +106,7 @@ console.log(newChatlistData,"----->chatdata",isFetching)
       <TouchableOpacity
         style={styles.chatItem}
         onPress={() => {
-          // if(newMessageIds.length > 0) {
+          // if(newMessageIds?.length > 0) {
           //   markRead(newMessageIds)
           // }
           navigation.navigate('ChatWindow', { socketId: socketId[0]?.socketId, userDetails: item.chatPartner, Chats: item })
@@ -115,8 +116,8 @@ console.log(newChatlistData,"----->chatdata",isFetching)
         <View style={styles.chatDetails}>
           <Text style={styles.chatName}>{item.chatPartner.name}</Text>
           <View style={{ flexDirection: "row", columnGap: actuatedNormalize(10), alignItems: "center", marginTop: actuatedNormalize(5) }}>
-            <Text style={styles.lastMessage}>{item.newMessages[item.newMessages.length - 1].message}</Text>
-            {newMessageIds.length > 0 && <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>{newMessageIds.length}</Badge>
+            <Text style={styles.lastMessage}>{item.newMessages[item.newMessages?.length - 1].message}</Text>
+            {newMessageIds?.length > 0 && <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>{newMessageIds?.length}</Badge>
             }
           </View>
         </View>
@@ -133,8 +134,9 @@ console.log(newChatlistData,"----->chatdata",isFetching)
       {/* Icons can be added here */}
 
       {
-        isFetching ? (
-          loadItems.current.map(el => <ChatItemSkeleton />)) : (<FlatList
+        !isLoading ? (
+          loadItems.current.map(el => <ChatItemSkeleton />)) : (
+          chatlistdata.length >0  ? <FlatList
             data={chatlistdata}
             contentContainerStyle={{
               rowGap: actuatedNormalize(10),
@@ -143,7 +145,8 @@ console.log(newChatlistData,"----->chatdata",isFetching)
             }}
             keyExtractor={item => item.chatPartner._id}
             renderItem={renderChatItem}
-          />)
+          /> : <Empty/>
+          )
       }
 
     </View>

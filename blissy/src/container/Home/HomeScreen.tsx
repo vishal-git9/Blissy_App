@@ -59,7 +59,7 @@ const iconsLabel: iconsLabelI[] = [
     id: 3,
     label: 'coupons',
     iconName: 'gift',
-    navigate: 'ComingsoonScreen',
+    navigate: 'CouponsScreen',
   },
 ];
 export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
@@ -118,6 +118,8 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
               setpermissionType('Location')
             }else if(permissionKey==="android.permission.RECORD_AUDIO"){
               setpermissionType("Microphone")
+            }else if(permissionKey==="android.permission.POST_NOTIFICATIONS"){
+              setpermissionType("Notifications")
             }
             // Handle logic for blocked permission
             break;

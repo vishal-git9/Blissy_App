@@ -17,8 +17,9 @@ export type RootStackParamList = {
   Chatlist: undefined;
   Calllist: undefined;
   Wallet: undefined;
-  Coupons: undefined;
+  CouponsScreen: undefined;
   ReviewScreen: { user: UserInterface | null, socketId: string | null };
   AudioCallScreen: { user: UserInterface | null };
   ComingsoonScreen: { screenName: string }
+  ChatPartnerDetails:{chatPartner:UserInterface | null}
 };

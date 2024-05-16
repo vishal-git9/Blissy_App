@@ -12,7 +12,7 @@ export const UserApi = API.injectEndpoints({
         url: 'user/get-user',
         method: 'GET',
       }),
-      keepUnusedDataFor: 0,
+      keepUnusedDataFor: 60000,
     }),
     postUser: builder.mutation<any, Partial<UserState>>({
       query: (body) => ({

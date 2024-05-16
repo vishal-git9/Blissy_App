@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  Animated,
+  Animated as NativeAnimated,
 } from 'react-native';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { NavigationStackProps } from '../Prelogin/onboarding';
@@ -27,8 +27,17 @@ import { AuthSelector } from '../../redux/uiSlice';
 import moment from 'moment';
 import { useGetChatlistQuery, useMarkReadMessageMutation, useSendMessageMutation } from '../../api/chatService';
 import generateRandomId from '../../utils/randomIdGenerator';
+import Animated, { SharedTransition, withSpring }  from 'react-native-reanimated';
 
-
+const customTransition = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    height: withSpring(values.targetHeight),
+    width: withSpring(values.targetWidth),
+    // originX: withSpring(values.targetOriginX),
+    // originY: withSpring(values.targetOriginY),
+  };
+});
 
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ChatWindow'>;
 
@@ -57,7 +66,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const [markRead, { }] = useMarkReadMessageMutation()
   const [istyping, setIsTyping] = useState<boolean>(false)
   const timerRef = useRef<NodeJS.Timeout>();
-  const yValue = useRef(new Animated.Value(0)).current;
+  const yValue = useRef(new NativeAnimated.Value(0)).current;
   const [sendMsg, { isError, isLoading, isSuccess, reset, data }] = useSendMessageMutation()
 
   const messages = useSelector(MessageSelector);
@@ -135,7 +144,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to the end to show new message
 
       // Animate the new message sliding in
-      Animated.timing(yValue, {
+      NativeAnimated.timing(yValue, {
         toValue: 1,
         duration: 500,
         useNativeDriver: true,
@@ -162,8 +171,6 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       clearTimeout(timerRef.current)
     }
   }, [chatlistdata])
-
-
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -212,6 +219,10 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   };
 
   // console.log(messages.filter((el) => (el.senderId === userDetails?._id && el.receiverId === user?._id || el.senderId === user?._id && el.receiverId === userDetails?._id)), "messages---->")
+  const getItemLayout = (data:any, index:any) => (
+    { length: actuatedNormalize(70), offset: actuatedNormalize(70) * index, index } // assuming each item has a height of 70
+  );
+  const lastMessageIndex = Chats ? chatlistdata.filter((el) => el.chatPartner._id === Chats.chatPartner._id)[0].newMessages.length - 1 : 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -221,11 +232,14 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           navigation.goBack()
         }} />
         <View style={styles.headerContent}>
-          <Image source={{ uri: userDetails?.profilePic }} style={styles.avatar} />
+          <TouchableOpacity style={styles.headerContent} onPress={()=>navigation.navigate('ChatPartnerDetails', {chatPartner:userDetails})}>
+          <Animated.Image style={styles.avatar} source={{uri:userDetails?.profilePic}} sharedTransitionTag='profile' />
+          {/* <Image source={{ uri: userDetails?.profilePic }} style={styles.avatar} /> */}
           <View>
-            <Text style={styles.userName}>{userDetails?.name}</Text>
+            <Animated.Text style={styles.userName} sharedTransitionTag='ChatPartnerName'>{userDetails?.name}</Animated.Text>
             <Text style={styles.userStatus}>{istyping ? "Typing..." : socketId ? "online" : "offline"}</Text>
           </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -239,9 +253,13 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           showsVerticalScrollIndicator={false}
           keyExtractor={(item) => item.messageId}
           renderItem={renderMessageItem}
-          contentContainerStyle={{ marginTop: actuatedNormalize(10) }}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          contentContainerStyle={{ marginTop: actuatedNormalize(10), paddingBottom: actuatedNormalize(10) }}
+          initialScrollIndex={lastMessageIndex}
+          getItemLayout={getItemLayout}
+          onLayout={() => flatListRef.current?.scrollToIndex({ index: lastMessageIndex, animated: true })}
+          viewabilityConfig={{
+            itemVisiblePercentThreshold: 50, // render items when at least 50% of the item is visible
+          }}
         />
         <View style={styles.inputContainer}>
           <TextInput
@@ -336,7 +354,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: "center",
-    columnGap: actuatedNormalize(10)
+    columnGap: actuatedNormalize(10),
+    padding:actuatedNormalize(5)
   },
   backButton: {
     fontSize: 18,

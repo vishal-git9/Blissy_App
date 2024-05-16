@@ -38,7 +38,7 @@ export const requestMultplePermissions =async()=>{
   let permission: Permission[];
 
   if (Platform.OS === 'android') {
-    permission = [PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,PERMISSIONS.ANDROID.RECORD_AUDIO];
+    permission = [PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,PERMISSIONS.ANDROID.RECORD_AUDIO, PERMISSIONS.ANDROID.POST_NOTIFICATIONS];
   } else if (Platform.OS === 'ios') {
     permission = [PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,PERMISSIONS.IOS.MICROPHONE];
   } else {

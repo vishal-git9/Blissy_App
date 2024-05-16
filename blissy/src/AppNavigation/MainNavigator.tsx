@@ -15,6 +15,8 @@ import CallListScreen from '../container/Connection/callList';
 import GlobalBackHandler from './Globalbackhandler';
 import VoiceCall from '../container/audioCall/audiocall';
 import { ComingSoon } from '../container/comingsoon/comingsoon';
+import { Coupons } from '../container/coupons/coupons';
+import ChatPartnerDetails from '../container/Connection/chatPartnerDetails';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -56,7 +58,9 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="ChatWindow" component={ChatWindowScreen} />
         <Stack.Screen name="ReviewScreen" component={ReviewScreen} /> 
         <Stack.Screen name="AudioCallScreen" component={VoiceCall} /> 
+        <Stack.Screen name="CouponsScreen" component={Coupons}/>
         <Stack.Screen name="ComingsoonScreen" component={ComingSoon} /> 
+        <Stack.Screen name='ChatPartnerDetails' component={ChatPartnerDetails}/>
       </Stack.Navigator>
       <GlobalBackHandler/>
     </NavigationContainer>

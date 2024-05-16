@@ -19,7 +19,7 @@ export const Navigator:React.FC<NavigationStackProps> = ({navigation}) => {
                 res.isError && dispatch(logoutUser())
             }).catch(err=>console.log(err))
         }
-        console.log(userData,"--userdata--")
+        console.log(userData,"--userdata--", user)
     },[token])
   return  <MainNavigator isLoggedIn={isAuthenticated} isNewUser={isNewUser}/>
    
