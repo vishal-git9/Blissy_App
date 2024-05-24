@@ -9,7 +9,7 @@ import {
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import Modal from 'react-native-modal';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Entypo from 'react-native-vector-icons/Entypo';
 import {fonts} from '../../constants/fonts';
 import LottieView from 'lottie-react-native';
 import colors from '../../constants/colors';
@@ -25,13 +25,20 @@ const screenWidth = Dimensions.get('window').width;
 interface LoginScreenProps {
   handleOtp: () => void;
   state: {
-    mobileNumber: string;
+    email: string;
   };
   dispatch: Dispatch<Action>;
   navigation: NativeStackNavigationProp<RootStackParamList>;
   modalState: boolean;
   isLoading: boolean;
+  invalidEmail:boolean;
 }
+
+export const validateEmail = (email: string) => {
+  const EmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  console.log(EmailRegex.test(email), "from regex", email)
+  return EmailRegex.test(email);
+};
 
 const MobileInput: React.FC<LoginScreenProps> = ({
   handleOtp,
@@ -40,6 +47,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
   state,
   modalState,
   isLoading,
+  invalidEmail
 }) => {
   const {width: SCREEN_WIDTH} = useWindowDimensions();
 
@@ -102,26 +110,24 @@ const MobileInput: React.FC<LoginScreenProps> = ({
             <View style={styles.modalContent}>
               <View style={styles.inputContainer}>
                 <LabelInputComponent
-                  value={state.mobileNumber}
-                  type={'mobileNumber'}
+                  value={state.email}
+                  type={'email'}
                   labelStyle={{width: '100%'}}
                   name={'name'}
-                  maxLength={10}
-                  placeholder="+91"
-                  validate={true}
-                  keyboardType={'numeric'}
-                  // errorText={'Name is part of our alogrithm'}
+                  // maxLength={10}
+                  placeholder="@"
+                  validate={invalidEmail}
+                  keyboardType={'email-address'}
+                  errorText={'Please Enter valid Email'}
                   onChangeText={dispatch}
-                  IconProvider={FontAwesome}
-                  IconName={'phone'}
+                  IconProvider={Entypo}
+                  IconName={'mail'}
                 />
                 <PrimaryButton
-                  disabled={state.mobileNumber.length < 10}
+                  // disabled={state.email.length < 10}
                   styles={{
                     backgroundColor: 
-                      state.mobileNumber.length < 10
-                        ? colors.gray
-                        : colors.primary,
+                      colors.primary,
                   }}
                   handleFunc={() => handleOtp()}
                   label="GET OTP"

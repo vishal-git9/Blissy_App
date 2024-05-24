@@ -1,10 +1,11 @@
-import React, { Dispatch, useState } from 'react';
+import React, { Dispatch, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import AvatarSelector from './AvatarSelector';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { Text } from 'react-native';
 import { LabelWithDesc } from '../labels/label1';
 import { Action } from '../../container/Registration/Registration';
+import FastImage from 'react-native-fast-image';
 
 interface AvatarComponentProps {
   avatarData: string[];
@@ -21,6 +22,12 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({ avatarData, selectedA
     setSelectedAvatar(avatar);
     dispatch({type:"profilePic",payload:avatar})
   };
+
+  // useEffect(()=>{
+  //   FastImage.preload(avatarData.map((uri)=>{
+  //     return {uri:uri, headers:{Authorization: uri}}
+  //   }))
+  // },[avatarData])
 
   return (
     <View style={styles.container}>

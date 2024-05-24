@@ -8,6 +8,7 @@ import {fonts} from '../../constants/fonts';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { UserInterface } from '../../redux/uiSlice';
+import FastImage from 'react-native-fast-image';
 // export interface DrawerUserInterface {
 //   mobileNumber: string;
 //   role: string;
@@ -28,8 +29,8 @@ export const ProfileBox: React.FC<UserInterface | any> = ({
 }) => {
   return (
     <View style={styles.shadowBox}>
-      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-        <Image
+      <View style={{flexDirection: 'row', justifyContent: 'space-between', overflow:'hidden' }}>
+        {/* <Image
           source={{uri: profilePic}}
           style={{
             height: actuatedNormalize(80),
@@ -37,7 +38,8 @@ export const ProfileBox: React.FC<UserInterface | any> = ({
             borderRadius: actuatedNormalize(40),
             marginBottom: actuatedNormalize(10),
           }}
-        />
+        /> */}
+       <FastImage source={{uri:profilePic}} style={styles.avatarStyle} resizeMode={FastImage.resizeMode.contain} />
         {/* <View style={{flexDirection: 'column', rowGap: actuatedNormalize(5)}}>
           <View style={{flexDirection: 'row', columnGap: actuatedNormalize(5)}}>
             <Text
@@ -98,4 +100,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     elevation: 5, // Add elevation for shadow
   },
+  avatarStyle:{
+    height: actuatedNormalize(80),
+    width: actuatedNormalize(80),
+    borderRadius: actuatedNormalize(40),
+    marginBottom: actuatedNormalize(10),
+    //  transform:[{ translateY:55},{scale:2}]
+  }
 });

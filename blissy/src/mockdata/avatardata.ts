@@ -1,2 +1,13 @@
-export const mensAvatarData = ["https://ik.imagekit.io/gqdvppqpv/avatar_men/avatar-men.png?updatedAt=1713636201953", "https://ik.imagekit.io/gqdvppqpv/avatar_men/avatar-glasses.png?updatedAt=1713636201971", "https://ik.imagekit.io/gqdvppqpv/avatar_men/avatar-boy.png?updatedAt=1713636201975", "https://ik.imagekit.io/gqdvppqpv/avatar_men/avatar-punjabi.png?updatedAt=1713636201847", "https://ik.imagekit.io/gqdvppqpv/avatar_men/avatar-cool.png?updatedAt=1713636201781", "https://ik.imagekit.io/gqdvppqpv/avatar_men/avatar-punjabiboy.png?updatedAt=1713636201775"]
-export const womensAvatarData = ["https://ik.imagekit.io/gqdvppqpv/avatar_women/avatar-curly.png?updatedAt=1713636132029", "https://ik.imagekit.io/gqdvppqpv/avatar_women/avatar-women.png?updatedAt=1713636132033", "https://ik.imagekit.io/gqdvppqpv/avatar_women/avatar-moderngirl.png?updatedAt=1713636131971", "https://ik.imagekit.io/gqdvppqpv/avatar_women/avatar-women2.png?updatedAt=1713636131975", "https://ik.imagekit.io/gqdvppqpv/avatar_women/avatar-office.png?updatedAt=1713636132014", "https://ik.imagekit.io/gqdvppqpv/avatar_women/avatar-punjabi.png?updatedAt=1713636132010"]
+export const mensAvatarData = [
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar3.png?updatedAt=1716207455082',
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar5.png?updatedAt=1716207455162',
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar6.png?updatedAt=1716207454382',
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar4.png?updatedAt=1716207453566',
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar2.png?updatedAt=1716207452101',
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar1.png?updatedAt=1716207452106',
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar10.png?updatedAt=1716207451728',
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar8.png?updatedAt=1716207441790',
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar9.png?updatedAt=1716207441681',
+  'https://ik.imagekit.io/gqdvppqpv/boys/menAvatar7.png?updatedAt=1716207440772',
+];
+export const womensAvatarData = ["https://ik.imagekit.io/gqdvppqpv/girlsCompressed/womenAvatars8.png?updatedAt=1716212194134","https://ik.imagekit.io/gqdvppqpv/girlsCompressed/womenAvatars7.png?updatedAt=1716212193307","https://ik.imagekit.io/gqdvppqpv/girlsCompressed/womenAvatars2.png?updatedAt=1716212190993"]

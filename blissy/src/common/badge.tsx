@@ -3,11 +3,13 @@ import { View, Text, StyleSheet } from 'react-native';
 import colors from '../constants/colors';
 import { actuatedNormalize } from '../constants/PixelScaling';
 import { fonts } from '../constants/fonts';
+import Typewriter from './animation/Typewritter';
 
 const OfferBadge: React.FC = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Healers will soon be available for you.</Text>
+      {/* <Text style={styles.text}>Healers will soon be available for you.</Text> */}
+      <Typewriter loop={true} text='Healers will soon be available for you.' speed={50} />
     </View>
   );
 };

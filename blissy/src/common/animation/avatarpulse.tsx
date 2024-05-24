@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, View, StyleSheet, Image } from 'react-native';
 import colors from '../../constants/colors';
+import FastImage from 'react-native-fast-image';
 
 const AvatarRingsAnimation: React.FC<{source:string | undefined,width:number,height:number}> = ({height,source,width}) => {
   const fadeAnim1 = useRef(new Animated.Value(0)).current;
@@ -37,7 +38,8 @@ const AvatarRingsAnimation: React.FC<{source:string | undefined,width:number,hei
   return (
     <View style={styles.container}>
       <View style={styles.avatarContainer}>
-        <Image source={{uri:source}} width={width} height={height} style={{borderRadius:50}}/>
+        {/* <Image source={{uri:source}} width={width} height={height} style={{borderRadius:50}}/> */}
+        <FastImage source={{uri:source}} style={{width:width, height:height, overflow:'hidden'}} resizeMode={FastImage.resizeMode.contain} />
       </View>
       <Animated.View style={[styles.ring, styles.ring1, { opacity: fadeAnim1 }]} />
       <Animated.View style={[styles.ring, styles.ring2, { opacity: fadeAnim2 }]} />
@@ -54,6 +56,9 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     // Avatar style
+    // width:200,
+    // height:200,
+    // overflow:'hidden'
   },
   ring: {
     position: 'absolute',
@@ -62,16 +67,16 @@ const styles = StyleSheet.create({
     borderColor: colors.gray,
   },
   ring1: {
-    width: 120,
-    height: 120,
+    width: 175,
+    height: 175,
   },
   ring2: {
-    width: 140,
-    height: 140,
+    width: 185,
+    height: 185,
   },
   ring3: {
-    width: 150,
-    height: 150,
+    width: 210,
+    height: 210,
   },
 });
 

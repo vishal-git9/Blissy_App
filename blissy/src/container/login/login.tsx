@@ -16,13 +16,20 @@ import { Loader } from '../../common/loader/loader';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 
 interface LoginInterface {
-  mobileNumber: string;
+  email: string;
   OTP: string;
 }
 const intialState: LoginInterface = {
-  mobileNumber: '',
+  email: '',
   OTP: '',
 };
+
+export const validateEmail = (email: string) => {
+  const EmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  console.log(EmailRegex.test(email), "from regex", email)
+  return EmailRegex.test(email);
+};
+
 export const reducerAction = (state: LoginInterface, action: Action) => {
   const key = action.type;
   switch (action.type) {
@@ -45,6 +52,7 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
   const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
   const [modalState,setModalState] = useState<boolean>(true)
   const [progressDuration, setProgressDuration] = useState(30);
+  const [invalidEmail, setEnvalidEmail] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout>();
    const [getOtp,{error,data,isLoading,reset:resetMobile}] = useGetOtpMutation();
    const {token,isAuthenticated,user,isNewUser,isRegisterd} = useSelector(AuthSelector)
@@ -54,7 +62,8 @@ export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
 const reduxDispatch = useDispatch()
 console.log(user,isNewUser,isRegisterd,"------user--------")
   const handleSubmitMobileNumber = async () => {
-      const res = await getOtp({mobileNumber:`+91${state.mobileNumber}`});
+    if(validateEmail(state.email)){
+      const res = await getOtp({email:`${state.email}`});
       console.log(res,"---res-----")
       if('data' in res){
         console.log(data,"data of MobileNumber")
@@ -62,10 +71,13 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
       }else if('error' in res){
         console.log(error)
       }
+    }else{
+      setEnvalidEmail(true)
+    }
   };
 
   const handleOtpSubmit = async() => {
-    const res = await OtpVerify({mobileNumber:`+91${state.mobileNumber}`,otp:parseInt(state.OTP)});
+    const res = await OtpVerify({email:`${state.email}`,otp:parseInt(state.OTP)});
     if('data' in res){
       console.log(res,"data of OTP")
       const isNewuser = await refetch()
@@ -122,6 +134,7 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
       style={styles.container}>
       {!isOtpSent ? (
         <MobileInput
+        invalidEmail={invalidEmail}
         isLoading={isLoading}
         modalState={modalState}
           state={state}

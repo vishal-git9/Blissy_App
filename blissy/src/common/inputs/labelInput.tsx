@@ -9,9 +9,10 @@ import {StyleSheet} from 'react-native';
 import {Icon} from 'react-native-vector-icons/Icon';
 import {Action} from '../../container/Registration/Registration';
 
-export const validateMobileNumber = (mobile: string) => {
-  const MobileRegex = /^[6-9]\d{0,9}$/;
-  return MobileRegex.test(mobile);
+export const validateEmail = (email: string) => {
+  const EmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  console.log(EmailRegex.test(email), "from regex", email)
+  return EmailRegex.test(email);
 };
 
 interface LabelInputProps {
@@ -55,12 +56,13 @@ const LabelInputComponent: React.FC<LabelInputProps> = ({
 }) => {
   const [eye, setEye] = useState(false);
 
-  const validateMobile = (value: string) => {
+  const validateUserEmail = (value: string) => {
     const newvalue = value.trim();
     if (newvalue === '') {
       onChangeText({type, payload: newvalue});
     } else {
-      if (validateMobileNumber(newvalue)) {
+      if (validateEmail(newvalue)) {
+        console.log(newvalue, "---->validate email")
         onChangeText({type, payload: newvalue});
       } else {
         return;
@@ -118,9 +120,10 @@ const LabelInputComponent: React.FC<LabelInputProps> = ({
         }
         placeholderTextColor={'grey'}
         onChangeText={text =>
-          !validate
-            ? onChangeText({type: type, payload: text})
-            : validateMobile(text)
+          // !validate
+          //   ?
+             onChangeText({type: type, payload: text})
+            // : validateUserEmail(text)
         }
         keyboardType={keyboardType}
         maxLength={maxLength}
@@ -128,9 +131,9 @@ const LabelInputComponent: React.FC<LabelInputProps> = ({
       />
       {errorText && (
         <HelperText
-          style={{fontFamily: fonts.NexaRegular, fontSize: 10}}
+          style={{fontFamily: fonts.NexaRegular, fontSize: 12, color:colors.red}}
           type="error"
-          visible={true}>
+          visible={validate}>
           {errorText}
         </HelperText>
       )}

@@ -2,7 +2,7 @@ import {API} from "./Api"
 
 
 interface loginInterface {
-    mobileNumber:string;
+    email:string;
     otp?:number;
     
 }

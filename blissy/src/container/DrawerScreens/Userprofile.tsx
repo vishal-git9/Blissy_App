@@ -54,7 +54,7 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
         {/* <ShockwavePulseButton>
           <Image source={{uri: userData.profilePic}} width={actuatedNormalize(100)} style={styles.avatarStyles} height={actuatedNormalize(100)}/>
         </ShockwavePulseButton> */}
-        <AvatarRingsAnimation source={user?.profilePic} width={100} height={100} />
+        <AvatarRingsAnimation source={user?.profilePic} width={150} height={150} />
       </View>
       <View style={styles.TitleContainer}>
         <View
