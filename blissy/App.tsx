@@ -12,9 +12,12 @@ import {PersistGate} from "redux-persist/integration/react"
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import colors from './src/constants/colors';
 import {Provider} from 'react-redux';
+import * as RootNavigation from './src/utils/RootNavigation.js';
 import { store,persistor } from './src/redux';
 import { Navigator } from './src/AppNavigation/Navigator';
 import { SplashScreenAnimated } from './src/common/splashscreen.tsx/splash';
+import setupNotificationListener, { navigationRef } from './src/utils/notificationService';
+import notifee, { EventType, AndroidImportance, AndroidVisibility } from '@notifee/react-native';
 
 const App:React.FC = ()=> {
   const isDarkMode = useColorScheme() === 'dark';
@@ -22,14 +25,31 @@ const App:React.FC = ()=> {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+  const setupNotificationChannel = async () => {
+    await notifee.createChannel({
+      id: 'default8',
+      name: 'Default Channel 8',
+      importance: AndroidImportance.HIGH,
+      badge: true,
+      sound: "level_up",
+      visibility: AndroidVisibility.PUBLIC,
+    });
+  };
+
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasSplash(false)
-    }, 4200);
-
-    return ()=> clearTimeout(timer)
+    // const timer = setTimeout(() => {
+    //   setHasSplash(false)
+    // }, 4200);
+    setupNotificationChannel()
+    
+    setupNotificationListener()
+    // return ()=> clearTimeout(timer)
   }, []);
+
+
+
+
 
   console.log(hasSplash,"---hassplash---")
 
@@ -43,9 +63,7 @@ const App:React.FC = ()=> {
             animated={true}
             backgroundColor={colors.black}
           />
-          {
-            hasSplash ? <SplashScreenAnimated/> : <Navigator/>
-          }
+          <Navigator/>
         </View>
       </SafeAreaProvider>
       </PersistGate>

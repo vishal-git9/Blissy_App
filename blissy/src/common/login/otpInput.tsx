@@ -31,6 +31,9 @@ interface OTPInputProps {
   dispatch: Dispatch<Action>;
   modalState: boolean;
   isLoading: boolean;
+  state: {
+    email: string;
+  };
   isError: FetchBaseQueryError | SerializedError | undefined;
 }
 
@@ -42,6 +45,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
   modalState,
   isLoading,
   isError,
+  state,
   retry,
 }) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
@@ -134,7 +138,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
                   alignSelf: 'center',
                   lineHeight: actuatedNormalize(20),
                 }}>
-                {`Enter OTP we sent to 910XXXX547 This code will expire in ${progressDuration}s`}
+                {`Enter OTP we sent to ${state.email} This code will expire in ${progressDuration}s`}
               </Text>
 
               <ProgressBar duration={30} progressDuration={progressDuration} />

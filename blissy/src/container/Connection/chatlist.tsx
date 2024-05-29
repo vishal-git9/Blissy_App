@@ -13,70 +13,90 @@ import { ActiveUserListSelector, ChatList, Message, MessageSelector, addMessage,
 import { AuthSelector } from '../../redux/uiSlice';
 import playNotificationSound from '../../common/sound/notification';
 import { formatDateTime } from '../../utils/formatedateTime';
-import { useGetChatlistQuery, useMarkReadMessageMutation } from '../../api/chatService';
+import { useMarkReadMessageMutation } from '../../api/chatService';
 import ChatItemSkeleton from '../../common/loader/skeleton';
 import { Empty } from '../../common/Empty/Empty';
+import moment from 'moment';
 
 const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const newMessages = useSelector(MessageSelector);
   const chatlistdata = useSelector(chatListSelector);
   const { socket, user } = useSelector(AuthSelector);
-  const loadItems = useRef<any[]>(new Array(5).fill(0))
+   const loadItems = useRef<any[]>(new Array(5).fill(0))
+  const [markRead, { }] = useMarkReadMessageMutation()
   const dispatch = useDispatch();
-  const { refetch, data: newChatlistData ,isLoading,isFetching} = useGetChatlistQuery(user?._id)
-  // const [markRead,{isError,isLoading,isSuccess}] = useMarkReadMessageMutation()
   const { activeUserList } = useSelector(ActiveUserListSelector);
-console.log(newChatlistData,"----->chatdata",isFetching)
-  const findMyMessage = useCallback((message: Message, newChatlistdata: ChatList[]) => {
-    console.log("message---->", message);
-    console.log("newChatlistData---->", newChatlistdata);
-    try {
-      const newChatlist: ChatList[] = newChatlistdata.map((chatItem) => {
-        const partnerMessages = message.senderId === chatItem.chatPartner._id;
-        const partnerSocketId = activeUserList.find((el) => el.userId._id === chatItem.chatPartner._id);
+  // const findMyMessage = useCallback((message: Message, newChatlistdata: ChatList[]) => {
+  //   console.log("message---->", message);
+  //   console.log("newChatlistData---->", newChatlistdata);
+  //   try {
+  //     const newChatlist: ChatList[] = newChatlistdata.map((chatItem) => {
+  //       const partnerMessages = message.senderId === chatItem.chatPartner._id;
+  //       const partnerSocketId = activeUserList.find((el) => el.userId._id === chatItem.chatPartner._id);
 
-        if (partnerMessages) {
-          console.log("here----->", partnerSocketId);
-          return { ...chatItem, newMessages: [...chatItem.newMessages, message], socketId: partnerSocketId?.socketId };
-        }
-        return chatItem;
-      });
+  //       if (partnerMessages) {
+  //         console.log("here----->", partnerSocketId);
+  //         return { ...chatItem, newMessages: [...chatItem.newMessages, message], socketId: partnerSocketId?.socketId };
+  //       }
+  //       return chatItem;
+  //     });
 
-      console.log(newChatlist, "newChatlist--->");
-      const newMessage = { ...message, sender: "them" };
-      dispatch(addMessage(newMessage));
-      dispatch(pushChatlist(newChatlist));
-    } catch (error) {
-      console.error("An error occurred---->", error);
-      // Handle the error appropriately, such as logging or displaying an error message
-    }
+  //     console.log(newChatlist, "newChatlist--->");
+  //     const newMessage = { ...message, sender: "them" };
+  //     dispatch(addMessage(newMessage));
+  //     dispatch(pushChatlist(newChatlist));
+  //   } catch (error) {
+  //     console.error("An error occurred---->", error);
+  //     // Handle the error appropriately, such as logging or displaying an error message
+  //   }
+  const findNewMessage = useCallback((message: Message, newChatlistdata: ChatList[]) => {
+
+     const sortedChatlist = newChatlistdata.sort((a,b)=>moment(a.newMessages[0]?.createdAt).diff(b.newMessages[0].createdAt))
+
+     console.log(sortedChatlist,"sorted chatlist")
+    
   }, [dispatch, activeUserList, chatlistdata?.length]);
 
   useEffect(() => {
-    socket?.on("privateMessageSuccessfulAdd", (newMessages) => {
-      console.log("newMessage----->", newMessages);
-      findMyMessage(newMessages, chatlistdata);
-      console.log("newMessage2----->", newMessages);
+    socket?.on("privateMessageSuccessfulAdd", async (data) => {
+      console.log("newMessage----->", data);
+      // findMyMessage(newMessages, chatlistdata);
+      dispatch(pushChatlist(data.chatList));
+      console.log("newMessage2----->", data);
       playNotificationSound();
+      await markRead({messageIds:[data.messageId],updateType:"isDelivered"})
+      socket.emit("messageReceived", { userId: data.senderId, socketId: data.otherEndsocketId })
     });
     socket?.on('newActiveUser', (user) => {
       dispatch(getActiveUserList(user))
       console.log(user, "activeUserList new-------->")
     })
+
+    socket?.on("messageDelivered", (data) => {
+      console.log(data, "Deliveredupdateddata------>")
+      dispatch(pushChatlist(data.chatList));
+    })
+
+    socket?.on("messageSeen", (data) => {
+      console.log(data, "Seenupdateddata------>")
+      dispatch(pushChatlist(data.chatList));
+    })
     return () => {
       socket?.off("privateMessageSuccessfulAdd")
       socket?.off("newActiveUser")
+      socket?.off("messageDelivered")
+      socket?.off("messageSeen")
     }
 
   }, [chatlistdata, socket]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', async () => {
-      await refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
-    })
-    return unsubscribe
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener('focus', async () => {
+  //     await refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
+  //   })
+  //   return unsubscribe
 
-  }, [navigation]);
+  // }, [navigation]);
 
 
   console.log(newMessages, chatlistdata, "chatlistscreen==")
@@ -85,9 +105,9 @@ console.log(newChatlistData,"----->chatdata",isFetching)
 
     const newMessageIds: any[] = []
     const FindSender = () => {
-      item.newMessages.forEach((el) => {
-        if (el.receiverId === user?._id && el.isRead === false) {
-          newMessageIds.push(el._id)
+      item.allMessages.forEach((el) => {
+        if (el?.receiverId === user?._id && el?.isRead === false) {
+          newMessageIds.push(el?._id)
           return;
         }
 
@@ -97,7 +117,7 @@ console.log(newChatlistData,"----->chatdata",isFetching)
 
     FindSender()
 
-    const socketId = activeUserList.filter((el) => el.userId._id === item.chatPartner._id)
+    const socketId = activeUserList?.find((el) => el?.userId?._id === item?.chatPartner?._id)
     console.log(item.newMessages?.length, "item----->", item.newMessages, newMessageIds)
 
 
@@ -109,19 +129,19 @@ console.log(newChatlistData,"----->chatdata",isFetching)
           // if(newMessageIds?.length > 0) {
           //   markRead(newMessageIds)
           // }
-          navigation.navigate('ChatWindow', { socketId: socketId[0]?.socketId, userDetails: item.chatPartner, Chats: item })
+          navigation.navigate('ChatWindow', { socketId: socketId?.socketId, userDetails: item.chatPartner, Chats: item,senderUserId:null })
         }}
       >
         <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
         <View style={styles.chatDetails}>
           <Text style={styles.chatName}>{item.chatPartner.name}</Text>
           <View style={{ flexDirection: "row", columnGap: actuatedNormalize(10), alignItems: "center", marginTop: actuatedNormalize(5) }}>
-            <Text style={styles.lastMessage}>{item.newMessages[item.newMessages?.length - 1].message}</Text>
+            <Text style={styles.lastMessage}>{item.allMessages[item.allMessages?.length - 1].message}</Text>
             {newMessageIds?.length > 0 && <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>{newMessageIds?.length}</Badge>
             }
           </View>
         </View>
-        <Text style={styles.timestamp}>{formatDateTime(item?.newMessages[item?.newMessages?.length - 1].createdAt)}</Text>
+        <Text style={styles.timestamp}>{formatDateTime(item?.allMessages[item?.allMessages?.length - 1].createdAt)}</Text>
       </TouchableOpacity>
     )
 
@@ -134,7 +154,7 @@ console.log(newChatlistData,"----->chatdata",isFetching)
       {/* Icons can be added here */}
 
       {
-        !isLoading ? (
+        false ? (
           loadItems.current.map(el => <ChatItemSkeleton />)) : (
           chatlistdata.length >0  ? <FlatList
             data={chatlistdata}

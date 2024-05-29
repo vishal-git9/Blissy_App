@@ -124,7 +124,7 @@ useEffect(()=>{
             iconame="chat"
             label="Say Hi!"
             iconcolor={colors.white}
-            onpress={() => navigation.navigate('ChatWindow',{Chats:null,socketId:socketId || undefined,userDetails:user})}
+            onpress={() => navigation.navigate('ChatWindow',{Chats:null,socketId:socketId || undefined,userDetails:user,senderUserId:null})}
             size={18}
             styles={styles.PrimaryButton}
             textSize={actuatedNormalize(18)}

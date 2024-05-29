@@ -13,7 +13,7 @@ export type RootStackParamList = {
   Healerlist: undefined;
   Drawer: undefined;
   Connection: undefined;
-  ChatWindow: { userDetails: UserInterface | null, socketId: string | undefined, Chats: ChatList | null };
+  ChatWindow: { userDetails: UserInterface | null, socketId: string | undefined, Chats: ChatList | null,senderUserId:string | null };
   Chatlist: undefined;
   Calllist: undefined;
   Wallet: undefined;
@@ -22,4 +22,5 @@ export type RootStackParamList = {
   AudioCallScreen: { user: UserInterface | null };
   ComingsoonScreen: { screenName: string }
   ChatPartnerDetails:{chatPartner:UserInterface | null}
+  IncomingCall:{}
 };

@@ -99,7 +99,7 @@ export const reducerAction = (state: UserState, action: Action) => {
   }
 };
 export const Registration: React.FC<RegistrationInterface> = ({navigation,route}) => {
-  const {UserData} = route.params
+  const UserData = route?.params?.UserData
   //handle error params of undefined
   // handle undefined is not a function
   const RegistrationState = UserData || initialState

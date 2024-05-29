@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid, Linking } from 'react-native';
+import { StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid, Linking, Platform } from 'react-native';
 import colors from '../../constants/colors';
-import { Loader } from '../../common/loader/loader';
-import { Button } from 'react-native';
 import { NavigationStackProps } from '../Prelogin/onboarding';
 import TopBar from '../../common/tab/topbar';
 import { ToggleButton } from '../../common/tab/switch';
@@ -12,28 +10,28 @@ import { HealerMockData } from '../../mockdata/healerData';
 import {
   actuatedNormalize,
 } from '../../constants/PixelScaling';
+import notifee, { EventType, AndroidImportance, AndroidVisibility } from '@notifee/react-native';
+import messaging from '@react-native-firebase/messaging';
 import OfferBadge from '../../common/badge';
 import * as Animatable from 'react-native-animatable';
-import LottieView from 'lottie-react-native';
 import { RoundedIconContainer } from '../../common/button/rounded';
-import TalkNowButton from '../../common/button/Talknow';
 import AutoLoopCarousel, { reviewsArray } from '../../common/cards/review';
 import io from 'socket.io-client';
 import { ApiEndPoint } from '../../config';
-import MicrophonePermissionModal from '../../common/permissions/microphone';
 import { useDispatch, useSelector } from 'react-redux';
-import { AuthSelector, UserInterface, setSocket } from '../../redux/uiSlice';
-import { requestBluetoothPermission, requestMicrophonePermission, requestMultplePermissions } from '../../utils/permission';
+import { AuthSelector, UserInterface, setFcmToken, setSocket } from '../../redux/uiSlice';
+import { requestMultplePermissions } from '../../utils/permission';
 import checkMicrophonePermission from '../../common/permissions/checkMicroPermission';
 import checkLocationPermission from '../../common/permissions/checkLocationPermission';
-import AnimatedBackground from '../../common/animation/animatedBackground';
-import { ActiveUserList, ActiveUserListSelector, addMessage, getActiveUserList, pushChatlist, pushCurrentMessage, resetMessageCount, resetMessages } from '../../redux/messageSlice';
-import { AppState } from 'react-native';
+import { ActiveUserList, ActiveUserListSelector, addMessage, chatListSelector, getActiveUserList, pushChatlist, resetMessageCount, resetMessages } from '../../redux/messageSlice';
 import { SwipeButtonComponent } from '../../common/button/swipebutton';
 import { fonts } from '../../constants/fonts';
 import PermissionDenied from '../../common/permissions/permissiondenied';
 import { PermissionStatus } from 'react-native-permissions';
-import { useGetChatlistQuery, useGetNewMessageQuery } from '../../api/chatService';
+import { useGetChatlistQuery } from '../../api/chatService';
+import checkNotificationPermission from '../../common/permissions/checkNotificationPermission';
+import { eventEmitter } from '../../..';
+import { usePostUserDevieInfoMutation } from '../../api/userService';
 
 interface iconsLabelI {
   id: number;
@@ -53,7 +51,7 @@ const iconsLabel: iconsLabelI[] = [
     id: 2,
     label: 'calls',
     iconName: 'call',
-    navigate: 'ComingsoonScreen',
+    navigate: 'IncomingCall',
   },
   {
     id: 3,
@@ -65,11 +63,13 @@ const iconsLabel: iconsLabelI[] = [
 export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [data, setData] = useState(HealerMockData.slice(0, 10)); // Initial data for first 10 cards
   const [value, setValue] = useState<string>('random');
-  const { user } = useSelector(AuthSelector)
-  const {activeUserList} = useSelector(ActiveUserListSelector)
+  const { user, fcmToken } = useSelector(AuthSelector)
+  const { activeUserList } = useSelector(ActiveUserListSelector)
   const dispatch = useDispatch()
-  const {refetch,isError,isLoading,isSuccess,data:chatlistdata} = useGetChatlistQuery(user?._id)
-  const {refetch:fetchNewMsg,isError:newMsgerr,isLoading:newMsgLoading,isSuccess:newMsgsuccess} = useGetNewMessageQuery({userId:user?._id})
+  const CurrentChatlistdata = useSelector(chatListSelector)
+  const { refetch, isError, isLoading, isSuccess, data: chatlistdata } = useGetChatlistQuery(user?._id)
+  const [postDeviceinfo, { isError: postDeviceinfoError, isLoading: postDeviceinfoLoading, data: postDeviceinfoData }] = usePostUserDevieInfoMutation()
+  // const {refetch:fetchNewMsg,isError:newMsgerr,isLoading:newMsgLoading,isSuccess:newMsgsuccess} = useGetNewMessageQuery({userId:user?._id})
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
   const [permission, setpermission] = useState(false);
@@ -97,39 +97,39 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     });
   };
 
-    const handlePermissions = (response: any) => {
-      for (const permissionKey in response) {
-        const permissionResult: PermissionStatus = response[permissionKey];
-        switch (permissionResult) {
-          case 'granted':
-            console.log(`${permissionKey} permission granted.`);
-            // Handle logic for granted permission
-            // setpermission(false);
-            break;
-          case 'denied':
-            console.log(`${permissionKey} permission denied.`);
-            // Handle logic for denied permission
-            break;
-          case 'blocked':
-            console.log(`${permissionKey} permission blocked.`);
-            // showBlockedModal(permissionKey);
-            setpermission(true)
-            if(permissionKey==="android.permission.ACCESS_FINE_LOCATION"){
-              setpermissionType('Location')
-            }else if(permissionKey==="android.permission.RECORD_AUDIO"){
-              setpermissionType("Microphone")
-            }else if(permissionKey==="android.permission.POST_NOTIFICATIONS"){
-              setpermissionType("Notifications")
-            }
-            // Handle logic for blocked permission
-            break;
-          default:
-            console.log(`${permissionKey} permission unknown status.`);
-            // Handle logic for unknown status
-            break;
-        }
+  const handlePermissions = (response: any) => {
+    for (const permissionKey in response) {
+      const permissionResult: PermissionStatus = response[permissionKey];
+      switch (permissionResult) {
+        case 'granted':
+          console.log(`${permissionKey} permission granted.`);
+          // Handle logic for granted permission
+          // setpermission(false);
+          break;
+        case 'denied':
+          console.log(`${permissionKey} permission denied.`);
+          // Handle logic for denied permission
+          break;
+        case 'blocked':
+          console.log(`${permissionKey} permission blocked.`);
+          // showBlockedModal(permissionKey);
+          setpermission(true)
+          if (permissionKey === "android.permission.ACCESS_FINE_LOCATION") {
+            setpermissionType('Location')
+          } else if (permissionKey === "android.permission.RECORD_AUDIO") {
+            setpermissionType("Microphone")
+          } else if (permissionKey === "android.permission.POST_NOTIFICATIONS") {
+            setpermissionType("Notifications")
+          }
+          // Handle logic for blocked permission
+          break;
+        default:
+          console.log(`${permissionKey} permission unknown status.`);
+          // Handle logic for unknown status
+          break;
       }
-    };
+    }
+  };
 
   const intiateRandomConnection = () => {
     navigation.navigate("AudioCallScreen", { user: user })
@@ -156,15 +156,15 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     try {
       const locationRes = await checkLocationPermission();
       const microphoneRes = await checkMicrophonePermission();
-      if (locationRes === 'granted' && microphoneRes ==='granted') {
+      if (locationRes === 'granted' && microphoneRes === 'granted') {
         // Permission is granted
         console.log(locationRes, microphoneRes, "permissions from home check if ")
         console.log("location permission granted");
       } else {
         // Handle other permission states accordingly
         // requestBluetoothPermission()
-       const response = await requestMultplePermissions();
-       handlePermissions(response);
+        const response = await requestMultplePermissions();
+        handlePermissions(response);
         console.log(response, "location permission not granted ");
         console.log(locationRes, microphoneRes, "permissions from home check else")
       }
@@ -172,6 +172,91 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       console.error(error);
     }
   };
+
+  const getFCMToken = async () => {
+    try {
+      await messaging().registerDeviceForRemoteMessages();
+      console.log("I am here----->")
+      if (!!fcmToken) {
+        console.log("OLD FCM_TOKEN FOUND", fcmToken)
+      } else {
+        const token = await messaging().getToken();
+        //inserting device token to db
+        postDeviceinfo({
+          userId: user?._id,
+          deviceData: {
+            fcmToken: token
+          }
+        })
+        // dispatch(setFcmToken(token)) // currently saving into local mobile state later on will save in db
+        console.log("NEW FCM_TOKEN", token)
+      }
+    } catch (error) {
+      console.log("error during generating token", error)
+    }
+  }
+
+  async function requestUserPermission() {
+
+    if (Platform.OS == 'android' && Platform.Version >= 33) {
+      const res = await checkNotificationPermission()
+      console.log(res, "notifyPermission----->")
+      if (res === "granted") {
+        getFCMToken()
+      } else {
+        console.log("permission denied")
+      }
+    } else {
+      const authStatus = await messaging().requestPermission();
+      const enabled =
+        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (enabled) {
+        console.log('Authorization status:', authStatus);
+        getFCMToken()
+      }
+    }
+  }
+
+  useEffect(() => {
+    const getInitialNotificationDetail = async () => {
+      const getInitialNotification = await notifee.getInitialNotification()
+      console.log(getInitialNotification, "getInitialNotification------>")
+      if (getInitialNotification) {
+        navigation.navigate("Chatlist");
+      }
+    }
+
+    // event listens for background and foreground mode
+    eventEmitter.on('notificationReceived', (Chatdata: any) => {
+      console.log("Iam here Yarr------>", Chatdata)
+      if (Chatdata?.senderData) {
+
+        //  if its a new friend message then ChatPartnerData will be null else it will have ChatPartnerData data with all Messages
+
+        const ChatPartnerData = CurrentChatlistdata.find((el) => el?.chatPartner?._id === Chatdata?.senderData?._id)
+        const socketId = activeUserList.find((el) => el?.userId?._id === Chatdata?.senderData?._id)
+        if (!ChatPartnerData) {
+          refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
+          navigation.navigate("ChatWindow", { userDetails: Chatdata.senderData, Chats: null, socketId: socketId?.socketId, senderUserId: Chatdata.senderData._id });
+        } else {
+          navigation.navigate("ChatWindow", { userDetails: Chatdata.senderData, Chats: ChatPartnerData, socketId: socketId?.socketId, senderUserId: Chatdata.senderData._id });
+        }
+      }
+    });
+
+    getInitialNotificationDetail()
+
+  }, []);
+
+  useEffect(() => {
+
+
+
+  }, [])
+
+
   useEffect(() => {
 
     verifyLocationPermissions();
@@ -186,31 +271,31 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    console.log("removed from screen home screen")
-
     dispatch(resetMessages())
+    requestUserPermission()
     socket.on("connect", () => {
       console.log("user connected", socket.id)
       console.log(socket, "sockeet state")
       socket.emit("getActiveUserList")
       dispatch(setSocket(socket))
-      refetch().then((res)=>dispatch(pushChatlist(res.data.chatList))).catch((err)=>console.log(err))
-      fetchNewMsg().then((res)=>dispatch(pushCurrentMessage(res.data.chat))).catch((err)=>console.log(err))
-  
+
+      // refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
+      // fetchNewMsg().then((res)=>dispatch(pushCurrentMessage(res.data.chat))).catch((err)=>console.log(err))
+
     })
 
     socket.on('initiateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
       otherUserScoketId.current = data.callerId
       // console.log(data, "data of paired user")
     })
-    socket.on('activeUserList', (activeUserListres:ActiveUserList[])=>{
+    socket.on('activeUserList', (activeUserListres: ActiveUserList[]) => {
       dispatch(getActiveUserList(activeUserListres))
       console.log(activeUserListres, "activeUserList from home =")
     })
 
-    socket.on('newActiveUser',(user)=>{
+    socket.on('newActiveUser', (user) => {
       dispatch(getActiveUserList(user))
-      console.log(user,"activeUserList new-------->")
+      console.log(user, "activeUserList new-------->")
     })
 
     return () => {
@@ -225,7 +310,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     }
   }, []);
 
-  console.log(chatlistdata,"chatlistdata")
+  console.log(chatlistdata, "chatlistdata")
 
   return (
     // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}>
@@ -294,7 +379,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
           </View>
         </View>
       )}
-      <PermissionDenied visible={permission} permissionType={permissionType} close={()=>{Linking.openSettings(); setpermission(false);}} />
+      <PermissionDenied visible={permission} permissionType={permissionType} close={() => { Linking.openSettings(); setpermission(false); }} />
     </View>
     // </AnimatedBackground>
   );
@@ -321,7 +406,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.NexaRegular,
     color: colors.darkGray,
     alignSelf: "center",
-    fontSize:actuatedNormalize(12),
+    fontSize: actuatedNormalize(12),
     marginTop: actuatedNormalize(5)
   }
 });

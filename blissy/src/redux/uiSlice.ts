@@ -18,6 +18,7 @@ export interface UserInterface {
   language: [string];
   profilePic: string;
   isActive: Boolean;
+
 }
 export interface IsUIState {
     token:string;
@@ -26,6 +27,7 @@ export interface IsUIState {
     isRegisterd:boolean;
     isNewUser:boolean;
     socket:Socket | null
+    fcmToken:string;
 }
 
 const initialState : IsUIState = {
@@ -34,7 +36,8 @@ const initialState : IsUIState = {
     isAuthenticated:false,
     isRegisterd:false,
     isNewUser:true,
-    socket:null
+    socket:null,
+    fcmToken:'',
 }
 
 
@@ -50,6 +53,9 @@ export const AuthSlice = createSlice({
         },
         setSocket:(state,action)=>{
             state.socket = action.payload
+        },
+        setFcmToken:(state,action)=>{
+            state.fcmToken = action.payload
         }
         ,
         logoutUser: ()=> initialState
@@ -61,7 +67,8 @@ export const AuthSlice = createSlice({
             state.isAuthenticated= true
         })
         builder.addMatcher(UserApi.endpoints.getUser.matchFulfilled,(state,{payload})=>{
-            state.user = payload.data.user
+            state.user = payload?.data?.user
+            state.fcmToken = payload?.data?.user?.UserDeviceInfo?.fcmToken
             // state.isNewUser =payload.data.user.isNewUser
         })
         builder.addMatcher(UserApi.endpoints.postUser.matchFulfilled,(state,{payload})=>{
@@ -71,6 +78,6 @@ export const AuthSlice = createSlice({
     }
 })
 
-export const {setUsertoken,logoutUser,setUserState,setSocket} = AuthSlice.actions
+export const {setUsertoken,logoutUser,setUserState,setSocket,setFcmToken} = AuthSlice.actions
 export const AuthSelector = (state:IRootState)=>state.Auth
 export default AuthSlice.reducer

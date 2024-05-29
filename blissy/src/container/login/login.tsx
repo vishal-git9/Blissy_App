@@ -86,7 +86,7 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
       clearInterval(timerRef.current);
       setModalState(false)
       console.log(isNewuser,"---user isnewuser")
-      if(isNewuser.data.data.user.isNewUser){
+      if(isNewuser?.data?.data?.user?.isNewUser){
         navigation.navigate('Registration',{UserData:null});  
       }else{
         navigation.navigate('Drawer');
@@ -147,6 +147,7 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
         isError={verifyOtpErr}
         isLoading={verifyOtpLoading}
         modalState={modalState}
+        state = {state}
           changeMobileNumber={() => {
             dispatch({type:"OTP",payload:""})
             setIsOtpSent(false)

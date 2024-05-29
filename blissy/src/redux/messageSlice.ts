@@ -14,12 +14,14 @@ export interface Message {
   isRead: boolean;
   createdAt: string;
   sender?:string;
+  isDelivered:boolean;
 }
 
 export interface ChatList {
   userId: string;
   chatPartner: UserInterface
   newMessages: Message[];
+  allMessages:Message[];
   newMessagesId:string;
   allMessagesId:string;
   socketId?:string;

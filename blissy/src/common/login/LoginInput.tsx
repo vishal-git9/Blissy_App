@@ -93,7 +93,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
                   fontSize: actuatedNormalize(26),
                   alignSelf: 'center',
                 }}>
-                {'Enter Your Number'}
+                {'Enter Your Email'}
               </Text>
               <Text
                 style={{

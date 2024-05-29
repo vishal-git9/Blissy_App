@@ -12,7 +12,7 @@ export const UserApi = API.injectEndpoints({
         url: 'user/get-user',
         method: 'GET',
       }),
-      keepUnusedDataFor: 60000,
+      keepUnusedDataFor: 0,
     }),
     postUser: builder.mutation<any, Partial<UserState>>({
       query: (body) => ({
@@ -21,7 +21,14 @@ export const UserApi = API.injectEndpoints({
         body
       }),
     }),
+    postUserDevieInfo: builder.mutation<any, any>({
+      query: (body) => ({
+        url: 'user/user-device-info',
+        method: 'PUT',
+        body
+      }),
+    }),
   }),
 });
 
-export const {useGetUserQuery,usePostUserMutation} = UserApi;
+export const {useGetUserQuery,usePostUserMutation,usePostUserDevieInfoMutation} = UserApi;
