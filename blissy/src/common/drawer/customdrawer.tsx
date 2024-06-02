@@ -12,6 +12,8 @@ import {
   DrawerContentScrollView,
   DrawerItemList,
 } from '@react-navigation/drawer';
+import messaging from '@react-native-firebase/messaging';
+
 import Entypo from 'react-native-vector-icons/Entypo';
 import colors from '../../constants/colors';
 import {SCREEN_HEIGHT, actuatedNormalize} from '../../constants/PixelScaling';
@@ -24,11 +26,14 @@ import {ProfileBox } from './profilebox';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthSelector, logoutUser } from '../../redux/uiSlice';
 import { AuthApi } from '../../api/authService';
+import { UserApi, useDeleteFcmTokenMutation } from '../../api/userService';
+import { ChatApi } from '../../api/chatService';
 
 const CustomDrawer: React.FC<any> = props => {
   const [ConfirmModal, setConfirmModal] = useState<boolean>(false);
   const { user } = useSelector(AuthSelector)
   const dispatch = useDispatch()
+  const [deleteFcmToken,{isLoading,isError,isSuccess}] = useDeleteFcmTokenMutation()
 
   console.log(props,"props of drawer")
 
@@ -73,11 +78,15 @@ const CustomDrawer: React.FC<any> = props => {
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => {
+              onPress={async () => {
                 setConfirmModal(false);
                 props.navigation.closeDrawer()
+                await deleteFcmToken({}) 
                 dispatch(AuthApi.util.resetApiState())
+                dispatch(UserApi.util.resetApiState())
+                dispatch(ChatApi.util.resetApiState())
                 dispatch(logoutUser());
+                // deleting fcm token from the backend for this user so that notification are disabled for this user
                 props.navigation.replace('Login');
                 // console.log('Yes');
               }}>

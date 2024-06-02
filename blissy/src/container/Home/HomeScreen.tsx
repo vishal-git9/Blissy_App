@@ -31,7 +31,9 @@ import { PermissionStatus } from 'react-native-permissions';
 import { useGetChatlistQuery } from '../../api/chatService';
 import checkNotificationPermission from '../../common/permissions/checkNotificationPermission';
 import { eventEmitter } from '../../..';
-import { usePostUserDevieInfoMutation } from '../../api/userService';
+import { useAddFcmTokenMutation, useGetUserQuery, usePostUserDevieInfoMutation } from '../../api/userService';
+import DeviceInfo from 'react-native-device-info';
+import { getDeviceUniqueId } from '../../utils/getDeviceUniqueId';
 
 interface iconsLabelI {
   id: number;
@@ -66,9 +68,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const { user, fcmToken } = useSelector(AuthSelector)
   const { activeUserList } = useSelector(ActiveUserListSelector)
   const dispatch = useDispatch()
-  const CurrentChatlistdata = useSelector(chatListSelector)
-  const { refetch, isError, isLoading, isSuccess, data: chatlistdata } = useGetChatlistQuery(user?._id)
+  const chatlistdata = useSelector(chatListSelector);
+  const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery(user?._id)
+  const { refetch:refetchUser, isError:isErrorUser, isLoading:isLoadingUser, isSuccess:isSuccessUser } = useGetUserQuery()
   const [postDeviceinfo, { isError: postDeviceinfoError, isLoading: postDeviceinfoLoading, data: postDeviceinfoData }] = usePostUserDevieInfoMutation()
+  const [postFcmToken, {  }] = useAddFcmTokenMutation()
+
   // const {refetch:fetchNewMsg,isError:newMsgerr,isLoading:newMsgLoading,isSuccess:newMsgsuccess} = useGetNewMessageQuery({userId:user?._id})
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
@@ -182,13 +187,75 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       } else {
         const token = await messaging().getToken();
         //inserting device token to db
-        postDeviceinfo({
-          userId: user?._id,
+        let platform = Platform.OS === "ios" ? "IOSMOBILE" : "ANDROIDMOBILE";
+        // let platform = 'HUAWEIMOBILE'
+
+        let devName = await DeviceInfo.getDeviceName()
+
+        let devType = DeviceInfo.getDeviceType() == 'Handset' ? 'MOBILE' : DeviceInfo.getDeviceType() == 'Tablet' ? 'TABLET' : 'MOBILE'
+
+        let getApplicationName = DeviceInfo.getApplicationName()
+
+        let getBuildId = await DeviceInfo.getBuildId()
+
+        let getBrand = DeviceInfo.getBrand()
+
+        let getBundleId = DeviceInfo.getBundleId()
+
+        let getBuildNumber = DeviceInfo.getBuildNumber()
+
+        let getDeviceId = DeviceInfo.getDeviceId()
+
+        let getIpAddress = await DeviceInfo.getIpAddress()
+
+        let getMacAddress = await DeviceInfo.getMacAddress()
+
+        let getManufacturer = await DeviceInfo.getManufacturer()
+
+        let getSystemName = DeviceInfo.getSystemName()
+
+        let getUniqueId = await getDeviceUniqueId()
+
+        let getUserAgent = await DeviceInfo.getUserAgent()
+
+        const deviceInfo =
+        {
+          appVersion: DeviceInfo.getVersion(),
+          platform: platform,
+          deviceType: devType,
+          platformVersion: DeviceInfo.getSystemVersion(),
+          deviceModel: DeviceInfo.getModel(),
+          deviceName: devName,
+          mpinEnabled: "N",
+          faceIdEnabled: "N",
+          bioMetricEnabled: "N",
+          applicationName: getApplicationName,
+          buildId: getBuildId,
+          brand: getBrand,
+          bundleId: getBundleId,
+          buildNumber: getBuildNumber,
+          deviceId: getDeviceId,
+          ipAddress: getIpAddress,
+          macAddress: getMacAddress,
+          manufacturer: getManufacturer,
+          systemName: getSystemName,
+          uniqueId: getUniqueId,
+          userAgent: getUserAgent
+        }
+        await postDeviceinfo({
           deviceData: {
-            fcmToken: token
-          }
+            ...deviceInfo
+          },
+          uniqueDeviceId:deviceInfo.uniqueId
         })
-        // dispatch(setFcmToken(token)) // currently saving into local mobile state later on will save in db
+
+        await postFcmToken({
+          fcmToken:token
+        })
+
+        await refetchUser()
+
+        //dispatch(setFcmToken(token)) // currently saving into local mobile state later on will save in db
         console.log("NEW FCM_TOKEN", token)
       }
     } catch (error) {
@@ -230,12 +297,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
     // event listens for background and foreground mode
     eventEmitter.on('notificationReceived', (Chatdata: any) => {
-      console.log("Iam here Yarr------>", Chatdata)
+      console.log("Iam here Yarr------>", chatlistdata)
       if (Chatdata?.senderData) {
 
         //  if its a new friend message then ChatPartnerData will be null else it will have ChatPartnerData data with all Messages
 
-        const ChatPartnerData = CurrentChatlistdata.find((el) => el?.chatPartner?._id === Chatdata?.senderData?._id)
+        const ChatPartnerData = chatlistdata?.find((el) => el?.chatPartner?._id === Chatdata?.senderData?._id)
         const socketId = activeUserList.find((el) => el?.userId?._id === Chatdata?.senderData?._id)
         if (!ChatPartnerData) {
           refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
@@ -259,7 +326,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
   useEffect(() => {
 
-    verifyLocationPermissions();
+    verifyLocationPermissions().then(()=>requestUserPermission()).catch((err)=>console.log(err));
     // calling off the animation after first render
     const timingAnim = setTimeout(() => {
       sethealerAnimate(false);
@@ -272,14 +339,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
   useEffect(() => {
     dispatch(resetMessages())
-    requestUserPermission()
     socket.on("connect", () => {
       console.log("user connected", socket.id)
       console.log(socket, "sockeet state")
       socket.emit("getActiveUserList")
       dispatch(setSocket(socket))
-
-      // refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
+      refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
       // fetchNewMsg().then((res)=>dispatch(pushCurrentMessage(res.data.chat))).catch((err)=>console.log(err))
 
     })

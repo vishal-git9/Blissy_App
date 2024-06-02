@@ -11,7 +11,7 @@ export const Navigator:React.FC = () => {
     const {token,isAuthenticated,isRegisterd,user,isNewUser} = useSelector(AuthSelector)
     const {data:userData,isLoading,refetch} = useGetUserQuery()
     const dispatch = useDispatch()
-    console.log(isNewUser,"----user----",isRegisterd)
+    console.log(isNewUser,"----user----",isRegisterd,token)
     // handle is registered logic if user left the registration form after loggin in
     useEffect(()=>{
         if(token){
@@ -22,7 +22,7 @@ export const Navigator:React.FC = () => {
                     dispatch(AuthApi.util.resetApiState())
                     dispatch(UserApi.util.resetApiState())
                     dispatch(ChatApi.util.resetApiState())
-
+                    
                     // navigate to token expire screen or modal
                 }
             }).catch(err=>console.log(err))

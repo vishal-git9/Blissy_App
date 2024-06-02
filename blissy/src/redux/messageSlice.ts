@@ -94,7 +94,8 @@ const MessageSlice = createSlice({
 
     })
     builder.addMatcher(ChatApi.endpoints.getChatlist.matchFulfilled, (state, { payload }) => {
-      state.chatList = payload
+      console.log(payload,"chatlistpayload------>")
+      state.chatList = payload.chatList
     })
     builder.addMatcher(ChatApi.endpoints.sendMessage.matchFulfilled, (state, { payload }) => {
 
@@ -102,7 +103,7 @@ const MessageSlice = createSlice({
   }
 });
 
-export const { addMessage, resetMessages, setChatScreenActive, resetMessageCount, getActiveUserList,pushCurrentMessage,pushChatlist } = MessageSlice.actions;
+export const { addMessage,resetMessages, setChatScreenActive, resetMessageCount, getActiveUserList,pushCurrentMessage,pushChatlist } = MessageSlice.actions;
 export const MessageSelector = (state: IRootState) => state.Message.messages
 export const chatListSelector = (state: IRootState) => state.Message.chatList
 export const newMessagesSelector = (state: IRootState) => state.Message.newMessages

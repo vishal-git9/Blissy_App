@@ -28,7 +28,20 @@ export const UserApi = API.injectEndpoints({
         body
       }),
     }),
+    addFcmToken: builder.mutation<any, any>({
+      query: (body) => ({
+        url: 'notification/add-fcm-token',
+        method: 'POST',
+        body
+      }),
+    }),
+    deleteFcmToken: builder.mutation<any, any>({
+      query: (body) => ({
+        url: 'notification/delete-fcm-token',
+        method: 'DELETE',
+      }),
+    }),
   }),
 });
 
-export const {useGetUserQuery,usePostUserMutation,usePostUserDevieInfoMutation} = UserApi;
+export const {useGetUserQuery,usePostUserMutation,usePostUserDevieInfoMutation,useDeleteFcmTokenMutation,useAddFcmTokenMutation} = UserApi;

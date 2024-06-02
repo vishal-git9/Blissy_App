@@ -8,6 +8,13 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+-keep class com.cloudwebrtc.webrtc.** { *; }
+-keep class org.webrtc.** { *; }
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.facebook.hermes.unicode.** { *; }
+-keep class com.facebook.jni.** { *; }
+-keep class com.facebook.react.turbomodule.** { *; }
+-keep public class com.horcrux.svg.** {*;}
 -keep public class com.dylanvann.fastimage.* {*;}
 -keep public class com.dylanvann.fastimage.** {*;}
 -keep public class * implements com.bumptech.glide.module.GlideModule

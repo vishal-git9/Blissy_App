@@ -17,22 +17,15 @@ import * as RootNavigation from './src/utils/RootNavigation.js';
 import { handleNotification } from './src/utils/notificationService';
 import { UserInterface } from './src/redux/uiSlice';
 
-interface RemoteMessageI {
-  data: {
-    senderData: any;
-    messageDetails?: any;
-  };
-}
-
 messaging().setBackgroundMessageHandler(async remoteMessage => {
     console.log('FCM Message received:', remoteMessage);
-    const RemoteMessage:RemoteMessageI = {
+    const RemoteMessage = {
       data:{
         senderData:remoteMessage?.data?.senderData,
         messageDetails:remoteMessage.data?.messageDetails
       }
     }
-    const senderData : UserInterface = JSON.parse(RemoteMessage.data.senderData);
+    const senderData  = JSON.parse(RemoteMessage.data.senderData);
     const messageDetails = JSON.parse(RemoteMessage.data.messageDetails);
     await handleNotification(remoteMessage);
     await notifee.displayNotification({
@@ -54,7 +47,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
         categoryId: 'default',
         attachments: [
           {
-            url: remoteMessage?.data?.profilePictureUrl as string, // URL of the sender's profile picture
+            url: remoteMessage?.data?.profilePictureUrl, // URL of the sender's profile picture
             thumbnailHidden: false,
             
           },
