@@ -50,8 +50,9 @@ export const reducerAction = (state: LoginInterface, action: Action) => {
 export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
   const [state, dispatch] = useReducer(reducerAction, intialState);
   const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
+  const [resendOtp,setResendOtp] = useState<boolean>(false)
   const [modalState,setModalState] = useState<boolean>(true)
-  const [progressDuration, setProgressDuration] = useState(30);
+  const [progressDuration, setProgressDuration] = useState(60);
   const [invalidEmail, setEnvalidEmail] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout>();
    const [getOtp,{error,data,isLoading,reset:resetMobile}] = useGetOtpMutation();
@@ -100,7 +101,7 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
   
   useEffect(() => {
     // Start the timer when isOtpSent is true
-    if (isOtpSent) {
+    if (isOtpSent || resendOtp) {
       timerRef.current = setInterval(() => {
         setProgressDuration(prevDuration => {
           if (prevDuration === 0) {
@@ -114,7 +115,7 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
       clearInterval(timerRef.current);
     }
     return () => clearInterval(timerRef.current);
-  }, [isOtpSent]);
+  }, [isOtpSent,resendOtp]);
 
   useEffect(() => {
     if (state.OTP.length === 4) {
@@ -144,7 +145,10 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
         />
       ) : (
         <OTPInput
+        setIsOtpSent={setIsOtpSent}
+        setResendOtp = {setResendOtp}
         isError={verifyOtpErr}
+        handleSubmitMobileNumber={handleSubmitMobileNumber}
         isLoading={verifyOtpLoading}
         modalState={modalState}
         state = {state}
@@ -154,7 +158,8 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
             reset()
             clearInterval(timerRef.current)
           }}
-          retry = {()=> reset()}
+
+          retry = {reset}
           dispatch={dispatch}
           progressDuration={progressDuration}
           setProgressDuration={setProgressDuration}

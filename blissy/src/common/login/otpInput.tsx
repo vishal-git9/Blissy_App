@@ -27,9 +27,12 @@ interface OTPInputProps {
   progressDuration: number;
   changeMobileNumber: () => void;
   retry: () => void;
+  handleSubmitMobileNumber:()=>void;
   setProgressDuration: (a: number) => void;
   dispatch: Dispatch<Action>;
   modalState: boolean;
+  setIsOtpSent:(a:boolean) => void;
+  setResendOtp:(a:boolean) => void;
   isLoading: boolean;
   state: {
     email: string;
@@ -41,8 +44,11 @@ const OTPInput: React.FC<OTPInputProps> = ({
   progressDuration,
   setProgressDuration,
   dispatch,
+  setResendOtp,
+  handleSubmitMobileNumber,
   changeMobileNumber,
   modalState,
+  setIsOtpSent,
   isLoading,
   isError,
   state,
@@ -141,7 +147,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
                 {`Enter OTP we sent to ${state.email} This code will expire in ${progressDuration}s`}
               </Text>
 
-              <ProgressBar duration={30} progressDuration={progressDuration} />
+              <ProgressBar duration={60} progressDuration={progressDuration} />
             </View>
             <View
               style={[
@@ -153,10 +159,10 @@ const OTPInput: React.FC<OTPInputProps> = ({
                   position:"relative"
                 },
               ]}>
-                 <Text
+                 {/* <Text
                       style={{ color: colors.white, fontFamily: fonts.NexaXBold,position:"absolute",top:actuatedNormalize(25),right:actuatedNormalize(25)}}>
                       OTP: 4321
-                    </Text>
+                    </Text> */}
               <OTPTextInput
                 containerStyle={{
                   justifyContent: 'center',
@@ -190,7 +196,10 @@ const OTPInput: React.FC<OTPInputProps> = ({
                   <TouchableWithoutFeedback
                     onPress={() => {
                       retry()
-                      setProgressDuration(30)
+                      handleSubmitMobileNumber()
+                      setIsOtpSent(false)
+                      setResendOtp(true)
+                      setProgressDuration(60)
                     }}>
                     <Text
                       style={{ color: '#1E5128', fontFamily: fonts.NexaXBold }}>

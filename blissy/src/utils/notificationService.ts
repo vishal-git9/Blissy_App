@@ -1,16 +1,11 @@
 import messaging from '@react-native-firebase/messaging';
-import { AppState } from 'react-native';
-import { NavigationContainerRef } from '@react-navigation/native';
 import axios from 'axios';
-import React from 'react';
-import notifee, { EventType, AndroidImportance, AndroidVisibility } from '@notifee/react-native';
+import notifee from '@notifee/react-native';
 import colors from '../constants/colors';
-import { store } from '../redux';
-import { pushChatlist } from '../redux/messageSlice';
-import { serverBaseUrl } from './globalVariable';
+import { serverBaseUrl, serverLocalUrl } from './globalVariable';
 import { UserInterface } from '../redux/uiSlice';
+import { setupNotificationChannel } from '../..';
 
-export const navigationRef = React.createRef<NavigationContainerRef<any>>();
 
 // data: {
 //   senderData: JSON.stringify(getNotificationSenderData[0]),
@@ -19,20 +14,20 @@ export const navigationRef = React.createRef<NavigationContainerRef<any>>();
 
 export const MarkMessageDelivered = async (messageId: string) => {
   console.log(messageId,"messageId----->")
-  // try {
-  //   const response = await axios.put(`${serverBaseUrl}/chat/markRead`,{messageIds:[messageId],updateType:"isDelivered"});
-  //   return response.data;
-  // } catch (error) {
-  //   console.error('Error Marking Message Delivered:', error);
-  //   throw error;
-  // }
+  try {
+    const response = await axios.put(`${serverLocalUrl}/chat/markRead`,{messageIds:[messageId],updateType:"isDelivered"});
+    return response.data;
+  } catch (error) {
+    console.error('Error Marking Message Delivered:', error);
+    throw error;
+  }
 };
 
 export const handleNotification = async (remoteMessage: any) => {
   console.log(remoteMessage,"BackgroundremoteMessage------>")
   const senderData = JSON.parse(remoteMessage.data?.senderData);
   const messageDetails = JSON.parse(remoteMessage.data?.messageDetails);
-  MarkMessageDelivered(messageDetails.messageId)
+  // MarkMessageDelivered(messageDetails?.messageId)
 
   // const chatList = store.getState().Message.chatList
   // console.log(chatList,"Chatlist----->",AppState.currentState)
@@ -85,17 +80,18 @@ const setupNotificationListener = () => {
         messageDetails:remoteMessage.data?.messageDetails
       }
     }
-    const senderData : UserInterface = JSON.parse(RemoteMessage.data.senderData);
-    const messageDetails = JSON.parse(RemoteMessage.data.messageDetails);
+    const senderData : UserInterface = JSON.parse(RemoteMessage?.data?.senderData);
+    const messageDetails = JSON.parse(RemoteMessage?.data?.messageDetails);
+    setupNotificationChannel()
     await handleNotification(remoteMessage);
     await notifee.displayNotification({
-      title: senderData.name,
-      body: messageDetails.messageText,
+      title: senderData?.name,
+      body: messageDetails?.messageText,
       data:{senderData : senderData},
       android: {
         channelId: "default8",
         smallIcon: 'ic_stat_name', // ensure this icon is in your drawable folder
-        largeIcon: senderData.profilePic, // URL of the sender's profile picture
+        largeIcon: senderData?.profilePic, // URL of the sender's profile picture
         color:colors.primary,
         circularLargeIcon:true,
         

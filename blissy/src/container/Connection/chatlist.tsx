@@ -23,7 +23,6 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const chatlistdata = useSelector(chatListSelector);
   const { socket, user } = useSelector(AuthSelector);
    const loadItems = useRef<any[]>(new Array(5).fill(0))
-  const [markRead, { }] = useMarkReadMessageMutation()
   const dispatch = useDispatch();
   const { activeUserList } = useSelector(ActiveUserListSelector);
   // const findMyMessage = useCallback((message: Message, newChatlistdata: ChatList[]) => {
@@ -57,38 +56,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     
   }, [dispatch, activeUserList, chatlistdata?.length]);
 
-  useEffect(() => {
-    socket?.on("privateMessageSuccessfulAdd", async (data) => {
-      console.log("newMessage----->", data);
-      // findMyMessage(newMessages, chatlistdata);
-      dispatch(pushChatlist(data.chatList));
-      console.log("newMessage2----->", data);
-      playNotificationSound();
-      await markRead({messageIds:[data.messageId],updateType:"isDelivered"})
-      socket.emit("messageReceived", { userId: data.senderId, socketId: data.otherEndsocketId })
-    });
-    socket?.on('newActiveUser', (user) => {
-      dispatch(getActiveUserList(user))
-      console.log(user, "activeUserList new-------->")
-    })
-
-    socket?.on("messageDelivered", (data) => {
-      console.log(data, "Deliveredupdateddata------>")
-      dispatch(pushChatlist(data.chatList));
-    })
-
-    socket?.on("messageSeen", (data) => {
-      console.log(data, "Seenupdateddata------>")
-      dispatch(pushChatlist(data.chatList));
-    })
-    return () => {
-      socket?.off("privateMessageSuccessfulAdd")
-      socket?.off("newActiveUser")
-      socket?.off("messageDelivered")
-      socket?.off("messageSeen")
-    }
-
-  }, [chatlistdata, socket]);
+  
 
   // useEffect(() => {
   //   const unsubscribe = navigation.addListener('focus', async () => {

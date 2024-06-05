@@ -84,7 +84,7 @@ useEffect(()=>{
             fullStarColor={color}
             activeOpacity={1}
             selectedStar={rating => {
-              if (ratingRef.current) {
+              if (ratingRef.current?.fadeIn) {
                 ratingRef.current?.fadeIn(800);
               }
 
@@ -124,7 +124,7 @@ useEffect(()=>{
             iconame="chat"
             label="Say Hi!"
             iconcolor={colors.white}
-            onpress={() => navigation.navigate('ChatWindow',{Chats:null,socketId:socketId || undefined,userDetails:user,senderUserId:null})}
+            onpress={() => navigation.navigate('ChatWindow',{Chats:null,socketId:socketId || undefined,userDetails:user,senderUserId:user?._id || null})}
             size={18}
             styles={styles.PrimaryButton}
             textSize={actuatedNormalize(18)}

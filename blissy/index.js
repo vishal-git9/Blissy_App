@@ -4,7 +4,7 @@
 
 import { AppRegistry } from 'react-native';
 import App from './App';
-import notifee, { EventType, AndroidImportance, AndroidVisibility } from '@notifee/react-native';
+import notifee, { AndroidImportance, AndroidVisibility, EventType } from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
 
 import { name as appName } from './app.json';
@@ -13,38 +13,51 @@ import colors from './src/constants/colors';
  var EventEmitter = require('eventemitter3');
  export const eventEmitter = new EventEmitter();
 
-import * as RootNavigation from './src/utils/RootNavigation.js';
 import { handleNotification } from './src/utils/notificationService';
-import { UserInterface } from './src/redux/uiSlice';
-
+export const setupNotificationChannel = async () => {
+  await notifee.createChannel({
+    id: 'default8',
+    name: 'Default Channel 8',
+    importance: AndroidImportance.HIGH,
+    badge: true,
+    sound: "level_up",
+    visibility: AndroidVisibility.PUBLIC,
+    
+  });
+};
 messaging().setBackgroundMessageHandler(async remoteMessage => {
     console.log('FCM Message received:', remoteMessage);
+    
     const RemoteMessage = {
       data:{
         senderData:remoteMessage?.data?.senderData,
         messageDetails:remoteMessage.data?.messageDetails
       }
     }
-    const senderData  = JSON.parse(RemoteMessage.data.senderData);
-    const messageDetails = JSON.parse(RemoteMessage.data.messageDetails);
+    const senderData  = JSON.parse(RemoteMessage?.data?.senderData);
+    const messageDetails = JSON.parse(RemoteMessage?.data?.messageDetails);
+    setupNotificationChannel()
     await handleNotification(remoteMessage);
     await notifee.displayNotification({
-      title: senderData.name,
-      body: messageDetails.messageText,
+      title: senderData?.name,
+      body: messageDetails?.messageText,
       data:{senderData : senderData},
       android: {
         channelId: "default8",
         smallIcon: 'ic_stat_name', // ensure this icon is in your drawable folder
-        largeIcon: senderData.profilePic, // URL of the sender's profile picture
+        largeIcon: senderData?.profilePic, // URL of the sender's profile picture
         color:colors.primary,
         circularLargeIcon:true,
-        
+        // alarmManager: {
+        //   allowWhileIdle: true,
+        // },
         pressAction: {
           id: 'default',
         },
       },
       ios: {
         categoryId: 'default',
+        
         attachments: [
           {
             url: remoteMessage?.data?.profilePictureUrl, // URL of the sender's profile picture
@@ -74,8 +87,8 @@ notifee.onForegroundEvent(
       );
       switch (type) {
         case EventType.PRESS:
-          if (detail.notification) {
-            eventEmitter.emit('notificationReceived',detail.notification.data);
+          if (detail?.notification) {
+            eventEmitter.emit('notificationReceived',detail?.notification?.data);
           }
           break;
         case EventType.ACTION_PRESS:

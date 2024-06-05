@@ -22,7 +22,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChatList, Message, MessageSelector, addMessage, chatListSelector, chatScreenActiveSelector, pushChatlist, resetMessageCount, setChatScreenActive } from '../../redux/messageSlice';
+import { ActiveUserList, ActiveUserListSelector, ChatList, Message, MessageSelector, addMessage, chatListSelector, chatScreenActiveSelector, getActiveUserList, pushChatlist, resetMessageCount, setChatScreenActive } from '../../redux/messageSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthSelector } from '../../redux/uiSlice';
 import moment from 'moment';
@@ -66,9 +66,11 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const { socket, user } = useSelector(AuthSelector)
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
+  const { activeUserList } = useSelector(ActiveUserListSelector)
   const chatlistdata = useSelector(chatListSelector);
   const [markRead, { }] = useMarkReadMessageMutation()
   const [istyping, setIsTyping] = useState<boolean>(false)
+  const UserSocketId = useRef<string | undefined>()
   const timerRef = useRef<NodeJS.Timeout>();
   const yValue = useRef(new NativeAnimated.Value(0)).current;
   const [sendMsg, { isError, isLoading, isSuccess, reset, data }] = useSendMessageMutation()
@@ -160,13 +162,12 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
 
       if (socketId) { // if user is online 
         try {
+          setInputText('');
           await sendMsg(newMessage)
           console.log("message sent")
           socket?.emit('privateMessageSendSuccessful', { messageId: newMessage.messageId, senderId: user?._id, receiverId: Chats?.chatPartner?._id || senderUserId, socketId: socketId, mysocketId: socket.id }); //calling the sockets
           socket?.emit("private_typing_state", { socketId, typingState: false })
-          setInputText('');
           flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to the end to show new message
-
           // Animate the new message sliding in
           NativeAnimated.timing(yValue, {
             toValue: 1,
@@ -179,10 +180,9 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       } else { // if user is offline
 
         try {
-          await sendMsg(newMessage)
           setInputText('');
+          await sendMsg(newMessage)
           flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to the end to show new message
-
           // Animate the new message sliding in
           NativeAnimated.timing(yValue, {
             toValue: 1,
@@ -218,7 +218,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
 
       }
     } // logic if we are navigating through notification
-    else if(senderUserId){
+    else if (senderUserId) {
       const newMessages = chatlistdata.find((el) => el.chatPartner._id === senderUserId)?.newMessages
       if (newMessages && newMessages?.length > 0) {
         timerRef.current = setTimeout(() => {
@@ -240,6 +240,13 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   }, [chatlistdata])
 
   useEffect(() => {
+
+    // socket?.on('newActiveUser', (user:ActiveUserList[]) => {
+    //   dispatch(getActiveUserList(user))
+    //   const socketId = user?.find((el) => el?.userId?._id === userDetails?._id)
+    //   UserSocketId.current = socketId?.socketId
+    // })
+
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
@@ -250,13 +257,15 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     return () => backHandler.remove();
   }, [])
 
+  const MessageChatlistData = Chats ? chatlistdata.find((el) => el?.chatPartner?._id === Chats?.chatPartner?._id)?.allMessages : senderUserId ? chatlistdata.find((el) => el?.chatPartner?._id === senderUserId)?.allMessages : messages
+
   // Render each chat message
   const renderMessageItem = ({ item, index }: { item: Message, index: number }) => {
 
 
     console.log(item, "itemchat----->", chatlistdata, messages)
 
-    const isLastMessage = index === (Chats ? chatlistdata.find((el) => el.chatPartner._id === Chats.chatPartner._id)?.allMessages?.length : messages?.length);
+    const isLastMessage = index === MessageChatlistData?.length
 
     const messageStyle = isLastMessage
       ? {
@@ -299,7 +308,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const getItemLayout = (data: any, index: any) => (
     { length: actuatedNormalize(70), offset: actuatedNormalize(70) * index, index } // assuming each item has a height of 70
   );
-  const lastMessageIndex = Chats ? chatlistdata?.filter((el) => el?.chatPartner?._id === Chats?.chatPartner?._id)[0].allMessages?.length - 1 : 0;
+  const lastMessageIndex = Chats ? chatlistdata?.filter((el) => el?.chatPartner?._id === Chats?.chatPartner?._id)[0].allMessages?.length - 1 : messages.length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -326,17 +335,34 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       >
         <FlatList
           ref={flatListRef}
-          data={Chats ? chatlistdata.find((el) => el?.chatPartner?._id === Chats?.chatPartner?._id)?.allMessages : senderUserId ? chatlistdata.find((el) => el?.chatPartner?._id === senderUserId)?.allMessages : messages}
+          data={MessageChatlistData}
           showsVerticalScrollIndicator={false}
           keyExtractor={(item) => item.messageId}
           renderItem={renderMessageItem}
           contentContainerStyle={{ marginTop: actuatedNormalize(10), paddingBottom: actuatedNormalize(10) }}
-          initialScrollIndex={lastMessageIndex}
-          getItemLayout={getItemLayout}
-          onLayout={() => flatListRef.current?.scrollToIndex({ index: lastMessageIndex, animated: true })}
+          initialScrollIndex={MessageChatlistData && MessageChatlistData.length >= 9 ? lastMessageIndex : null}
+          getItemLayout={(data, index) => ({
+            length: getItemLayout(data, index).length,
+            offset: getItemLayout(data, index).offset,
+            index,
+          })} onLayout={() => {
+            if (MessageChatlistData && MessageChatlistData.length > 0) {
+              flatListRef.current?.scrollToIndex({ index: lastMessageIndex, animated: true });
+            }
+          }}
+          onContentSizeChange={() => {
+            if (flatListRef.current) {
+              flatListRef.current.scrollToEnd({ animated: true });
+            }
+          }}
           viewabilityConfig={{
             itemVisiblePercentThreshold: 50, // render items when at least 50% of the item is visible
           }}
+          initialNumToRender={20}
+          maxToRenderPerBatch={20}
+          // windowSize={10}
+           removeClippedSubviews={true}
+          updateCellsBatchingPeriod={50}    
         />
         <View style={styles.inputContainer}>
           <TextInput

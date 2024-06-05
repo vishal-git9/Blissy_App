@@ -18,8 +18,8 @@ import { ComingSoon } from '../container/comingsoon/comingsoon';
 import { Coupons } from '../container/coupons/coupons';
 import ChatPartnerDetails from '../container/Connection/chatPartnerDetails';
 import CallScreen from '../common/call/incomingcallMain';
-import { navigationRef } from '../utils/notificationService';
 import { Linking } from 'react-native';
+import { navigationRef } from '../utils/RootNavigation';
 // import { navigationRef } from '../utils/notificationService';
 
 const deepLinksConf = {

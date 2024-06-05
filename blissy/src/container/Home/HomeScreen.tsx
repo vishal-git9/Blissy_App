@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid, Linking, Platform } from 'react-native';
 import colors from '../../constants/colors';
 import { NavigationStackProps } from '../Prelogin/onboarding';
@@ -28,12 +28,13 @@ import { SwipeButtonComponent } from '../../common/button/swipebutton';
 import { fonts } from '../../constants/fonts';
 import PermissionDenied from '../../common/permissions/permissiondenied';
 import { PermissionStatus } from 'react-native-permissions';
-import { useGetChatlistQuery } from '../../api/chatService';
+import { useGetChatlistQuery, useMarkReadMessageMutation } from '../../api/chatService';
 import checkNotificationPermission from '../../common/permissions/checkNotificationPermission';
 import { eventEmitter } from '../../..';
 import { useAddFcmTokenMutation, useGetUserQuery, usePostUserDevieInfoMutation } from '../../api/userService';
 import DeviceInfo from 'react-native-device-info';
 import { getDeviceUniqueId } from '../../utils/getDeviceUniqueId';
+import playNotificationSound from '../../common/sound/notification';
 
 interface iconsLabelI {
   id: number;
@@ -78,6 +79,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
   const [permission, setpermission] = useState(false);
+  const [markRead, { }] = useMarkReadMessageMutation()
   const [permissionType, setpermissionType] = useState('');
   const otherUserScoketId = useRef<string | null>(null);
   console.log(user, "user home screens")
@@ -141,6 +143,34 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     console.log("emitted the event for call")
     socket.emit('connectRandom')
   }
+
+  const handleNotificationReceived = useCallback( (Chatdata:any)=>{
+    console.log("I am here Yarr------>", chatlistdata, Chatdata,activeUserList);
+    if (Chatdata?.senderData) {
+      // Dispatch actions to refetch the latest data when a new notification is received
+
+
+      const ChatPartnerData = chatlistdata?.find((el) => el?.chatPartner?._id === Chatdata?.senderData?._id);
+      const socketId = activeUserList?.find((el) => el?.userId?._id === Chatdata?.senderData?._id)?.socketId;
+
+      if (!ChatPartnerData) {
+        navigation.navigate("ChatWindow", {
+          userDetails: Chatdata.senderData,
+          Chats: null,
+          socketId: socketId,
+          senderUserId: Chatdata.senderData._id
+        });
+      } else {
+        navigation.navigate("ChatWindow", {
+          userDetails: Chatdata.senderData,
+          Chats: ChatPartnerData,
+          socketId: socketId,
+          senderUserId: Chatdata.senderData._id
+        });
+      }
+    }
+
+  },[chatlistdata?.length,activeUserList?.length])
 
   useEffect(() => {
 
@@ -296,32 +326,44 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     }
 
     // event listens for background and foreground mode
-    eventEmitter.on('notificationReceived', (Chatdata: any) => {
-      console.log("Iam here Yarr------>", chatlistdata)
-      if (Chatdata?.senderData) {
-
-        //  if its a new friend message then ChatPartnerData will be null else it will have ChatPartnerData data with all Messages
-
-        const ChatPartnerData = chatlistdata?.find((el) => el?.chatPartner?._id === Chatdata?.senderData?._id)
-        const socketId = activeUserList.find((el) => el?.userId?._id === Chatdata?.senderData?._id)
-        if (!ChatPartnerData) {
-          refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
-          navigation.navigate("ChatWindow", { userDetails: Chatdata.senderData, Chats: null, socketId: socketId?.socketId, senderUserId: Chatdata.senderData._id });
-        } else {
-          navigation.navigate("ChatWindow", { userDetails: Chatdata.senderData, Chats: ChatPartnerData, socketId: socketId?.socketId, senderUserId: Chatdata.senderData._id });
-        }
-      }
-    });
+    eventEmitter.on('notificationReceived',handleNotificationReceived);
 
     getInitialNotificationDetail()
-
-  }, []);
-
+    return () => {
+      eventEmitter.off('notificationReceived');
+    };
+  }, [activeUserList?.length]);
   useEffect(() => {
+    socket?.on("privateMessageSuccessfulAdd", async (data) => {
+      console.log("newMessage----->", data);
+      // findMyMessage(newMessages, chatlistdata);
+      dispatch(pushChatlist(data.chatList));
+      console.log("newMessage2----->", data);
+      playNotificationSound();
+      await markRead({messageIds:[data.messageId],updateType:"isDelivered"})
+      socket.emit("messageReceived", { userId: data.senderId, socketId: data.otherEndsocketId })
+    });
+    // socket?.on('newActiveUser', (user) => {
+    //   dispatch(getActiveUserList(user))
+    //   console.log(user, "activeUserList new-------->")
+    // })
 
+    socket?.on("messageDelivered", (data) => {
+      console.log(data, "Deliveredupdateddata------>")
+      dispatch(pushChatlist(data.chatList));
+    })
 
+    socket?.on("messageSeen", (data) => {
+      console.log(data, "Seenupdateddata------>")
+      dispatch(pushChatlist(data.chatList));
+    })
+    return () => {
+      socket?.off("privateMessageSuccessfulAdd")
+      socket?.off("messageDelivered")
+      socket?.off("messageSeen")
+    }
 
-  }, [])
+  }, [chatlistdata, socket]);
 
 
   useEffect(() => {
@@ -366,12 +408,15 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     return () => {
       socket.off("initiateCall")
       socket.off('activeUserList')
+      socket.off("newActiveUser")
       socket.on('disconnect', () => {
         dispatch(resetMessageCount())
         dispatch(resetMessages())
         socket.emit("callEnded", otherUserScoketId.current)
         console.log('user disconnected from socket');
       })
+
+      console.log("user out of app")
     }
   }, []);
 

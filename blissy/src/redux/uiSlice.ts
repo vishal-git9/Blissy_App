@@ -70,7 +70,7 @@ export const AuthSlice = createSlice({
 
             console.log(payload,"payload---->")
             state.user = payload?.data?.user
-            state.fcmToken = payload?.data?.user?.UserDeviceInfo?.fcmToken
+            state.fcmToken = payload?.data?.user?.DeviceFcmtoken?.fcmToken
             // state.isNewUser =payload.data.user.isNewUser
         })
         builder.addMatcher(UserApi.endpoints.postUser.matchFulfilled,(state,{payload})=>{
