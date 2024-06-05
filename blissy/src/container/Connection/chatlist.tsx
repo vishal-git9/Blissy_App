@@ -11,7 +11,6 @@ import { Badge } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { ActiveUserListSelector, ChatList, Message, MessageSelector, addMessage, chatListSelector, getActiveUserList, newMessagesSelector, pushChatlist } from '../../redux/messageSlice';
 import { AuthSelector } from '../../redux/uiSlice';
-import playNotificationSound from '../../common/sound/notification';
 import { formatDateTime } from '../../utils/formatedateTime';
 import { useMarkReadMessageMutation } from '../../api/chatService';
 import ChatItemSkeleton from '../../common/loader/skeleton';

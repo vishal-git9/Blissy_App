@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,9 @@ import AnimatedCounter from '../../common/counter/counter';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { UserInterface } from '../../redux/uiSlice';
-import { IconButton } from '../../common/button/iconbutton';
 import { Socket } from 'socket.io-client';
 import { useDispatch, useSelector } from 'react-redux';
-import {  MessageCountSelector, addMessage, chatScreenActiveSelector, setChatScreenActive } from '../../redux/messageSlice';
-import playNotificationSound from '../../common/sound/notification';
+import {  MessageCountSelector, chatScreenActiveSelector } from '../../redux/messageSlice';
 import ProfileScreenModal from '../../common/modals/profile';
 import { Snackbar } from 'react-native-paper';
 

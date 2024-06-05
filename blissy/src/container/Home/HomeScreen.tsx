@@ -34,7 +34,7 @@ import { eventEmitter } from '../../..';
 import { useAddFcmTokenMutation, useGetUserQuery, usePostUserDevieInfoMutation } from '../../api/userService';
 import DeviceInfo from 'react-native-device-info';
 import { getDeviceUniqueId } from '../../utils/getDeviceUniqueId';
-import playNotificationSound from '../../common/sound/notification';
+import { playNotificationSound } from '../../common/sound/notification';
 
 interface iconsLabelI {
   id: number;

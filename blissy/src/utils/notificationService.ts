@@ -89,7 +89,7 @@ const setupNotificationListener = () => {
       body: messageDetails?.messageText,
       data:{senderData : senderData},
       android: {
-        channelId: "default8",
+        channelId: "blissy1",
         smallIcon: 'ic_stat_name', // ensure this icon is in your drawable folder
         largeIcon: senderData?.profilePic, // URL of the sender's profile picture
         color:colors.primary,
@@ -100,7 +100,7 @@ const setupNotificationListener = () => {
         },
       },
       ios: {
-        categoryId: 'default',
+        categoryId: 'blissy1',
         attachments: [
           {
             url: remoteMessage?.data?.profilePictureUrl as string, // URL of the sender's profile picture

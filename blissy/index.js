@@ -16,8 +16,8 @@ import colors from './src/constants/colors';
 import { handleNotification } from './src/utils/notificationService';
 export const setupNotificationChannel = async () => {
   await notifee.createChannel({
-    id: 'default8',
-    name: 'Default Channel 8',
+    id: 'blissy1',
+    name: 'Blissy Channel 1',
     importance: AndroidImportance.HIGH,
     badge: true,
     sound: "level_up",
@@ -43,7 +43,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
       body: messageDetails?.messageText,
       data:{senderData : senderData},
       android: {
-        channelId: "default8",
+        channelId: "blissy1",
         smallIcon: 'ic_stat_name', // ensure this icon is in your drawable folder
         largeIcon: senderData?.profilePic, // URL of the sender's profile picture
         color:colors.primary,
@@ -56,7 +56,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
         },
       },
       ios: {
-        categoryId: 'default',
+        categoryId: 'blissy1',
         
         attachments: [
           {

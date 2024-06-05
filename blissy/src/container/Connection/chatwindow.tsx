@@ -40,6 +40,7 @@ const customTransition = SharedTransition.custom((values) => {
   };
 });
 import { formatDateTime } from '../../utils/formatedateTime';
+import { playSendMsgSound } from '../../common/sound/notification';
 
 
 
@@ -163,6 +164,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       if (socketId) { // if user is online 
         try {
           setInputText('');
+          playSendMsgSound()
           await sendMsg(newMessage)
           console.log("message sent")
           socket?.emit('privateMessageSendSuccessful', { messageId: newMessage.messageId, senderId: user?._id, receiverId: Chats?.chatPartner?._id || senderUserId, socketId: socketId, mysocketId: socket.id }); //calling the sockets
@@ -181,6 +183,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
 
         try {
           setInputText('');
+          playSendMsgSound()
           await sendMsg(newMessage)
           flatListRef.current?.scrollToEnd({ animated: true }); // Scroll to the end to show new message
           // Animate the new message sliding in
