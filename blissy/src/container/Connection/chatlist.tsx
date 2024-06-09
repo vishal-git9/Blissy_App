@@ -47,23 +47,23 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   //     console.error("An error occurred---->", error);
   //     // Handle the error appropriately, such as logging or displaying an error message
   //   }
-  const findNewMessage = useCallback((message: Message, newChatlistdata: ChatList[]) => {
+  const findNewMessage = useCallback(() => {
 
-     const sortedChatlist = newChatlistdata.sort((a,b)=>moment(a.newMessages[0]?.createdAt).diff(b.newMessages[0].createdAt))
+     const sortedChatlist = chatlistdata.sort((a,b)=>moment(a.newMessages[0]?.createdAt).diff(b.newMessages[0].createdAt))
 
-     console.log(sortedChatlist,"sorted chatlist")
+     console.log(sortedChatlist,"sortedChatlist--->")
     
-  }, [dispatch, activeUserList, chatlistdata?.length]);
+  }, [dispatch, chatlistdata]);
 
   
 
-  // useEffect(() => {
-  //   const unsubscribe = navigation.addListener('focus', async () => {
-  //     await refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
-  //   })
-  //   return unsubscribe
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      findNewMessage()
+    })
+    return unsubscribe
 
-  // }, [navigation]);
+  }, [navigation,chatlistdata]);
 
 
   console.log(newMessages, chatlistdata, "chatlistscreen==")

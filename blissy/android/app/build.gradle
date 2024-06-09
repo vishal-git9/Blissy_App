@@ -56,7 +56,7 @@ project.ext.react = [
     bundleInRelease: true,
     nodeExecutableAndArgs: ["node", "--max_old_space_size=8192"]
 ]
-def enableSeparateBuildPerCPUArchitecture = true
+def enableSeparateBuildPerCPUArchitecture = false
 
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.

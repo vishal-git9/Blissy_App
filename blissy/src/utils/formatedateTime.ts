@@ -17,3 +17,14 @@ export function formatDateTime(dateString: string) {
         return date.format('D MMM'); // Return day and month (e.g., "28 Apr")
     }
 }
+
+export const getFormattedDate = (dateString: string) => {
+    const date = moment(dateString);
+    if (date.isSame(moment(), 'day')) {
+      return 'Today';
+    } else if (date.isSame(moment().subtract(1, 'day'), 'day')) {
+      return 'Yesterday';
+    } else {
+      return date.format('LL');
+    }
+  };

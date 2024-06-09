@@ -4,7 +4,6 @@ import notifee from '@notifee/react-native';
 import colors from '../constants/colors';
 import { serverBaseUrl, serverLocalUrl } from './globalVariable';
 import { UserInterface } from '../redux/uiSlice';
-import { setupNotificationChannel } from '../..';
 
 
 // data: {
@@ -82,7 +81,6 @@ const setupNotificationListener = () => {
     }
     const senderData : UserInterface = JSON.parse(RemoteMessage?.data?.senderData);
     const messageDetails = JSON.parse(RemoteMessage?.data?.messageDetails);
-    setupNotificationChannel()
     await handleNotification(remoteMessage);
     await notifee.displayNotification({
       title: senderData?.name,

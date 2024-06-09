@@ -80,12 +80,12 @@ const CustomDrawer: React.FC<any> = props => {
             <TouchableOpacity
               onPress={async () => {
                 setConfirmModal(false);
-                props.navigation.closeDrawer()
                 await deleteFcmToken({}) 
                 dispatch(AuthApi.util.resetApiState())
                 dispatch(UserApi.util.resetApiState())
                 dispatch(ChatApi.util.resetApiState())
                 dispatch(logoutUser());
+                props.navigation.closeDrawer()
                 // deleting fcm token from the backend for this user so that notification are disabled for this user
                 props.navigation.replace('Login');
                 // console.log('Yes');

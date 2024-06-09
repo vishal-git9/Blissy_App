@@ -26,13 +26,23 @@ const App:React.FC = ()=> {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
  
-
+  const setupNotificationChannel = async () => {
+    await notifee.createChannel({
+      id: 'blissy1',
+      name: 'Blissy Channel 1',
+      importance: AndroidImportance.HIGH,
+      badge: true,
+      sound: "level_up",
+      visibility: AndroidVisibility.PUBLIC,
+      
+    });
+  };
 
   useEffect(() => {
     // const timer = setTimeout(() => {
     //   setHasSplash(false)
     // }, 4200);
-    
+    setupNotificationChannel()
     setupNotificationListener()
     // return ()=> clearTimeout(timer)
   }, []);

@@ -154,6 +154,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       const socketId = activeUserList?.find((el) => el?.userId?._id === Chatdata?.senderData?._id)?.socketId;
 
       if (!ChatPartnerData) {
+        
         navigation.navigate("ChatWindow", {
           userDetails: Chatdata.senderData,
           Chats: null,
@@ -211,11 +212,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const getFCMToken = async () => {
     try {
       await messaging().registerDeviceForRemoteMessages();
+      const token = await messaging().getToken();
       console.log("I am here----->")
-      if (!!fcmToken) {
+      if (!!fcmToken && fcmToken === token) {
         console.log("OLD FCM_TOKEN FOUND", fcmToken)
       } else {
-        const token = await messaging().getToken();
+        // const token = await messaging().getToken();
         //inserting device token to db
         let platform = Platform.OS === "ios" ? "IOSMOBILE" : "ANDROIDMOBILE";
         // let platform = 'HUAWEIMOBILE'
@@ -321,7 +323,11 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       const getInitialNotification = await notifee.getInitialNotification()
       console.log(getInitialNotification, "getInitialNotification------>")
       if (getInitialNotification) {
+        // refetch().then((res) =>{
+        //   dispatch(pushChatlist(res.data.chatList))
+        // } ).catch((err) => console.log(err)) // no need since app is opened from quit state it will auto fetch the chatlist api
         navigation.navigate("Chatlist");
+
       }
     }
 
@@ -339,7 +345,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       // findMyMessage(newMessages, chatlistdata);
       dispatch(pushChatlist(data.chatList));
       console.log("newMessage2----->", data);
-      playNotificationSound();
+      // playNotificationSound();
       await markRead({messageIds:[data.messageId],updateType:"isDelivered"})
       socket.emit("messageReceived", { userId: data.senderId, socketId: data.otherEndsocketId })
     });

@@ -3,7 +3,7 @@ import { serverLocalUrl,serverBaseUrl } from "../utils/globalVariable";
 import { IRootState } from "../redux";
 
 const baseQuery = fetchBaseQuery({
-    baseUrl:serverLocalUrl,
+    baseUrl:serverBaseUrl,
 
     prepareHeaders(headers, {getState}) {
         const {Auth} = getState() as IRootState;

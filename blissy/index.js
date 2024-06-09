@@ -14,17 +14,6 @@ import colors from './src/constants/colors';
  export const eventEmitter = new EventEmitter();
 
 import { handleNotification } from './src/utils/notificationService';
-export const setupNotificationChannel = async () => {
-  await notifee.createChannel({
-    id: 'blissy1',
-    name: 'Blissy Channel 1',
-    importance: AndroidImportance.HIGH,
-    badge: true,
-    sound: "level_up",
-    visibility: AndroidVisibility.PUBLIC,
-    
-  });
-};
 messaging().setBackgroundMessageHandler(async remoteMessage => {
     console.log('FCM Message received:', remoteMessage);
     
@@ -36,7 +25,6 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     }
     const senderData  = JSON.parse(RemoteMessage?.data?.senderData);
     const messageDetails = JSON.parse(RemoteMessage?.data?.messageDetails);
-    setupNotificationChannel()
     await handleNotification(remoteMessage);
     await notifee.displayNotification({
       title: senderData?.name,
