@@ -108,7 +108,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
             }
           </View>
         </View>
-        <Text style={styles.timestamp}>{formatDateTime(item?.allMessages[item?.allMessages?.length - 1].createdAt)}</Text>
+        <Text style={styles.timestamp}>{formatDateTime(item?.allMessages[item?.allMessages?.length - 1].createdAt,"Date_time")}</Text>
       </TouchableOpacity>
     )
 

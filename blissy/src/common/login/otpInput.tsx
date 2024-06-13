@@ -31,6 +31,7 @@ interface OTPInputProps {
   setProgressDuration: (a: number) => void;
   dispatch: Dispatch<Action>;
   modalState: boolean;
+  resendOtp:boolean;
   setIsOtpSent:(a:boolean) => void;
   setResendOtp:(a:boolean) => void;
   isLoading: boolean;
@@ -44,6 +45,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
   progressDuration,
   setProgressDuration,
   dispatch,
+  resendOtp,
   setResendOtp,
   handleSubmitMobileNumber,
   changeMobileNumber,
@@ -197,8 +199,8 @@ const OTPInput: React.FC<OTPInputProps> = ({
                     onPress={() => {
                       retry()
                       handleSubmitMobileNumber()
-                      setIsOtpSent(false)
-                      setResendOtp(true)
+                      // setIsOtpSent(false)
+                      setResendOtp(!resendOtp)
                       setProgressDuration(60)
                     }}>
                     <Text

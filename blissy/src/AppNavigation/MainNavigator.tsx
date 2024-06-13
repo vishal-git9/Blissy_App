@@ -20,6 +20,7 @@ import ChatPartnerDetails from '../container/Connection/chatPartnerDetails';
 import CallScreen from '../common/call/incomingcallMain';
 import { Linking } from 'react-native';
 import { navigationRef } from '../utils/RootNavigation';
+import { SessionError } from '../container/DrawerScreens/SessionError';
 // import { navigationRef } from '../utils/notificationService';
 
 const deepLinksConf = {
@@ -90,6 +91,7 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
   isLoggedIn,
   isNewUser,
 }) => {
+
   console.log(isLoggedIn,isNewUser,"isLoggedin")
   return (
     <NavigationContainer ref={navigationRef}>
@@ -126,6 +128,7 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         {/* <Stack.Screen name="IncomingCall" component={CallScreen} />  */}
       </Stack.Navigator>
       <GlobalBackHandler/>
+      {/* <SessionError/> */}
     </NavigationContainer>
   );
 };

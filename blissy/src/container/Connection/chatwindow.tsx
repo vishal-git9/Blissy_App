@@ -118,6 +118,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       });
       if (newMessageIds.length > 0) {
         await markRead({ messageIds: newMessageIds, updateType: 'isRead' });
+        console.log(UserSocketId,"socket--id")
         socket?.emit('messageSeen', { userId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId });
         // refetch()
         //   .then((res) => dispatch(pushChatlist(res.data.chatList)))
@@ -238,18 +239,19 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     [chatlistdata,senderUserId]
   );
 
-  console.log(MessageChatlistData,"MessageChatlistData----->")
+  // console.log(MessageChatlistData,"MessageChatlistData----->")
 
 
   let scrollTimeout = null;
 
   const handleTyping = useCallback(
     debounce((text: string) => {
+      console.log("socketId---->",UserSocketId)
       socket?.emit('private_typing_state', { socketId: UserSocketId, typingState: true });
       setInputText(text);
       // You can also dispatch typing state to the redux store or perform other actions here
     }, 300),
-    []
+    [activeUserList.length,dispatch,senderUserId]
   );
 
   const handleScroll = (event:any) => {
@@ -328,7 +330,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
               ]}
             >
               <Text style={[styles.messageText, { color: colors.gray, fontSize: actuatedNormalize(10) }]}>
-                {formatDateTime(item.createdAt)}
+                {formatDateTime(item.createdAt,"")}
               </Text>
               {item.senderId === user?._id ? (
                 item.isDelivered && item.isRead ? (
@@ -394,12 +396,12 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const onLayout = () => {
     // setIsMounted(true);
     if (MessageChatlistData && MessageChatlistData.length > 0 && flashListRef.current) {
-      console.log("Iamhere------>")
+      // console.log("Iamhere------>")
       flashListRef.current.scrollToIndex({ index: MessageChatlistData.length - 1, animated: true });
     }
   };
 
-  console.log(sections,"sections----->")
+  // console.log(sections,"sections----->")
 
   return (
     <SafeAreaView style={styles.container}>

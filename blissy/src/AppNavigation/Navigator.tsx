@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useEffect } from 'react'
+import React, { PropsWithChildren, useEffect, useState } from 'react'
 import MainNavigator from './MainNavigator'
 import { useDispatch, useSelector } from 'react-redux'
 import { AuthSelector, logoutUser } from '../redux/uiSlice'
@@ -10,6 +10,7 @@ import { navigate } from '../utils/RootNavigation'
 
 export const Navigator:React.FC = () => {
     const {token,isAuthenticated,isRegisterd,user,isNewUser} = useSelector(AuthSelector)
+    const [sessionErrorsetSessionError] = useState(false)
     const {data:userData,isLoading,refetch} = useGetUserQuery()
     const dispatch = useDispatch()
     console.log(isNewUser,"----user----",isRegisterd,token)
@@ -19,11 +20,12 @@ export const Navigator:React.FC = () => {
             console.log("hi from-----")
             refetch().then(res=>{
                 if(res.isError){
+                    console.log("tokenError------->")
                     dispatch(logoutUser())
                     dispatch(AuthApi.util.resetApiState())
                     dispatch(UserApi.util.resetApiState())
                     dispatch(ChatApi.util.resetApiState())
-                    navigate("Login")
+                    // navigate("Login")
                     // navigate to token expire screen or modal
                 }
             }).catch(err=>console.log(err))

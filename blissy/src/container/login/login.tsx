@@ -1,10 +1,10 @@
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import React, {useEffect, useReducer, useRef, useState} from 'react';
-import {Keyboard, StyleSheet, View} from 'react-native';
-import {Action} from '../Registration/Registration';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
+import { Keyboard, StyleSheet, View } from 'react-native';
+import { Action } from '../Registration/Registration';
 import MobileInput from '../../common/login/LoginInput';
 import OTPInput from '../../common/login/otpInput';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { NavigationStackProps } from '../Prelogin/onboarding';
 import { useGetOtpMutation, useVerifyOtpMutation } from '../../api/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -40,65 +40,65 @@ export const reducerAction = (state: LoginInterface, action: Action) => {
         [key]: action.payload,
       };
     }
-    case "RESET" : 
+    case "RESET":
       return intialState
-    
+
     default:
       return state;
   }
 };
-export const LoginScreen : React.FC<NavigationStackProps> = ({navigation}) => {
+export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [state, dispatch] = useReducer(reducerAction, intialState);
   const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
-  const [resendOtp,setResendOtp] = useState<boolean>(false)
-  const [modalState,setModalState] = useState<boolean>(true)
+  const [resendOtp, setResendOtp] = useState<boolean>(false)
+  const [modalState, setModalState] = useState<boolean>(true)
   const [progressDuration, setProgressDuration] = useState(60);
   const [invalidEmail, setEnvalidEmail] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout>();
-   const [getOtp,{error,data,isLoading,reset:resetMobile}] = useGetOtpMutation();
-   const {token,isAuthenticated,user,isNewUser,isRegisterd} = useSelector(AuthSelector)
-   const {data:userData,isLoading:userLoading,refetch} = useGetUserQuery()
-   const [OtpVerify,{error:verifyOtpErr,data:verifyOtpData,isLoading:verifyOtpLoading,reset}] = useVerifyOtpMutation()
+  const [getOtp, { error, data, isLoading, reset: resetMobile }] = useGetOtpMutation();
+  const { token, isAuthenticated, user, isNewUser, isRegisterd } = useSelector(AuthSelector)
+  const { data: userData, isLoading: userLoading, refetch } = useGetUserQuery()
+  const [OtpVerify, { error: verifyOtpErr, data: verifyOtpData, isLoading: verifyOtpLoading, reset }] = useVerifyOtpMutation()
 
-const reduxDispatch = useDispatch()
-console.log(user,isNewUser,isRegisterd,"------user--------")
+  const reduxDispatch = useDispatch()
+  console.log(user, isNewUser, isRegisterd, "------user--------")
   const handleSubmitMobileNumber = async () => {
-    if(validateEmail(state.email)){
-      const res = await getOtp({email:`${state.email}`});
-      console.log(res,"---res-----")
-      if('data' in res){
-        console.log(data,"data of MobileNumber")
+    if (validateEmail(state.email)) {
+      const res = await getOtp({ email: `${state.email}` });
+      console.log(res, "---res-----")
+      if ('data' in res) {
+        console.log(data, "data of MobileNumber")
         setIsOtpSent(true);
-      }else if('error' in res){
+      } else if ('error' in res) {
         console.log(error)
       }
-    }else{
+    } else {
       setEnvalidEmail(true)
     }
   };
 
-  const handleOtpSubmit = async() => {
-    const res = await OtpVerify({email:`${state.email}`,otp:parseInt(state.OTP)});
-    if('data' in res){
-      console.log(res,"data of OTP")
+  const handleOtpSubmit = async () => {
+    const res = await OtpVerify({ email: `${state.email}`, otp: parseInt(state.OTP) });
+    if ('data' in res) {
+      console.log(res, "data of OTP")
       const isNewuser = await refetch()
       // fetch user details
       console.log(isNewUser, "newUser from login---")
       clearInterval(timerRef.current);
       setModalState(false)
-      console.log(isNewuser,"---user isnewuser")
-      if(isNewuser?.data?.data?.user?.isNewUser){
-        navigation.navigate('Registration',{UserData:null});  
-      }else{
+      console.log(isNewuser, "---user isnewuser")
+      if (isNewuser?.data?.data?.user?.isNewUser) {
+        navigation.navigate('Registration', { UserData: null });
+      } else {
         navigation.navigate('Drawer');
-        reduxDispatch(setUserState(false)) 
+        reduxDispatch(setUserState(false))
       }
-    }else if('error' in res){
-      console.log(res,"res of otp")
-      console.log(verifyOtpErr,"error of otp")
+    } else if ('error' in res) {
+      console.log(res, "res of otp")
+      console.log(verifyOtpErr, "error of otp")
     }
   };
-  
+
   useEffect(() => {
     // Start the timer when isOtpSent is true
     if (isOtpSent || resendOtp) {
@@ -115,7 +115,7 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
       clearInterval(timerRef.current);
     }
     return () => clearInterval(timerRef.current);
-  }, [isOtpSent,resendOtp]);
+  }, [isOtpSent, resendOtp]);
 
   useEffect(() => {
     if (state.OTP.length === 4) {
@@ -130,14 +130,14 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
   return (
     <KeyboardAwareScrollView
       contentContainerStyle={styles.container}
-      resetScrollToCoords={{x: 0, y: 0}}
+      resetScrollToCoords={{ x: 0, y: 0 }}
       scrollEnabled={true}
       style={styles.container}>
       {!isOtpSent ? (
         <MobileInput
-        invalidEmail={invalidEmail}
-        isLoading={isLoading}
-        modalState={modalState}
+          invalidEmail={invalidEmail}
+          isLoading={isLoading}
+          modalState={modalState}
           state={state}
           dispatch={dispatch}
           navigation={navigation}
@@ -145,21 +145,22 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
         />
       ) : (
         <OTPInput
-        setIsOtpSent={setIsOtpSent}
-        setResendOtp = {setResendOtp}
-        isError={verifyOtpErr}
-        handleSubmitMobileNumber={handleSubmitMobileNumber}
-        isLoading={verifyOtpLoading}
-        modalState={modalState}
-        state = {state}
+          setIsOtpSent={setIsOtpSent}
+          setResendOtp={setResendOtp}
+          isError={verifyOtpErr}
+          handleSubmitMobileNumber={handleSubmitMobileNumber}
+          isLoading={verifyOtpLoading}
+          modalState={modalState}
+          state={state}
           changeMobileNumber={() => {
-            dispatch({type:"OTP",payload:""})
+            dispatch({ type: "OTP", payload: "" })
             setIsOtpSent(false)
             reset()
             clearInterval(timerRef.current)
+            setProgressDuration(60)
           }}
-
-          retry = {reset}
+          retry={reset}
+          resendOtp={resendOtp}
           dispatch={dispatch}
           progressDuration={progressDuration}
           setProgressDuration={setProgressDuration}
@@ -172,13 +173,13 @@ console.log(user,isNewUser,isRegisterd,"------user--------")
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position:'relative'
+    position: 'relative'
   },
-  loaderContainer:{
-    position:"absolute",
-    backgroundColor:"red",
-    zIndex:200,
-    top:actuatedNormalize(250),
-    left:actuatedNormalize(150),
+  loaderContainer: {
+    position: "absolute",
+    backgroundColor: "red",
+    zIndex: 200,
+    top: actuatedNormalize(250),
+    left: actuatedNormalize(150),
   }
 });

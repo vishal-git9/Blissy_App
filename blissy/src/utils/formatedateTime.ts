@@ -1,12 +1,13 @@
 import moment from "moment";
 
-export function formatDateTime(dateString: string) {
+export function formatDateTime(dateString: string,type:string) {
     const date = moment(dateString);
     const today = moment().startOf('day');
     const yesterday = moment().subtract(1, 'day').startOf('day');
     console.log(dateString,"date---->")
 
-    if (date.isSame(today, 'day')) {
+    if(type === "Date_time"){
+      if (date.isSame(today, 'day')) {
         // Today's date
         return date.format('hh:mm A'); // Return time only
     } else if (date.isSame(yesterday, 'day')) {
@@ -16,6 +17,11 @@ export function formatDateTime(dateString: string) {
         // Any other date
         return date.format('D MMM'); // Return day and month (e.g., "28 Apr")
     }
+
+    }else{
+      return date.format('hh:mm A'); // Return time only
+    }
+
 }
 
 export const getFormattedDate = (dateString: string) => {
