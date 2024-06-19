@@ -12,6 +12,11 @@ import { fonts } from "../../constants/fonts"
 interface AppProps {
     navigation: NativeStackNavigationProp<RootStackParamList>;
     route: RouteProp<RootStackParamList, "ComingsoonScreen">;
+    screenName?:string;
+}
+interface AppProps2 {
+    navigation: NativeStackNavigationProp<RootStackParamList>;
+    screenName?:string;
 }
 export const ComingSoon:React.FC<AppProps> = ({navigation,route}) => {
     const {screenName} = route.params
@@ -27,6 +32,18 @@ export const ComingSoon:React.FC<AppProps> = ({navigation,route}) => {
     )
 }
 
+export const ComingSoonComponent:React.FC<AppProps2> = ({navigation,screenName}) => {
+    return (
+        <View style={styles.container}>
+            <RouteBackButton  onPress={()=>navigation.goBack()}/>
+            <LottieView autoPlay
+              loop source={require("../../../assets/animation/comingsoon.json")} style={{ width: actuatedNormalize(300), height: actuatedNormalize(300),alignSelf:"center" }} />
+              <Text style={styles.description}>
+                {screenName} Feature will soon be available for you
+              </Text>
+        </View>
+    )
+}
 
 const styles = StyleSheet.create({
     container: {

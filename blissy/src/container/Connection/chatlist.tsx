@@ -9,133 +9,133 @@ import { actuatedNormalize } from '../../constants/PixelScaling';
 import { fonts } from '../../constants/fonts';
 import { Badge } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
-import { ActiveUserListSelector, ChatList, Message, MessageSelector, addMessage, chatListSelector, getActiveUserList, newMessagesSelector, pushChatlist } from '../../redux/messageSlice';
+import {
+  ActiveUserListSelector,
+  ChatList,
+  Message,
+  MessageSelector,
+  addMessage,
+  chatListSelector,
+  getActiveUserList,
+  newMessagesSelector,
+  pushChatlist
+} from '../../redux/messageSlice';
 import { AuthSelector } from '../../redux/uiSlice';
 import { formatDateTime } from '../../utils/formatedateTime';
-import { useMarkReadMessageMutation } from '../../api/chatService';
 import ChatItemSkeleton from '../../common/loader/skeleton';
 import { Empty } from '../../common/Empty/Empty';
 import moment from 'moment';
+import PullToRefresh from '../../common/refresh/pulltorefresh';
 
 const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const newMessages = useSelector(MessageSelector);
   const chatlistdata = useSelector(chatListSelector);
   const { socket, user } = useSelector(AuthSelector);
-   const loadItems = useRef<any[]>(new Array(5).fill(0))
+  const loadItems = useRef<any[]>(new Array(5).fill(0));
   const dispatch = useDispatch();
   const { activeUserList } = useSelector(ActiveUserListSelector);
-  // const findMyMessage = useCallback((message: Message, newChatlistdata: ChatList[]) => {
-  //   console.log("message---->", message);
-  //   console.log("newChatlistData---->", newChatlistdata);
-  //   try {
-  //     const newChatlist: ChatList[] = newChatlistdata.map((chatItem) => {
-  //       const partnerMessages = message.senderId === chatItem.chatPartner._id;
-  //       const partnerSocketId = activeUserList.find((el) => el.userId._id === chatItem.chatPartner._id);
 
-  //       if (partnerMessages) {
-  //         console.log("here----->", partnerSocketId);
-  //         return { ...chatItem, newMessages: [...chatItem.newMessages, message], socketId: partnerSocketId?.socketId };
-  //       }
-  //       return chatItem;
-  //     });
+  const getLatestMessageTimestamp = (item: ChatList) => {
+    if (item.allMessages.length === 0) return null;
+    return item.allMessages.reduce((latest, message) => {
+      return moment(latest.createdAt).isAfter(moment(message.createdAt)) ? latest : message;
+    }).createdAt;
+  };
 
-  //     console.log(newChatlist, "newChatlist--->");
-  //     const newMessage = { ...message, sender: "them" };
-  //     dispatch(addMessage(newMessage));
-  //     dispatch(pushChatlist(newChatlist));
-  //   } catch (error) {
-  //     console.error("An error occurred---->", error);
-  //     // Handle the error appropriately, such as logging or displaying an error message
-  //   }
+  const dataWithTimestamps = chatlistdata.map(item => ({
+    ...item,
+    latestMessageTimestamp: getLatestMessageTimestamp(item)
+  }));
+
   const findNewMessage = useCallback(() => {
-
-     const sortedChatlist = chatlistdata.sort((a,b)=>moment(a.newMessages[0]?.createdAt).diff(b.newMessages[0].createdAt))
-
-     console.log(sortedChatlist,"sortedChatlist--->")
-    
+    const sortedData = dataWithTimestamps.sort((a, b) => {
+      if (a.latestMessageTimestamp === null) return 1;
+      if (b.latestMessageTimestamp === null) return -1;
+      return moment(b.latestMessageTimestamp).diff(moment(a.latestMessageTimestamp));
+    });
+    dispatch(pushChatlist(sortedData));
+    console.log(sortedData, "sortedData-------->");
   }, [dispatch, chatlistdata]);
-
-  
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
-      findNewMessage()
-    })
-    return unsubscribe
-
-  }, [navigation,chatlistdata]);
-
-
-  console.log(newMessages, chatlistdata, "chatlistscreen==")
+      findNewMessage();
+    });
+    return unsubscribe;
+  }, [navigation, chatlistdata]);
 
   const renderChatItem = ({ item }: { item: ChatList }) => {
-
-    const newMessageIds: any[] = []
+    const newMessageIds: any[] = [];
     const FindSender = () => {
       item.allMessages.forEach((el) => {
         if (el?.receiverId === user?._id && el?.isRead === false) {
-          newMessageIds.push(el?._id)
+          newMessageIds.push(el?._id);
           return;
         }
-
         return;
-      })
-    }
+      });
+    };
 
-    FindSender()
+    FindSender();
 
-    const socketId = activeUserList?.find((el) => el?.userId?._id === item?.chatPartner?._id)
-    console.log(item.newMessages?.length, "item----->", item.newMessages, newMessageIds)
-
-
+    const socketId = activeUserList?.find((el) => el?.userId?._id === item?.chatPartner?._id);
 
     return (
       <TouchableOpacity
         style={styles.chatItem}
         onPress={() => {
-          // if(newMessageIds?.length > 0) {
-          //   markRead(newMessageIds)
-          // }
-          navigation.navigate('ChatWindow', { socketId: socketId?.socketId, userDetails: item.chatPartner, Chats: item,senderUserId:null })
+          navigation.navigate('ChatWindow', {
+            socketId: socketId?.socketId,
+            userDetails: item.chatPartner,
+            Chats: item,
+            senderUserId: null
+          });
         }}
       >
         <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
         <View style={styles.chatDetails}>
           <Text style={styles.chatName}>{item.chatPartner.name}</Text>
-          <View style={{ flexDirection: "row", columnGap: actuatedNormalize(10), alignItems: "center", marginTop: actuatedNormalize(5) }}>
+          <View style={{ flexDirection: 'row', columnGap: actuatedNormalize(10), alignItems: 'center', marginTop: actuatedNormalize(5) }}>
             <Text style={styles.lastMessage}>{item.allMessages[item.allMessages?.length - 1].message}</Text>
-            {newMessageIds?.length > 0 && <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>{newMessageIds?.length}</Badge>
-            }
+            {newMessageIds?.length > 0 && (
+              <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>
+                {newMessageIds?.length}
+              </Badge>
+            )}
           </View>
         </View>
-        <Text style={styles.timestamp}>{formatDateTime(item?.allMessages[item?.allMessages?.length - 1].createdAt,"Date_time")}</Text>
+        <Text style={styles.timestamp}>{formatDateTime(item?.allMessages[item?.allMessages?.length - 1].createdAt, 'Date_time')}</Text>
       </TouchableOpacity>
-    )
-
-  }
+    );
+  };
 
   return (
     <View style={styles.container}>
       <RouteBackButton onPress={() => navigation.goBack()} />
-      <Text style={{ color: colors.white, alignSelf: "center", fontFamily: fonts.NexaBold, fontSize: actuatedNormalize(23), marginTop: actuatedNormalize(20) }}>Chats</Text>
+      <Text style={{ color: colors.white, alignSelf: 'center', fontFamily: fonts.NexaBold, fontSize: actuatedNormalize(23), marginTop: actuatedNormalize(20) }}>
+        Chats
+      </Text>
       {/* Icons can be added here */}
-
-      {
-        false ? (
-          loadItems.current.map(el => <ChatItemSkeleton />)) : (
-          chatlistdata.length >0  ? <FlatList
-            data={chatlistdata}
-            contentContainerStyle={{
-              rowGap: actuatedNormalize(10),
-              marginHorizontal: actuatedNormalize(10),
-              marginTop: actuatedNormalize(40),
-            }}
-            keyExtractor={item => item.chatPartner._id}
-            renderItem={renderChatItem}
-          /> : <Empty/>
-          )
-      }
-
+      {false ? (
+        loadItems.current.map(el => <ChatItemSkeleton key={el} />)
+      ) : (
+        chatlistdata.length > 0 ? (
+          <PullToRefresh refreshing={false} onRefresh={findNewMessage}>
+            <FlatList
+              data={chatlistdata}
+              contentContainerStyle={{
+                rowGap: actuatedNormalize(10),
+                marginHorizontal: actuatedNormalize(10),
+                marginTop: actuatedNormalize(40),
+              }}
+              keyExtractor={item => item.chatPartner._id}
+              renderItem={renderChatItem}
+            />
+          </PullToRefresh>
+        ) : (
+          <Empty />
+        )
+      )}
     </View>
   );
 };
@@ -145,16 +145,12 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: actuatedNormalize(20)
   },
-  //   headerTitle: {
-  //     fontSize: 24,
-  //     fontWeight: 'bold',
-  //   },
   chatItem: {
     flexDirection: 'row',
     padding: actuatedNormalize(15),
     borderRadius: actuatedNormalize(10),
     borderBottomColor: '#ececec',
-    backgroundColor: colors.dark, // Assuming a white background for each chat item
+    backgroundColor: colors.dark, // Assuming a dark background for each chat item
     alignItems: 'center',
   },
   avatar: {

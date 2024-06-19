@@ -35,7 +35,7 @@ const CustomDrawer: React.FC<any> = props => {
   const dispatch = useDispatch()
   const [deleteFcmToken,{isLoading,isError,isSuccess}] = useDeleteFcmTokenMutation()
 
-  console.log(props,"props of drawer")
+  console.log(props,"props of drawer----->",user)
 
   const confirmModalBody = (
     <Animatable.View
@@ -175,8 +175,8 @@ const CustomDrawer: React.FC<any> = props => {
                 rowGap: actuatedNormalize(20),
                 marginTop: actuatedNormalize(20),
               }}>
-              <LabelWithIcon iconName="bug" label="Report a Problem" />
-              <LabelWithIcon iconName="pencil" label="Write a Review" />
+              <LabelWithIcon onPress={()=>props.navigation.navigate("Bugreport")} iconName="bug" label="Report a Problem" />
+              <LabelWithIcon onPress={()=>props.navigation.navigate("Userreview")}  iconName="pencil" label="Write a Review" />
             </View>
           </View>
         </View>
@@ -188,7 +188,7 @@ const CustomDrawer: React.FC<any> = props => {
           borderTopColor: colors.gray,
         }}>
           <View style={{rowGap:actuatedNormalize(20)}}>
-          <LabelWithIcon iconName="share-social-outline" label="Tell a Friend" />
+          <LabelWithIcon onPress={()=>props.navigation.navigate("ComingsoonScreen",{screenName:"Tell a Friend"})} iconName="share-social-outline" label="Tell a Friend" />
         <LabelWithIcon
           onPress={() => setConfirmModal(true)}
           iconName="exit-outline"

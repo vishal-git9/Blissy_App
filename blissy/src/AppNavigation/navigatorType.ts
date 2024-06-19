@@ -23,4 +23,6 @@ export type RootStackParamList = {
   ComingsoonScreen: { screenName: string }
   ChatPartnerDetails:{chatPartner:UserInterface | null}
   IncomingCall:{}
+  Bugreport:{}
+  Userreview:{}
 };

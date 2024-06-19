@@ -1,6 +1,6 @@
 import React from 'react';
 import {Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {HealerProfileData} from '../../mockdata/healerData';
+import {HealerMockData} from '../../mockdata/healerData';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { Image } from 'react-native';
@@ -32,9 +32,9 @@ export const HealerList:React.FC<HealerList> = ({navigation}) => {
     <View>
       
       <FlatList
-      data={HealerProfileData}
+      data={HealerMockData}
       renderItem={renderItem}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => item.id.toString()}
       contentContainerStyle={styles.container}
     />
       {/* <View style={styles.bg}/> */}

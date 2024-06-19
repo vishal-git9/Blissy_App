@@ -1,14 +1,16 @@
 import React from 'react';
-import {View, Text, StyleSheet, Image} from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Avatar, Card, Title, Paragraph} from 'react-native-paper';
+import { Avatar, Card, Title, Paragraph } from 'react-native-paper';
 import colors from '../../constants/colors';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {actuatedNormalize} from '../../constants/PixelScaling';
+import { actuatedNormalize } from '../../constants/PixelScaling';
 import * as Animatable from 'react-native-animatable';
-import {fonts} from '../../constants/fonts';
+import { fonts } from '../../constants/fonts';
 import TalkNowButton from '../button/Talknow';
+import { BlurView } from '@react-native-community/blur';
+
 interface Props {
   name: string;
   age: number;
@@ -20,7 +22,7 @@ interface Props {
   calls: string;
   ratingCount: number;
   imageUrl: string;
-  shouldAnimate?:boolean
+  shouldAnimate?: boolean;
 }
 
 const ProfileCard: React.FC<Props> = ({
@@ -37,14 +39,19 @@ const ProfileCard: React.FC<Props> = ({
   shouldAnimate
 }) => {
   return (
-    <Animatable.View style={{}} animation={shouldAnimate ? 'bounceInLeft' : undefined} useNativeDriver={true}  iterationCount={1} delay={id * 500}>
+    <Animatable.View
+      style={{}}
+      animation={shouldAnimate ? 'bounceInLeft' : undefined}
+      useNativeDriver={true}
+      iterationCount={1}
+      delay={id * 500}
+    >
       <Card style={styles.card} elevation={5}>
-        {/* <Card.Cover source={{ uri: imageUrl }} /> */}
         <Card.Content>
           <View style={styles.header}>
-            <Avatar.Image size={48} source={{uri: imageUrl}}/>
+            <Avatar.Image size={48} source={{ uri: imageUrl }} />
             <View style={styles.details}>
-              <Title style={{color: colors.white, fontFamily: fonts.NexaBold}}>
+              <Title style={{ color: colors.white, fontFamily: fonts.NexaBold }}>
                 {name}
               </Title>
               <View style={styles.genderContainer}>
@@ -57,14 +64,9 @@ const ProfileCard: React.FC<Props> = ({
               </View>
             </View>
           </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              columnGap: actuatedNormalize(5),
-            }}>
+          <View style={styles.row}>
             <AntDesign
-              style={{marginBottom: actuatedNormalize(15)}}
+              style={styles.icon}
               name="user"
               size={16}
               color={colors.white}
@@ -73,51 +75,42 @@ const ProfileCard: React.FC<Props> = ({
               {bio}
             </Paragraph>
           </View>
-          <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}>
-            <View style={{rowGap:actuatedNormalize(5)}}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  columnGap: actuatedNormalize(5),
-                }}>
+          <View style={styles.rowBetween}>
+            <View style={styles.column}>
+              <View style={styles.row}>
                 <Ionicons name="call" size={14} color={colors.white} />
                 <Paragraph style={styles.hours}>
-                  <Text
-                    style={{
-                      color: colors.white,
-                      fontFamily:fonts.NexaBold,
-                      fontSize: actuatedNormalize(16),
-                    }}>
-                    {calls}{' '}
-                  </Text>
+                  <Text style={styles.callsCount}>{calls} </Text>
                   Calls completed
                 </Paragraph>
               </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  columnGap: actuatedNormalize(5),
-                }}>
+              <View style={styles.row}>
                 <AntDesign name="star" size={14} color={colors.yellow} />
                 <Text style={styles.rating}>
                   {rating} ({ratingCount})
                 </Text>
               </View>
             </View>
-            <TalkNowButton label='Coming Soon..' onPress={()=>console.log("first")}/>
           </View>
         </Card.Content>
+
       </Card>
+      <BlurView
+        style={styles.absolute}
+        blurType="ultraThinMaterialLight"
+        blurAmount={3}
+      />
+      <View style={styles.overlay}>
+        <TalkNowButton label='Coming Soon..' onPress={() => console.log("first")} />
+      </View>
     </Animatable.View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 20,
-    paddingHorizontal:actuatedNormalize(5),
+    marginBottom: actuatedNormalize(20),
+    paddingHorizontal: actuatedNormalize(5),
     backgroundColor: colors.dark,
   },
   header: {
@@ -152,6 +145,36 @@ const styles = StyleSheet.create({
     fontFamily: fonts.NexaRegular,
     color: colors.gray,
   },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    columnGap: actuatedNormalize(5),
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  column: {
+    rowGap: actuatedNormalize(5),
+  },
+  icon: {
+    marginBottom: actuatedNormalize(15),
+  },
+  callsCount: {
+    color: colors.white,
+    fontFamily: fonts.NexaBold,
+    fontSize: actuatedNormalize(16),
+  },
+  absolute: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: actuatedNormalize(20)
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });
 
 export default ProfileCard;

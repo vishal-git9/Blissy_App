@@ -9,7 +9,7 @@ import { NavigationStackProps } from '../Prelogin/onboarding';
 import { useGetOtpMutation, useVerifyOtpMutation } from '../../api/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
-import { AuthSelector, setUserState } from '../../redux/uiSlice';
+import { AuthSelector, setSessionStatus, setUserState } from '../../redux/uiSlice';
 import { useGetUserQuery } from '../../api/userService';
 import { TextInput } from 'react-native-paper';
 import { Loader } from '../../common/loader/loader';
@@ -53,6 +53,7 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [resendOtp, setResendOtp] = useState<boolean>(false)
   const [modalState, setModalState] = useState<boolean>(true)
   const [progressDuration, setProgressDuration] = useState(60);
+  const [otpAlreadySentCase,SetotpAlreadySentCase] = useState(false)
   const [invalidEmail, setEnvalidEmail] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout>();
   const [getOtp, { error, data, isLoading, reset: resetMobile }] = useGetOtpMutation();
@@ -65,11 +66,15 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const handleSubmitMobileNumber = async () => {
     if (validateEmail(state.email)) {
       const res = await getOtp({ email: `${state.email}` });
-      console.log(res, "---res-----")
+      console.log(res, "---res-----",error)
       if ('data' in res) {
         console.log(data, "data of MobileNumber")
         setIsOtpSent(true);
       } else if ('error' in res) {
+        if(res.error?.data?.message === "OTP already sent"){
+          setIsOtpSent(true);
+          SetotpAlreadySentCase(true)
+        }
         console.log(error)
       }
     } else {
@@ -88,9 +93,11 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       setModalState(false)
       console.log(isNewuser, "---user isnewuser")
       if (isNewuser?.data?.data?.user?.isNewUser) {
+        reduxDispatch(setSessionStatus(false))
         navigation.navigate('Registration', { UserData: null });
       } else {
         navigation.navigate('Drawer');
+        reduxDispatch(setSessionStatus(false))
         reduxDispatch(setUserState(false))
       }
     } else if ('error' in res) {
@@ -145,6 +152,8 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
         />
       ) : (
         <OTPInput
+        otpAlreadySent={otpAlreadySentCase}
+        setAlreadyOtpSent={SetotpAlreadySentCase}
           setIsOtpSent={setIsOtpSent}
           setResendOtp={setResendOtp}
           isError={verifyOtpErr}

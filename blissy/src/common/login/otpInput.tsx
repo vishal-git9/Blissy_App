@@ -20,6 +20,7 @@ import { Loader } from '../loader/loader';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from '@reduxjs/toolkit';
 import { PrimaryButton } from '../button/PrimaryButton';
+import { Snackbar } from 'react-native-paper';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
@@ -35,6 +36,8 @@ interface OTPInputProps {
   setIsOtpSent:(a:boolean) => void;
   setResendOtp:(a:boolean) => void;
   isLoading: boolean;
+  setAlreadyOtpSent:(a:boolean)=>void;
+  otpAlreadySent:boolean;
   state: {
     email: string;
   };
@@ -43,6 +46,8 @@ interface OTPInputProps {
 
 const OTPInput: React.FC<OTPInputProps> = ({
   progressDuration,
+  otpAlreadySent,
+  setAlreadyOtpSent,
   setProgressDuration,
   dispatch,
   resendOtp,
@@ -57,7 +62,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
   retry,
 }) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
-  console.log('at the otp screen');
+  console.log('at the otp screen',progressDuration);
   return (
     <>
       <Modal
@@ -211,6 +216,30 @@ const OTPInput: React.FC<OTPInputProps> = ({
                 </View>
               )}
             </View>
+
+            <Snackbar
+            duration={2000}
+            visible={otpAlreadySent}
+            style={{backgroundColor: colors.black}}
+            onDismiss={() => setAlreadyOtpSent(false)}
+            action={{
+              theme: {
+                fonts: {
+                  regular: {fontFamily: fonts.NexaRegular},
+                  medium: {fontFamily: fonts.NexaBold},
+                  light: {fontFamily: fonts.NexaBold},
+                  thin: {fontFamily: fonts.NexaRegular},
+                },
+              },
+              label: 'Okay',
+              labelStyle: {fontFamily: fonts.NexaBold},
+              onPress: () => {
+                // Do something
+                setAlreadyOtpSent(false);
+              },
+            }}>
+            {"OTP Already sent to your mail"}
+          </Snackbar>
           </>
         )}
       </Modal>

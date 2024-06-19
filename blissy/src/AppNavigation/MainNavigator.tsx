@@ -8,6 +8,7 @@ import {LoginScreen} from '../container/login/login';
 import { HealerList } from '../common/healerList/healerlist';
 import { Healerdetails } from '../common/healerList/healerdetails';
 import {DrawerNavigator} from './Drawer';
+import NetInfo from '@react-native-community/netinfo';
 import ChatListScreen from '../container/Connection/chatlist';
 import ChatWindowScreen from '../container/Connection/chatwindow';
 import ReviewScreen from '../container/Connection/review';
@@ -17,10 +18,13 @@ import VoiceCall from '../container/audioCall/audiocall';
 import { ComingSoon } from '../container/comingsoon/comingsoon';
 import { Coupons } from '../container/coupons/coupons';
 import ChatPartnerDetails from '../container/Connection/chatPartnerDetails';
-import CallScreen from '../common/call/incomingcallMain';
-import { Linking } from 'react-native';
 import { navigationRef } from '../utils/RootNavigation';
-import { SessionError } from '../container/DrawerScreens/SessionError';
+import { SessionError } from '../container/InfoModal/SessionError';
+import { useDispatch } from 'react-redux';
+import { setConnectionStatus } from '../redux/uiSlice';
+import { ConnectionModal } from '../container/InfoModal/ConnectionModal';
+import BugReportScreen from '../container/feedback/bugreport';
+import UserreviewScreen from '../container/feedback/userreview';
 // import { navigationRef } from '../utils/notificationService';
 
 const deepLinksConf = {
@@ -34,7 +38,7 @@ const deepLinksConf = {
   },
 };
 
-const linking: LinkingOptions = {
+const linking = {
   prefixes: ['myapp://', 'https://app.myapp.com'],
   config: deepLinksConf,
   // async getInitialURL() {
@@ -92,6 +96,17 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
   isNewUser,
 }) => {
 
+  const dispatch = useDispatch();
+
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      dispatch(setConnectionStatus(state.isConnected));
+    });
+
+    return () => unsubscribe();
+  }, [dispatch]);
+
+
   console.log(isLoggedIn,isNewUser,"isLoggedin")
   return (
     <NavigationContainer ref={navigationRef}>
@@ -125,10 +140,12 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="CouponsScreen" component={Coupons}/>
         <Stack.Screen name="ComingsoonScreen" component={ComingSoon} /> 
         <Stack.Screen name='ChatPartnerDetails' component={ChatPartnerDetails}/>
-        {/* <Stack.Screen name="IncomingCall" component={CallScreen} />  */}
+        <Stack.Screen name="Bugreport" component={BugReportScreen} /> 
+        <Stack.Screen name="Userreview" component={UserreviewScreen} /> 
       </Stack.Navigator>
       <GlobalBackHandler/>
-      {/* <SessionError/> */}
+      {/* <SessionError title='Session Expired' description='Your session has expired please login again'/> */}
+      <ConnectionModal title='OFFLINE!' description='Please check your internet connection' onPressPrimaryButton={()=>console.log("networkhi--->")}/> 
     </NavigationContainer>
   );
 };

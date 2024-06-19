@@ -81,7 +81,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const timerRef = useRef<NodeJS.Timeout>();
   const yValue = useRef(new NativeAnimated.Value(0)).current;
   const [sendMsg, { isError, isLoading, isSuccess, reset, data }] = useSendMessageMutation();
-  // const { refetch, isError: chatlisterror, isLoading: chatlistloading, data: newchatlistdata } = useGetChatlistQuery(user?._id);
+  const { refetch, isError: chatlisterror, isLoading: chatlistloading, data: newchatlistdata } = useGetChatlistQuery(user?._id);
 
   const messages = useSelector(MessageSelector);
 
@@ -119,13 +119,13 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       if (newMessageIds.length > 0) {
         await markRead({ messageIds: newMessageIds, updateType: 'isRead' });
         console.log(UserSocketId,"socket--id")
-        socket?.emit('messageSeen', { userId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId });
-        // refetch()
-        //   .then((res) => dispatch(pushChatlist(res.data.chatList)))
-        //   .catch((err) => console.log(err));
+        UserSocketId && socket?.emit('messageSeen', { userId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId });
+        refetch()
+          .then((res) => dispatch(pushChatlist(res.data.chatList)))
+          .catch((err) => console.log(err));
       }
     },
-    [dispatch,chatlistdata]
+    [dispatch,chatlistdata,UserSocketId]
   );
 
   const sendMessage = async () => {
@@ -183,7 +183,11 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     }
   };
 
+  useEffect(() => {
+    const socketId = Chats ? activeUserList?.find((el) => el?.userId?._id === Chats?.chatPartner?._id) : activeUserList?.find((el) => el?.userId?._id === senderUserId)
 
+    SetUserSocketId(socketId?.socketId)
+  }, [activeUserList?.length])
 
   useEffect(() => {
     if (Chats) {
@@ -203,8 +207,13 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     }
 
 
-    socket?.on('notify_typing_state', (typingState: boolean) => {
-      setIsTyping(typingState);
+    socket?.on('notify_typing_state', (data) => {
+      // {
+      //   socketId:
+      //   userData:
+      //   typingState
+      // }
+      setIsTyping(data.typingState);
     });
 
 
@@ -213,13 +222,9 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       socket?.off('notify_typing_state');
       clearTimeout(timerRef.current);
     };
-  }, [chatlistdata]);
+  }, [chatlistdata,UserSocketId]);
 
-  useEffect(() => {
-    const socketId = Chats ? activeUserList?.find((el) => el?.userId?._id === Chats?.chatPartner?._id) : activeUserList?.find((el) => el?.userId?._id === senderUserId)
 
-    SetUserSocketId(socketId?.socketId)
-  }, [activeUserList?.length])
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -245,13 +250,18 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   let scrollTimeout = null;
 
   const handleTyping = useCallback(
-    debounce((text: string) => {
+    (text: string) => {
       console.log("socketId---->",UserSocketId)
-      socket?.emit('private_typing_state', { socketId: UserSocketId, typingState: true });
+      const TypingUserData = {
+        socketId:UserSocketId,
+        userData:user,
+        typingState:true
+      }
+      socket?.emit('private_typing_state', TypingUserData);
       setInputText(text);
       // You can also dispatch typing state to the redux store or perform other actions here
-    }, 300),
-    [activeUserList.length,dispatch,senderUserId]
+    },
+    [activeUserList.length,dispatch,senderUserId,inputText]
   );
 
   const handleScroll = (event:any) => {

@@ -17,7 +17,7 @@ export const ModalComponent:React.FC<ModalComponent> = ({ children, modalVisible
           width: "100%",
           alignSelf: "center",
         }}
-        onBackdropPress={()=>setModalVisible(false)}
+        // onBackdropPress={()=>setModalVisible(false)}
         backdropTransitionOutTiming={100}
         animationInTiming={500}
         useNativeDriver={true}

@@ -23,7 +23,7 @@ import FastImage from 'react-native-fast-image';
 
 export const ProfileBox: React.FC<UserInterface | any> = ({
   gender,
-  mobileNumber,
+  email,
   name,
   profilePic,
 }) => {
@@ -84,7 +84,7 @@ export const ProfileBox: React.FC<UserInterface | any> = ({
             fontFamily: fonts.NexaRegular,
             marginRight: actuatedNormalize(5),
           }}>
-          {mobileNumber}
+          {email}
         </Text>
       </View>
     </View>

@@ -6,17 +6,16 @@ export const navigationRef = createNavigationContainerRef();
 
 export function navigate(name, params) {
   console.log("Navigating----->",navigationRef.isReady(),navigationRef.current.getRootState())
-  navigationRef.navigate(name);
   if (navigationRef.isReady()) {
     console.log("NavigatingYaar----->")
 
-    navigationRef.navigate("Chatlist");
+    navigationRef.navigate(name);
   }else {
     const unsubscribe = navigationRef.addListener('state', () => {
       console.log("Listener----->",navigationRef.isReady())
       if (navigationRef.isReady()) {
         unsubscribe();  // Remove the listener after navigation is performed
-        navigationRef.navigate("Chatlist");
+        // navigationRef.navigate("Chatlist");
       }
     });
   }

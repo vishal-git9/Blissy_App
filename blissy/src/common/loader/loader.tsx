@@ -31,7 +31,7 @@ export const Loader = ({ size }: { size: number }) => {
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 1,
           shadowRadius: 10,
-          position: 'absolute',
+          // position: 'absolute',
           zIndex: 3,
         }}
       />

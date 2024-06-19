@@ -58,7 +58,7 @@ const ChatPartnerDetails: React.FC<ChatPartnerProps> = ({ navigation, route }) =
       
       <RouteBackButton onPress={() => navigation.goBack()} />
       <View style={[styles.avatarContainer, styles.avatar]}>
-        <Animated.Image sharedTransitionTag='profile' source={{uri:chatPartner?.profilePic}} style={[styles.avatar,{width:400, height:400}]} />
+        <Animated.Image sharedTransitionTag='profile' source={{uri:chatPartner?.profilePic}} style={[styles.avatar,{width:150, height:150}]} />
       </View>
       <Animated.View style={styles.TitleContainer} entering={FadeIn.duration(1200).easing(Easing.ease)} exiting={FadeOutDown.duration(1500).easing(Easing.ease)}>
         <View
@@ -95,11 +95,11 @@ const ChatPartnerDetails: React.FC<ChatPartnerProps> = ({ navigation, route }) =
           </View>
         </View>
       </Animated.View>
-      <Animated.ScrollView contentContainerStyle={styles.infoContainer} scrollEventThrottle={16}>
+      <Animated.ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.infoContainer} scrollEventThrottle={16}>
 
         {/* details Container */}
         <View style={styles.descContainer}>
-          <LabelWithIcon iconName="person" label="Their story" />
+          <LabelWithIcon iconName="person" label={`${chatPartner?.name} Story`} />
           <Text style={styles.bioText}>{userData.bio}</Text>
         </View>
         <View style={styles.descContainer}>
@@ -168,6 +168,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    marginTop:actuatedNormalize(50)
   },
   userPerformaceContainer: {
     flexDirection: "row",

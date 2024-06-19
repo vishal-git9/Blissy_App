@@ -18,6 +18,7 @@ import { Navigator } from './src/AppNavigation/Navigator';
 import { SplashScreenAnimated } from './src/common/splashscreen.tsx/splash';
 import setupNotificationListener from './src/utils/notificationService';
 import notifee, { EventType, AndroidImportance, AndroidVisibility } from '@notifee/react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const App:React.FC = ()=> {
   const isDarkMode = useColorScheme() === 'dark';
@@ -56,6 +57,7 @@ const App:React.FC = ()=> {
   return (
     <Provider store={store}>
     <PersistGate persistor={persistor} loading={null}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider style={backgroundStyle}>
         <View style={[styles.AppContainer, backgroundStyle]}>
           <StatusBar
@@ -66,6 +68,7 @@ const App:React.FC = ()=> {
           <Navigator/>
         </View>
       </SafeAreaProvider>
+      </GestureHandlerRootView>
       </PersistGate>
     </Provider>
   );

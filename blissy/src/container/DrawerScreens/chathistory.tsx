@@ -8,6 +8,7 @@ import {Image} from 'react-native';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import {fonts} from '../../constants/fonts';
 import {Badge} from 'react-native-paper';
+import { ComingSoonComponent } from '../comingsoon/comingsoon';
 
 interface Chat {
   id: string;
@@ -52,21 +53,22 @@ const ChatHistory: React.FC<NavigationStackProps> = ({navigation}) => {
   );
 
   return (
-    <View style={styles.container}>
-            <RouteBackButton onPress={() => navigation.goBack()} />
-      <Text style={{color:colors.white,alignSelf:"center",fontFamily:fonts.NexaBold,fontSize:actuatedNormalize(23),marginTop:actuatedNormalize(20)}}>Chat History</Text>
-      {/* Icons can be added here */}
-      <FlatList
-        data={chats}
-        contentContainerStyle={{
-          rowGap: actuatedNormalize(10),
-          marginHorizontal: actuatedNormalize(10),
-          marginTop: actuatedNormalize(40),
-        }}
-        keyExtractor={item => item.id}
-        renderItem={renderChatItem}
-      />
-    </View>
+    <ComingSoonComponent navigation={navigation} screenName='Chat History'/>
+    // <View style={styles.container}>
+    //         <RouteBackButton onPress={() => navigation.goBack()} />
+    //   <Text style={{color:colors.white,alignSelf:"center",fontFamily:fonts.NexaBold,fontSize:actuatedNormalize(23),marginTop:actuatedNormalize(20)}}>Chat History</Text>
+    //   {/* Icons can be added here */}
+    //   <FlatList
+    //     data={chats}
+    //     contentContainerStyle={{
+    //       rowGap: actuatedNormalize(10),
+    //       marginHorizontal: actuatedNormalize(10),
+    //       marginTop: actuatedNormalize(40),
+    //     }}
+    //     keyExtractor={item => item.id}
+    //     renderItem={renderChatItem}
+    //   />
+    // </View>
   );
 };
 

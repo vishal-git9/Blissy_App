@@ -54,7 +54,7 @@ const iconsLabel: iconsLabelI[] = [
     id: 2,
     label: 'calls',
     iconName: 'call',
-    navigate: 'IncomingCall',
+    navigate: 'ComingsoonScreen',
   },
   {
     id: 3,
@@ -346,7 +346,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       dispatch(pushChatlist(data.chatList));
       console.log("newMessage2----->", data);
       // playNotificationSound();
-      await markRead({messageIds:[data.messageId],updateType:"isDelivered"})
+      await markRead({messageIds:[data.messageId],updateType:"isDelivered"}) // this needs to be called when message is delivered via notification
       socket.emit("messageReceived", { userId: data.senderId, socketId: data.otherEndsocketId })
     });
     // socket?.on('newActiveUser', (user) => {

@@ -11,6 +11,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {RoundedIconContainer} from '../../common/button/rounded';
 import TalkNowButton from '../../common/button/Talknow';
+import { ComingSoonComponent } from '../comingsoon/comingsoon';
 
 interface Chat {
   id: string;
@@ -62,30 +63,31 @@ const CallHistory: React.FC<NavigationStackProps> = ({navigation}) => {
   );
 
   return (
-    <View style={styles.container}>
-      <RouteBackButton onPress={() => navigation.goBack()} />
-      <Text
-        style={{
-          color: colors.white,
-          alignSelf: 'center',
-          fontFamily: fonts.NexaBold,
-          fontSize: actuatedNormalize(23),
-          marginTop: actuatedNormalize(20),
-        }}>
-        Call History
-      </Text>
-      {/* Icons can be added here */}
-      <FlatList
-        data={chats}
-        contentContainerStyle={{
-          rowGap: actuatedNormalize(10),
-          marginHorizontal: actuatedNormalize(10),
-          marginTop: actuatedNormalize(40),
-        }}
-        keyExtractor={item => item.id}
-        renderItem={renderChatItem}
-      />
-    </View>
+    <ComingSoonComponent navigation={navigation} screenName='Call History'/>
+    // <View style={styles.container}>
+    //   <RouteBackButton onPress={() => navigation.goBack()} />
+    //   <Text
+    //     style={{
+    //       color: colors.white,
+    //       alignSelf: 'center',
+    //       fontFamily: fonts.NexaBold,
+    //       fontSize: actuatedNormalize(23),
+    //       marginTop: actuatedNormalize(20),
+    //     }}>
+    //     Call History
+    //   </Text>
+    //   {/* Icons can be added here */}
+    //   <FlatList
+    //     data={chats}
+    //     contentContainerStyle={{
+    //       rowGap: actuatedNormalize(10),
+    //       marginHorizontal: actuatedNormalize(10),
+    //       marginTop: actuatedNormalize(40),
+    //     }}
+    //     keyExtractor={item => item.id}
+    //     renderItem={renderChatItem}
+    //   />
+    // </View>
   );
 };
 
