@@ -181,6 +181,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
                 handleTextChange={text =>
                   dispatch({ type: 'OTP', payload: text })
                 }
+                 
                 textInputStyle={styles.otpStyles}
               />
               {/* <PrimaryButton

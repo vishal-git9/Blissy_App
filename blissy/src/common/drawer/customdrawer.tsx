@@ -25,17 +25,20 @@ import {LabelWithIcon} from './iconlabel';
 import {ProfileBox } from './profilebox';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthSelector, logoutUser } from '../../redux/uiSlice';
-import { AuthApi } from '../../api/authService';
+import { AuthApi, useLogoutUserSessionMutation } from '../../api/authService';
 import { UserApi, useDeleteFcmTokenMutation } from '../../api/userService';
 import { ChatApi } from '../../api/chatService';
+import { BlissyLoader } from '../loader/blissy';
 
 const CustomDrawer: React.FC<any> = props => {
   const [ConfirmModal, setConfirmModal] = useState<boolean>(false);
   const { user } = useSelector(AuthSelector)
   const dispatch = useDispatch()
   const [deleteFcmToken,{isLoading,isError,isSuccess}] = useDeleteFcmTokenMutation()
+  const [logoutUserSession,{isLoading:islogoutLoading}] = useLogoutUserSessionMutation()
 
   console.log(props,"props of drawer----->",user)
+  
 
   const confirmModalBody = (
     <Animatable.View
@@ -80,12 +83,14 @@ const CustomDrawer: React.FC<any> = props => {
             <TouchableOpacity
               onPress={async () => {
                 setConfirmModal(false);
-                await deleteFcmToken({}) 
+                await deleteFcmToken({}) // delete the fcm token
+                await logoutUserSession({}) // logout user session
                 dispatch(AuthApi.util.resetApiState())
                 dispatch(UserApi.util.resetApiState())
                 dispatch(ChatApi.util.resetApiState())
                 dispatch(logoutUser());
                 props.navigation.closeDrawer()
+                // props.navigation.popToTop()
                 // deleting fcm token from the backend for this user so that notification are disabled for this user
                 props.navigation.replace('Login');
                 // console.log('Yes');
@@ -112,6 +117,7 @@ const CustomDrawer: React.FC<any> = props => {
 
   return (
     <View style={{flex: 1, marginTop: actuatedNormalize(15)}}>
+      {isLoading || islogoutLoading && <BlissyLoader/>}
       <DrawerContentScrollView {...props}>
         <ProfileBox {...user}/>
         <View style={{flex: 1, marginTop: actuatedNormalize(15)}}>

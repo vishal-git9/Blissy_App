@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,53 +11,89 @@ import {
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import colors from '../../constants/colors';
-import {actuatedNormalize} from '../../constants/PixelScaling';
-import {fonts} from '../../constants/fonts';
+import { actuatedNormalize } from '../../constants/PixelScaling';
+import { fonts } from '../../constants/fonts';
 import AnimatedCounter from '../../common/counter/counter';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { UserInterface } from '../../redux/uiSlice';
+import { AuthSelector, UserInterface } from '../../redux/uiSlice';
 import { Socket } from 'socket.io-client';
 import { useDispatch, useSelector } from 'react-redux';
-import {  MessageCountSelector, chatScreenActiveSelector } from '../../redux/messageSlice';
+import { MessageCountSelector, chatScreenActiveSelector } from '../../redux/messageSlice';
 import ProfileScreenModal from '../../common/modals/profile';
 import { Snackbar } from 'react-native-paper';
+import { usePostUserRatingMutation } from '../../api/rewardservice';
+import { usePostCallInfoMutation, useUpdateCallInfoMutation } from '../../api/callService';
 
 interface IconContainerProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
-  leave:()=>void;
-  toggleMic:()=>void;
-  toggleSpeaker:()=>void;
-  ConnectedUserData:UserInterface | null;
-  speakerEnabled:boolean;
-  muteEnabled:boolean;
-  socketId:string | null;
+  leave: () => void;
+  toggleMic: () => void;
+  toggleSpeaker: () => void;
+  ConnectedUserData: UserInterface | null;
+  speakerEnabled: boolean;
+  muteEnabled: boolean;
+  socketId: string | null;
+  seconds: number;
+  setSeconds: Dispatch<SetStateAction<number>>;
 }
 
 interface CallingScreenProps extends IconContainerProps {
-  socket:Socket;
+  socket: Socket;
 }
 
-const IconContainer: React.FC<IconContainerProps> = ({socketId,ConnectedUserData,navigation,leave,toggleMic,toggleSpeaker,speakerEnabled,muteEnabled}) => {
+const IconContainer: React.FC<IconContainerProps> = ({ seconds, setSeconds, socketId, ConnectedUserData, navigation, leave, toggleMic, toggleSpeaker, speakerEnabled, muteEnabled }) => {
+  const [postcallInfo, { isLoading, isError, isSuccess }] = usePostCallInfoMutation()
+  const { user } = useSelector(AuthSelector)
+
+  const postCallInfotoDB = async () => {
+
+    if (seconds >= 120) {
+      const callInfobody = {
+        callType: "Random", // individual  or random
+        callerId: user?._id, // caller Id
+        calleeId: ConnectedUserData?._id, // calleeId
+        callDuration: seconds, // duration
+        isMissed: false,
+        isRejected: false,
+        isSuccessful: true,
+      }
+      postcallInfo(callInfobody)
+    } else {
+      const callInfobody = {
+        callType: "Random", // individual  or random
+        callerId: user?._id, // caller Id
+        calleeId: ConnectedUserData?._id, // calleeId
+        callDuration: seconds, // duration
+        isMissed: false,
+        isRejected: false,
+        isSuccessful: false,
+      }
+      postcallInfo(callInfobody)
+
+    }
+
+  }
   return (
     <View style={styles.iconContainer}>
-      <TouchableOpacity style={[styles.icon, styles.leftIcon,{backgroundColor:muteEnabled ? colors.primary : colors.white}]} onPress={toggleMic}>
+      <TouchableOpacity style={[styles.icon, styles.leftIcon, { backgroundColor: muteEnabled ? colors.primary : colors.white }]} onPress={toggleMic}>
         {/* Add your left icon here */}
         <Entypo name="sound-mute" color={muteEnabled ? colors.white : colors.black} size={30} />
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.icon, styles.middleIcon]}
-        onPress={() =>{
+        onPress={() => {
+          postCallInfotoDB()
           leave()
-          navigation.navigate('ReviewScreen', {user: ConnectedUserData,socketId:socketId})
+          navigation.navigate('ReviewScreen', { user: ConnectedUserData, socketId: socketId })
         }
         }>
         {/* Add your middle icon here */}
         <MaterialIcons name="call-end" color={'white'} size={30} />
       </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.icon, styles.rightIcon,{backgroundColor:speakerEnabled ? colors.primary : colors.white}]} onPress={toggleSpeaker}>
+      <TouchableOpacity style={[styles.icon, styles.rightIcon, { backgroundColor: speakerEnabled ? colors.primary : colors.white }]} onPress={toggleSpeaker}>
         {/* Add your right icon here */}
         <Entypo name="sound" color={speakerEnabled ? colors.white : colors.black} size={30} />
       </TouchableOpacity>
@@ -65,31 +101,26 @@ const IconContainer: React.FC<IconContainerProps> = ({socketId,ConnectedUserData
   );
 };
 
-const CallingScreen: React.FC<CallingScreenProps> = ({navigation,leave,toggleMic,ConnectedUserData,toggleSpeaker,socketId,socket}) => {
-  const [seconds, setSeconds] = useState<number>(0);
-  const [mute,setMute] = useState<boolean>(false);
-  const [otherUserMute,setotherUserMute] = useState<boolean>(true)
-  const [speaker,setSpeaker] = useState<boolean>(false)
-  const [profileModal,setProfileModal] = useState<boolean>(false)
-  const [errorSnackbar,setErrorSnackbar] = useState<boolean>(false)
-  // const [messageCount,setMessageCount] = useState<number>(0)
-// const [userChannel,setUserChannel] = useState<string>("Call")
-const isChatStateActive = useSelector(chatScreenActiveSelector)
-// console.log(ConnectedUserData)
-const messageCount = useSelector(MessageCountSelector)
-// console.log(isChatStateActive)
-const dispatch = useDispatch()
-  const handleToggleMic = ()=>{
+const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navigation, leave, toggleMic, ConnectedUserData, toggleSpeaker, socketId, socket }) => {
+  const [mute, setMute] = useState<boolean>(false);
+  const [otherUserMute, setotherUserMute] = useState<boolean>(true)
+  const [speaker, setSpeaker] = useState<boolean>(false)
+  const [profileModal, setProfileModal] = useState<boolean>(false)
+  const [errorSnackbar, setErrorSnackbar] = useState<boolean>(false)
+  const isChatStateActive = useSelector(chatScreenActiveSelector)
+  const messageCount = useSelector(MessageCountSelector)
+  const dispatch = useDispatch()
+  const handleToggleMic = () => {
     toggleMic()
     setMute(!mute)
-    socket.emit("private_mute_state",{socketId,muteState:!mute})
+    socket.emit("private_mute_state", { socketId, muteState: !mute })
   }
-  const handleToggleSpeaker = ()=>{
+  const handleToggleSpeaker = () => {
     toggleSpeaker()
     setSpeaker(!speaker)
   }
 
-  const handleProfileUsermodal = ()=>{
+  const handleProfileUsermodal = () => {
     setProfileModal(true)
   }
   // switch (userChannel) {
@@ -99,7 +130,9 @@ const dispatch = useDispatch()
   //     return <UserProfile navigation={navigation}/>
   // }
 
-  useEffect(()=>{
+
+
+  useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
@@ -119,15 +152,11 @@ const dispatch = useDispatch()
     //   dispatch(addMessage(newMessage));
     //   playNotificationSound()
     // });
-
-
-    socket.on("notify_mute_state",(muteState)=>{
-      console.log(muteState,"mutestte of the user")
+    socket.on("notify_mute_state", (muteState) => {
+      console.log(muteState, "mutestte of the user")
       setotherUserMute(muteState)
       setErrorSnackbar(true)
     })
-
-
     // Cleanup on component unmount
     return () => {
       socket.off("notify_mute_state");
@@ -135,15 +164,16 @@ const dispatch = useDispatch()
   }, [isChatStateActive]);
 
 
-  console.log(otherUserMute,"otherusermate")
+
+  console.log(otherUserMute, "otherusermate")
 
 
   return (
     <SafeAreaView style={styles.container}>
       {/* User section */}
-      <ProfileScreenModal onClose={()=>setProfileModal(false)} visible={profileModal} userdata={ConnectedUserData}/>
+      <ProfileScreenModal onClose={() => setProfileModal(false)} visible={profileModal} userdata={ConnectedUserData} />
       <View style={styles.userSection}>
-        <View style={{justifyContent: 'center', alignItems: 'center'}}>
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
           <Text style={styles.connectedText}>You connected with {ConnectedUserData?.name}</Text>
           <Text style={styles.timeText}>
             {Math.floor(seconds / 60)
@@ -155,19 +185,19 @@ const dispatch = useDispatch()
         <View style={styles.avatarContainer}>
           <Image
             // blurRadius={10}
-            source={{uri: ConnectedUserData?.profilePic}} // Replace with actual image path
+            source={{ uri: ConnectedUserData?.profilePic }} // Replace with actual image path
             style={styles.avatar}
           />
         </View>
-        <View style={{justifyContent: 'center', alignItems: 'center',width:"100%"}}>
+        <View style={{ justifyContent: 'center', alignItems: 'center', width: "100%" }}>
           <Text style={styles.knowText}>
             Know What {ConnectedUserData?.name} and You have common
           </Text>
-          <TouchableOpacity style={styles.readReceiptsButton}  onPress={handleProfileUsermodal}>
+          <TouchableOpacity style={styles.readReceiptsButton} onPress={handleProfileUsermodal}>
             <Text style={styles.readReceiptsText}>View Profile</Text>
           </TouchableOpacity>
 
-            {/* <IconButton
+          {/* <IconButton
             IsBadge={ messageCount > 0 ? true : false}
             BadgeCount={messageCount}
             IconProvider={MaterialIcons}
@@ -191,30 +221,30 @@ const dispatch = useDispatch()
       </View>
 
       {/* Action buttons */}
-      <IconContainer speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} socketId={socketId} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker}  />
+      <IconContainer seconds={seconds} setSeconds={setSeconds} speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} socketId={socketId} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker} />
       <Snackbar
-            duration={otherUserMute ? 10000 : 2000}
-            visible={errorSnackbar}
-            style={{backgroundColor: colors.black}}
-            onDismiss={() => setErrorSnackbar(false)}
-            action={{
-              theme: {
-                fonts: {
-                  regular: {fontFamily: fonts.NexaRegular},
-                  medium: {fontFamily: fonts.NexaBold},
-                  light: {fontFamily: fonts.NexaBold},
-                  thin: {fontFamily: fonts.NexaRegular},
-                },
-              },
-              label: 'Okay',
-              labelStyle: {fontFamily: fonts.NexaBold},
-              onPress: () => {
-                // Do something
-                setErrorSnackbar(false);
-              },
-            }}>
-            {otherUserMute ? `${ConnectedUserData?.name} is on mute` : `${ConnectedUserData?.name} has unmute`}
-          </Snackbar>
+        duration={otherUserMute ? 10000 : 2000}
+        visible={errorSnackbar}
+        style={{ backgroundColor: colors.black }}
+        onDismiss={() => setErrorSnackbar(false)}
+        action={{
+          theme: {
+            fonts: {
+              regular: { fontFamily: fonts.NexaRegular },
+              medium: { fontFamily: fonts.NexaBold },
+              light: { fontFamily: fonts.NexaBold },
+              thin: { fontFamily: fonts.NexaRegular },
+            },
+          },
+          label: 'Okay',
+          labelStyle: { fontFamily: fonts.NexaBold },
+          onPress: () => {
+            // Do something
+            setErrorSnackbar(false);
+          },
+        }}>
+        {otherUserMute ? `${ConnectedUserData?.name} is on mute` : `${ConnectedUserData?.name} has unmute`}
+      </Snackbar>
     </SafeAreaView>
   );
 };
@@ -222,12 +252,12 @@ const dispatch = useDispatch()
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black, 
-    paddingVertical:actuatedNormalize(10)
+    backgroundColor: colors.black,
+    paddingVertical: actuatedNormalize(10)
   },
   userSection: {
     flex: 1,
-    marginTop:actuatedNormalize(50),
+    marginTop: actuatedNormalize(50),
     alignItems: 'center',
     rowGap: actuatedNormalize(20),
   },
@@ -235,7 +265,7 @@ const styles = StyleSheet.create({
     fontSize: actuatedNormalize(22),
     fontFamily: fonts.NexaBold,
     color: colors.white,
-    textAlign:"center"
+    textAlign: "center"
   },
   timeText: {
     fontSize: actuatedNormalize(16),
@@ -260,8 +290,8 @@ const styles = StyleSheet.create({
     fontSize: actuatedNormalize(16),
     color: colors.lightGray,
     textAlign: 'center',
-    width:"80%",
-    lineHeight:actuatedNormalize(20),
+    width: "80%",
+    lineHeight: actuatedNormalize(20),
     fontFamily: fonts.NexaRegular,
     marginBottom: actuatedNormalize(16),
   },
@@ -320,7 +350,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     elevation: 5,
   },
   rightIcon: {
@@ -338,7 +368,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    marginTop:actuatedNormalize(10),
+    marginTop: actuatedNormalize(10),
     borderColor: colors.lightGray,
     columnGap: actuatedNormalize(10),
   },

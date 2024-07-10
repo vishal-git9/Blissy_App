@@ -3,7 +3,9 @@ import axios from 'axios';
 import notifee from '@notifee/react-native';
 import colors from '../constants/colors';
 import { serverBaseUrl, serverLocalUrl } from './globalVariable';
-import { UserInterface } from '../redux/uiSlice';
+import { AuthSelector, UserInterface } from '../redux/uiSlice';
+import { AppState } from 'react-native';
+import { store } from '../redux';
 
 
 // data: {
@@ -12,21 +14,27 @@ import { UserInterface } from '../redux/uiSlice';
 // },
 
 export const MarkMessageDelivered = async (messageId: string) => {
-  console.log(messageId,"messageId----->")
-  try {
-    const response = await axios.put(`${serverLocalUrl}/chat/markRead`,{messageIds:[messageId],updateType:"isDelivered"});
-    return response.data;
-  } catch (error) {
-    console.error('Error Marking Message Delivered:', error);
-    throw error;
-  }
+  const {token} = AuthSelector(store.getState()); //active in foreground
+  console.log(messageId,"messageId----->",AppState.currentState,token) // not receiving token in killed state of the app
+
+    try {
+      const response = await axios.put(`${serverLocalUrl}chat/markRead`,{messageIds:[messageId],updateType:"isDelivered"}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }});
+      console.log(response.data,"delivery reponse------>")
+      return response.data;
+    } catch (error) {
+      console.error('Error Marking Message Delivered:', error);
+      throw error;
+    }
 };
 
 export const handleNotification = async (remoteMessage: any) => {
   console.log(remoteMessage,"BackgroundremoteMessage------>")
   const senderData = JSON.parse(remoteMessage.data?.senderData);
   const messageDetails = JSON.parse(remoteMessage.data?.messageDetails);
-  // MarkMessageDelivered(messageDetails?.messageId)
+  MarkMessageDelivered(messageDetails?.messageId)
 
   // const chatList = store.getState().Message.chatList
   // console.log(chatList,"Chatlist----->",AppState.currentState)

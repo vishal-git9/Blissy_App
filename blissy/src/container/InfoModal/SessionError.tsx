@@ -10,7 +10,7 @@ import { fonts } from "../../constants/fonts";
 import { useDispatch, useSelector } from "react-redux";
 import { AuthSelector, logoutUser, setSessionStatus } from "../../redux/uiSlice";
 import { UserApi, useGetUserQuery } from "../../api/userService";
-import { AuthApi } from "../../api/authService";
+import { AuthApi, useLogoutUserSessionMutation } from "../../api/authService";
 import { ChatApi } from "../../api/chatService";
 import { useNavigation } from "@react-navigation/native";
 import { NavigationStackProps } from "../Prelogin/onboarding";
@@ -23,29 +23,36 @@ interface SessionError {
 }
 
 export const SessionError: React.FC<SessionError> = ({ title, description }) => {
-    const { token, isRegisterd, user, isNewUser, sessionStatus } = useSelector(AuthSelector)
-    const [modalVisible, setModalVisible] = useState(sessionStatus)
+    const {token, isRegisterd, user, isNewUser, sessionStatus } = useSelector(AuthSelector)
+    const [modalVisible, setModalVisible] = useState(false)
+    const [logoutUserSession,{}] = useLogoutUserSessionMutation()
     const navigation = useNavigation<NavigationStackProps>()
     const { data: userData, isLoading, refetch } = useGetUserQuery()
     const dispatch = useDispatch()
-    console.log(isNewUser,token, "----user----", sessionStatus)
+    console.log(isNewUser, "----user----", sessionStatus)
     useEffect(() => {
         if (token) {
             console.log("hi from-----")
             refetch().then(res => {
                 if (res.isError) {
-                    console.log("tokenError------->")
+                    setModalVisible(true)
+                    dispatch(setSessionStatus(true))
+                    console.log("tokenError2------->")
                     dispatch(logoutUser())
+                    logoutUserSession({}) // logout user session
                     dispatch(AuthApi.util.resetApiState())
                     dispatch(UserApi.util.resetApiState())
                     dispatch(ChatApi.util.resetApiState())
-                    dispatch(setSessionStatus(true))
                     // navigate("Login")
+
                     // navigate to token expire screen or modal
                 }
             }).catch(err => {
                 console.log("tokenError------->")
                 dispatch(setSessionStatus(true))
+                dispatch(logoutUser())
+                setModalVisible(true)
+
             } )
         }
         console.log(userData, "--userdata--", user)

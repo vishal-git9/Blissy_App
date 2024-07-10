@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
-  StyleSheet, Text,Vibration
+  StyleSheet, Text, Vibration
 } from 'react-native';
 import {
   mediaDevices,
@@ -24,6 +24,7 @@ import CircularImageReveal from '../../common/cards/waitingUser';
 import { fonts } from '../../constants/fonts';
 import { useDispatch, useSelector } from 'react-redux';
 import { resetMessages } from '../../redux/messageSlice';
+import { usePostCallInfoMutation, useUpdateCallInfoMutation } from '../../api/callService';
 
 interface AppProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -40,8 +41,10 @@ interface RTCIceMessage {
 const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-  const {socket} = useSelector(AuthSelector)
-  const [speaker,setSpeaker] = useState<boolean>(false)
+  const [seconds, setSeconds] = useState<number>(0);
+  const { socket } = useSelector(AuthSelector)
+  const [postcallInfo, { isLoading, isError, isSuccess }] = usePostCallInfoMutation()
+  const [speaker, setSpeaker] = useState<boolean>(false)
   const dispatch = useDispatch()
   const [type, setType] = useState<string>('LOADING');
   const { user } = route.params
@@ -76,7 +79,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   useEffect(() => {
     socket?.on(
       'newCall',
-      (data: { rtcMessage: RTCSessionDescription; callerId: string,callerData:UserInterface }) => {
+      (data: { rtcMessage: RTCSessionDescription; callerId: string, callerData: UserInterface }) => {
         remoteRTCMessage.current = data.rtcMessage;
         // console.log("getting call User data", data.callerData)
         otherUserScoketId.current = data.callerId;
@@ -94,14 +97,15 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       processCall()
     })
 
-    socket?.on("callCancelled",(message:string)=>{
-      console.log(message,"you cancelled the call")
+    socket?.on("callCancelled", (message: string) => {
+      console.log(message, "you cancelled the call")
     })
 
 
     socket?.on("callEnded", () => {
-      navigation.navigate("ReviewScreen", {user:otherUserData.current,socketId:otherUserScoketId.current})
-      dispatch(resetMessages())
+      navigation.navigate("ReviewScreen", { user: otherUserData.current, socketId: otherUserScoketId.current })
+      postCallInfotoDB()
+      // dispatch(resetMessages())
     })
 
     socket?.on('callAnswered', (data: { rtcMessage: RTCSessionDescription }) => {
@@ -117,7 +121,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       'ICEcandidate',
       (data: { rtcMessage: { candidate: string; id: string; label: number } }) => {
         let message = data.rtcMessage;
-console.log("getting the message")
+        console.log("getting the message")
         peerConnection.current
           .addIceCandidate(
             new RTCIceCandidate({
@@ -229,7 +233,7 @@ console.log("getting the message")
 
   async function processAccept() {
     try {
-      if(remoteRTCMessage.current){
+      if (remoteRTCMessage.current) {
         peerConnection.current.setRemoteDescription(
           new RTCSessionDescription(remoteRTCMessage.current!),
         );
@@ -241,10 +245,10 @@ console.log("getting the message")
           rtcMessage: sessionDescription,
         });
         console.log("Getting the answer message")
-      }else{
+      } else {
         console.log("not getting the answer message")
       }
-      
+
     } catch (error) {
       console.log(error, "error while creating answer")
     }
@@ -278,7 +282,7 @@ console.log("getting the message")
     });
   }
 
-  function toggleSpeaker(){
+  function toggleSpeaker() {
     setSpeaker(!speaker)
     InCallManager.setForceSpeakerphoneOn(!speaker); // false for audio and true for video
   }
@@ -292,7 +296,7 @@ console.log("getting the message")
     dispatch(resetMessages())
   }
 
-  function cancelCall(){
+  function cancelCall() {
     peerConnection.current.close();
     setLocalStream(null);
     setRemoteStream(null);
@@ -300,6 +304,37 @@ console.log("getting the message")
     socket?.emit("cancelCall")
     navigation.goBack()
   }
+
+
+  const postCallInfotoDB = useCallback(()=>{
+
+    if (seconds >= 120) {
+      const callInfobody = {
+        callType: "Random", // individual  or random
+        callerId: user?._id, // caller Id
+        calleeId: otherUserData.current?._id, // calleeId
+        callDuration: seconds, // duration
+        isMissed: false,
+        isRejected: false,
+        isSuccessful: true,
+      }
+      postcallInfo(callInfobody)
+    } else {
+      const callInfobody = {
+        callType: "Random", // individual  or random
+        callerId: user?._id, // caller Id
+        calleeId: otherUserData.current?._id, // calleeId
+        callDuration: seconds, // duration
+        isMissed: false,
+        isRejected: false,
+        isSuccessful: false,
+      }
+      postcallInfo(callInfobody)
+
+    }
+  },[seconds])
+
+
 
   switch (type) {
 
@@ -311,7 +346,7 @@ console.log("getting the message")
           <View style={{ width: "60%", alignSelf: "center", marginTop: actuatedNormalize(30), rowGap: actuatedNormalize(15) }}>
             <CircularImageReveal />
             <Text style={styles.waitText}>Hang on {user?.name}! Healing awaits... </Text>
-            <View style={{width: "70%",alignSelf:"center",marginTop:actuatedNormalize(20)}}>
+            <View style={{ width: "70%", alignSelf: "center", marginTop: actuatedNormalize(20) }}>
               <AnimatedBorderButton label='Cancel Call' func={cancelCall} />
             </View>
           </View>
@@ -320,16 +355,18 @@ console.log("getting the message")
     case 'AUDIO_ROOM':
       return (
         <CallingScreen
-        socket={socket!}
-        socketId={otherUserScoketId.current}
+          socket={socket!}
+          seconds={seconds}
+          setSeconds={setSeconds}
+          socketId={otherUserScoketId.current}
           ConnectedUserData={otherUserData.current}
           leave={leave}
           toggleSpeaker={toggleSpeaker}
           toggleMic={toggleMic}
-          navigation={navigation} 
-          speakerEnabled={false} 
-          muteEnabled={false}   
-         />
+          navigation={navigation}
+          speakerEnabled={false}
+          muteEnabled={false}
+        />
       );
     default:
       return null;

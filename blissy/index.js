@@ -4,7 +4,7 @@
 
 import { AppRegistry } from 'react-native';
 import App from './App';
-import notifee, { AndroidImportance, AndroidVisibility, EventType } from '@notifee/react-native';
+import notifee, {EventType } from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
 
 import { name as appName } from './app.json';
@@ -14,6 +14,53 @@ import colors from './src/constants/colors';
  export const eventEmitter = new EventEmitter();
 
 import { handleNotification } from './src/utils/notificationService';
+import { persistor, store } from './src/redux';
+
+let isRehydrated = false;
+persistor.subscribe(() => {
+  const { bootstrapped } = persistor.getState();
+  console.log('Persistor state:', persistor.getState());
+  if (bootstrapped) {
+    isRehydrated = true;
+    console.log('Store rehydrated');
+  }
+});
+
+console.log("Hi from Index.js-----> ")
+
+const handleNewMessage = (message) => {
+  console.log("Hi Iam here insiderehydrateStoreAndHandleMessage3-----> ")
+
+  if (!isRehydrated) {
+    console.log('State not yet rehydrated. Skipping message handling.');
+    return;
+  }
+
+  const currentState = store.getState();
+  console.log('Current state:', currentState);
+   handleNotification(message);
+
+  // Process the message and update the state if needed
+  // store.dispatch(setValue(message.data.value));
+};
+
+// Ensure the store is rehydrated before handling messages
+const rehydrateStoreAndHandleMessage = async (message) => {
+
+  console.log("Hi Iam here insiderehydrateStoreAndHandleMessage----->",isRehydrated)
+  await new Promise((resolve) => {
+    const interval = setInterval(() => {
+      console.log('Checking rehydration status:', isRehydrated);
+      if (isRehydrated) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 1000);
+  });
+  console.log("Hi Iam here insiderehydrateStoreAndHandleMessage2-----> ")
+
+  handleNewMessage(message);
+};
 messaging().setBackgroundMessageHandler(async remoteMessage => {
     console.log('FCM Message received:', remoteMessage);
     
@@ -25,7 +72,11 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     }
     const senderData  = JSON.parse(RemoteMessage?.data?.senderData);
     const messageDetails = JSON.parse(RemoteMessage?.data?.messageDetails);
-    await handleNotification(remoteMessage);
+    // await handleNotification(remoteMessage);
+    // const callId = 'call-12345';
+    // const callerName = 'John Doe';
+    // const hasVideo = false;
+    // displayCallNotificationAndroid({ callId, callerName, hasVideo });
     await notifee.displayNotification({
       title: senderData?.name,
       body: messageDetails?.messageText,
@@ -55,7 +106,6 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
         ],
       },
     });
-    // await handleNotification(remoteMessage);
 
 
     // notifee.getInitialNotification().then(notification => {
@@ -64,6 +114,8 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     //         handleNotification(notification);
     //     }
     // });
+    await rehydrateStoreAndHandleMessage(remoteMessage)
+
 });
 notifee.onForegroundEvent(
     async ({ type, detail, }) => {
@@ -75,11 +127,18 @@ notifee.onForegroundEvent(
       );
       switch (type) {
         case EventType.PRESS:
+          console.log("event type press tho")
           if (detail?.notification) {
             eventEmitter.emit('notificationReceived',detail?.notification?.data);
           }
           break;
         case EventType.ACTION_PRESS:
+          if(detail.pressAction.id === "decline-call"){
+            console.log("Call declined-------->")
+          }
+          if(detail.pressAction.id === "accept-call"){
+            console.log("Call accepted-------->")
+          }
           console.log(`It was an ACTION PRESS THO`)
           break;
       }

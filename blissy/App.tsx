@@ -6,27 +6,29 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { StatusBar, StyleSheet, useColorScheme, View} from 'react-native';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {PersistGate} from "redux-persist/integration/react"
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { PersistGate } from "redux-persist/integration/react"
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 import colors from './src/constants/colors';
-import {Provider} from 'react-redux';
+import { Provider } from 'react-redux';
 import * as RootNavigation from './src/utils/RootNavigation.js';
-import { store,persistor } from './src/redux';
+import { store, persistor } from './src/redux';
 import { Navigator } from './src/AppNavigation/Navigator';
 import { SplashScreenAnimated } from './src/common/splashscreen.tsx/splash';
 import setupNotificationListener from './src/utils/notificationService';
 import notifee, { EventType, AndroidImportance, AndroidVisibility } from '@notifee/react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PaperProvider } from 'react-native-paper';
+import { fonts } from './src/constants/fonts';
 
-const App:React.FC = ()=> {
+const App: React.FC = () => {
   const isDarkMode = useColorScheme() === 'dark';
-  const [hasSplash,setHasSplash] = useState<boolean>(true)
+  const [hasSplash, setHasSplash] = useState<boolean>(true)
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
- 
+
   const setupNotificationChannel = async () => {
     await notifee.createChannel({
       id: 'blissy1',
@@ -35,7 +37,14 @@ const App:React.FC = ()=> {
       badge: true,
       sound: "level_up",
       visibility: AndroidVisibility.PUBLIC,
-      
+
+    });
+    await notifee.createChannel({
+      id: 'nuggets-call2',
+      name: 'nuggets call 2',
+      sound: "level_up",
+      importance: AndroidImportance.HIGH,
+      visibility: AndroidVisibility.PUBLIC,
     });
   };
 
@@ -52,23 +61,28 @@ const App:React.FC = ()=> {
 
 
 
-  console.log(hasSplash,"---hassplash---")
+  console.log(hasSplash, "---hassplash---")
 
   return (
     <Provider store={store}>
-    <PersistGate persistor={persistor} loading={null}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider style={backgroundStyle}>
-        <View style={[styles.AppContainer, backgroundStyle]}>
-          <StatusBar
-            barStyle={'light-content'}
-            animated={true}
-            backgroundColor={colors.black}
-          />
-          <Navigator/>
-        </View>
-      </SafeAreaProvider>
-      </GestureHandlerRootView>
+      <PersistGate persistor={persistor} loading={null}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <SafeAreaProvider style={backgroundStyle}>
+            <View style={[styles.AppContainer, backgroundStyle]}>
+              <StatusBar
+                barStyle={'light-content'}
+                animated={true}
+                backgroundColor={colors.black}
+              />
+              <PaperProvider theme={{
+                
+              }}>
+
+                <Navigator />
+              </PaperProvider>
+            </View>
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
       </PersistGate>
     </Provider>
   );

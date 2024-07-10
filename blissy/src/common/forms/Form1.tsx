@@ -17,7 +17,10 @@ interface Form1Props {
 const Form1: React.FC<Form1Props> = ({state, dispatch}) => {
   const animatableRef = useRef<Animatable.View>(null);
   return (
-    <View>
+    <Animatable.View ref={animatableRef}
+    easing={'ease-in-cubic'}
+    animation="slideInLeft"
+    duration={500}>
       <View style={[styles.inputForm, {marginTop: actuatedNormalize(25)}]}>
         <LabelWithDesc label="What's Your Name?" sublabel='it will appear to other user while talking'/>
         <LabelInputComponent
@@ -30,7 +33,7 @@ const Form1: React.FC<Form1Props> = ({state, dispatch}) => {
           IconName={'user'}
         />
       </View>
-      </View>
+      </Animatable.View>
   );
 };
 

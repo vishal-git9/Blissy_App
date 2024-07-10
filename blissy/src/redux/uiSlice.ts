@@ -3,8 +3,28 @@ import { AuthApi } from "../api/authService";
 import { IRootState } from ".";
 import { UserApi } from "../api/userService";
 import { Socket } from "socket.io-client";
+import { FeebackApi } from "../api/feedbackservice";
 
-
+export interface Calllist extends Document {
+    callType:String;
+    callerId: String;
+    calleeId:String;
+    callDuration:String;
+    isSuccessful: Boolean;
+    isMissed:Boolean;
+    isRejected:Boolean
+  }
+  export interface IQoutes extends Document {
+    // mobileNumber: string;
+    text:string;
+    author:string
+  }
+  export interface IRating extends Document {
+    userId: string;
+    appId: string;
+    rating: number;
+    createdAt: Date;
+}
 export interface UserInterface {
     _id: string;
     mobileNumber: string;
@@ -14,10 +34,14 @@ export interface UserInterface {
     username: string;
     age: number;
     gender: string;
+    bio:string;
     interest: [string];
+    mentalIssues:[string];
     language: [string];
     profilePic: string;
     isActive: Boolean;
+    UserCallsInfoList:Calllist[];
+    UserRating:IRating[]
 
 }
 export interface IsUIState {
@@ -30,6 +54,7 @@ export interface IsUIState {
     socket: Socket | null
     fcmToken: string;
     isConnected: boolean;
+    todayquotes:IQoutes
 }
 
 const initialState: IsUIState = {
@@ -41,7 +66,8 @@ const initialState: IsUIState = {
     isNewUser: true,
     socket: null,
     fcmToken: '',
-    isConnected: true
+    isConnected: true,
+    todayquotes:{text:'',author:''}
 }
 
 
@@ -81,6 +107,10 @@ export const AuthSlice = createSlice({
             state.user = payload?.data?.user
             state.fcmToken = payload?.data?.user?.DeviceFcmtoken?.fcmToken
             // state.isNewUser =payload.data.user.isNewUser
+        })
+        builder.addMatcher(FeebackApi.endpoints.getmyTodayquotes.matchFulfilled,(state,{payload})=>{
+            console.log(payload,"payload of quotes--->")
+            state.todayquotes = payload.quote
         })
         builder.addMatcher(UserApi.endpoints.postUser.matchFulfilled, (state, { payload }) => {
             state.isRegisterd = true

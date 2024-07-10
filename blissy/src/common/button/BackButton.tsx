@@ -33,11 +33,11 @@ const styles = StyleSheet.create({
     height:actuatedNormalize(35),
     width:actuatedNormalize(35),
     left: 20,
-    zIndex: 100, // Ensure the button is on top of other components
+    zIndex: 100,
   },
   button: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Transparent background
-    borderRadius: 30, // Rounded border
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 30, 
     padding: actuatedNormalize(10),
     borderWidth:1,
     borderColor:colors.white,

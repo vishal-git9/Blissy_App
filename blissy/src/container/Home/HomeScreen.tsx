@@ -35,6 +35,7 @@ import { useAddFcmTokenMutation, useGetUserQuery, usePostUserDevieInfoMutation }
 import DeviceInfo from 'react-native-device-info';
 import { getDeviceUniqueId } from '../../utils/getDeviceUniqueId';
 import { playNotificationSound } from '../../common/sound/notification';
+import { useAddmyquotesMutation, useGetmyTodayquotesQuery } from '../../api/feedbackservice';
 
 interface iconsLabelI {
   id: number;
@@ -54,7 +55,7 @@ const iconsLabel: iconsLabelI[] = [
     id: 2,
     label: 'calls',
     iconName: 'call',
-    navigate: 'ComingsoonScreen',
+    navigate: 'Calllist',
   },
   {
     id: 3,
@@ -66,15 +67,19 @@ const iconsLabel: iconsLabelI[] = [
 export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [data, setData] = useState(HealerMockData.slice(0, 10)); // Initial data for first 10 cards
   const [value, setValue] = useState<string>('random');
-  const { user, fcmToken } = useSelector(AuthSelector)
+  const { user, fcmToken, isAuthenticated } = useSelector(AuthSelector)
   const { activeUserList } = useSelector(ActiveUserListSelector)
   const dispatch = useDispatch()
   const chatlistdata = useSelector(chatListSelector);
+  const { todayquotes } = useSelector(AuthSelector)
+  const { refetch: refetchQuote, isLoading: isquotesLoading, isSuccess: isquotesSuccess, isError: isquotesError } = useGetmyTodayquotesQuery({})
   const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery(user?._id)
-  const { refetch:refetchUser, isError:isErrorUser, isLoading:isLoadingUser, isSuccess:isSuccessUser } = useGetUserQuery()
+  const { refetch: refetchUser, isError: isErrorUser, isLoading: isLoadingUser, isSuccess: isSuccessUser } = useGetUserQuery()
   const [postDeviceinfo, { isError: postDeviceinfoError, isLoading: postDeviceinfoLoading, data: postDeviceinfoData }] = usePostUserDevieInfoMutation()
-  const [postFcmToken, {  }] = useAddFcmTokenMutation()
+  const [postrandomequote, { }] = useAddmyquotesMutation()
 
+  const [postFcmToken, { }] = useAddFcmTokenMutation()
+  const [newChatMessages, setnewChatMessages] = useState<number>(0)
   // const {refetch:fetchNewMsg,isError:newMsgerr,isLoading:newMsgLoading,isSuccess:newMsgsuccess} = useGetNewMessageQuery({userId:user?._id})
   const [healerAnimate, sethealerAnimate] = useState(true);
   const [PeopleAnimate, setPeopleAnimate] = useState(true);
@@ -144,8 +149,8 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     socket.emit('connectRandom')
   }
 
-  const handleNotificationReceived = useCallback( (Chatdata:any)=>{
-    console.log("I am here Yarr------>", chatlistdata, Chatdata,activeUserList);
+  const handleNotificationReceived = useCallback((Chatdata: any) => {
+    console.log("I am here Yarr------>", chatlistdata, Chatdata, activeUserList, isAuthenticated);
     if (Chatdata?.senderData) {
       // Dispatch actions to refetch the latest data when a new notification is received
 
@@ -154,24 +159,24 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       const socketId = activeUserList?.find((el) => el?.userId?._id === Chatdata?.senderData?._id)?.socketId;
 
       if (!ChatPartnerData) {
-        
+
         navigation.navigate("ChatWindow", {
-          userDetails: Chatdata.senderData,
+          userDetails: Chatdata?.senderData,
           Chats: null,
           socketId: socketId,
-          senderUserId: Chatdata.senderData._id
+          senderUserId: Chatdata?.senderData._id
         });
       } else {
         navigation.navigate("ChatWindow", {
-          userDetails: Chatdata.senderData,
+          userDetails: Chatdata?.senderData,
           Chats: ChatPartnerData,
           socketId: socketId,
-          senderUserId: Chatdata.senderData._id
+          senderUserId: Chatdata?.senderData?._id
         });
       }
     }
 
-  },[chatlistdata?.length,activeUserList?.length])
+  }, [chatlistdata?.length, activeUserList?.length])
 
   useEffect(() => {
 
@@ -214,7 +219,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       await messaging().registerDeviceForRemoteMessages();
       const token = await messaging().getToken();
       console.log("I am here----->")
-      if (!!fcmToken && fcmToken === token) {
+      if (fcmToken && fcmToken === token) {
         console.log("OLD FCM_TOKEN FOUND", fcmToken)
       } else {
         // const token = await messaging().getToken();
@@ -274,18 +279,33 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
           uniqueId: getUniqueId,
           userAgent: getUserAgent
         }
-        await postDeviceinfo({
-          deviceData: {
-            ...deviceInfo
-          },
-          uniqueDeviceId:deviceInfo.uniqueId
-        })
 
-        await postFcmToken({
-          fcmToken:token
-        })
+        try {
+          await postDeviceinfo({
+            deviceData: {
+              ...deviceInfo
+            },
+            uniqueDeviceId: deviceInfo.uniqueId
+          })
+        } catch (error) {
+          console.log(error, "error while posting device info ------>")
+        }
 
-        await refetchUser()
+
+        try {
+          await postFcmToken({
+            fcmToken: token
+          })
+        } catch (error) {
+          console.log(error, "error while posting device token ------>")
+        }
+
+        try {
+          await refetchUser()
+
+        } catch (error) {
+          console.log(error, "error while refetching user ------>")
+        }
 
         //dispatch(setFcmToken(token)) // currently saving into local mobile state later on will save in db
         console.log("NEW FCM_TOKEN", token)
@@ -326,19 +346,37 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
         // refetch().then((res) =>{
         //   dispatch(pushChatlist(res.data.chatList))
         // } ).catch((err) => console.log(err)) // no need since app is opened from quit state it will auto fetch the chatlist api
-        navigation.navigate("Chatlist");
+        if (isAuthenticated) {
+          navigation.navigate("Chatlist");
+        } else {
+          navigation.navigate("Login")
+        }
 
       }
     }
 
     // event listens for background and foreground mode
-    eventEmitter.on('notificationReceived',handleNotificationReceived);
+    eventEmitter.on('notificationReceived', handleNotificationReceived);
 
     getInitialNotificationDetail()
     return () => {
       eventEmitter.off('notificationReceived');
     };
   }, [activeUserList?.length]);
+
+  useEffect(() => {
+
+    verifyLocationPermissions().then(() => requestUserPermission()).catch((err) => console.log(err));
+    // calling off the animation after first render
+    const timingAnim = setTimeout(() => {
+      sethealerAnimate(false);
+    }, 5000);
+    return () => {
+      sethealerAnimate(false);
+      clearTimeout(timingAnim);
+    };
+  }, []);
+
   useEffect(() => {
     socket?.on("privateMessageSuccessfulAdd", async (data) => {
       console.log("newMessage----->", data);
@@ -346,8 +384,9 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       dispatch(pushChatlist(data.chatList));
       console.log("newMessage2----->", data);
       // playNotificationSound();
-      await markRead({messageIds:[data.messageId],updateType:"isDelivered"}) // this needs to be called when message is delivered via notification
-      socket.emit("messageReceived", { userId: data.senderId, socketId: data.otherEndsocketId })
+      setnewChatMessages((prev) => prev + 1)
+      // await markRead({messageIds:[data.messageId],updateType:"isDelivered"}) // this needs to be called when message is delivered via notification
+      // socket.emit("messageReceived", { userId: data.senderId, socketId: data.otherEndsocketId })
     });
     // socket?.on('newActiveUser', (user) => {
     //   dispatch(getActiveUserList(user))
@@ -371,28 +410,16 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
   }, [chatlistdata, socket]);
 
-
   useEffect(() => {
-
-    verifyLocationPermissions().then(()=>requestUserPermission()).catch((err)=>console.log(err));
-    // calling off the animation after first render
-    const timingAnim = setTimeout(() => {
-      sethealerAnimate(false);
-    }, 5000);
-    return () => {
-      sethealerAnimate(false);
-      clearTimeout(timingAnim);
-    };
-  }, []);
-
-  useEffect(() => {
-    dispatch(resetMessages())
+    // dispatch(resetMessages())
+    refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
+    // postrandomequote()
+    refetchQuote()
     socket.on("connect", () => {
       console.log("user connected", socket.id)
       console.log(socket, "sockeet state")
       socket.emit("getActiveUserList")
       dispatch(setSocket(socket))
-      refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
       // fetchNewMsg().then((res)=>dispatch(pushCurrentMessage(res.data.chat))).catch((err)=>console.log(err))
 
     })
@@ -461,8 +488,13 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
                 key={item.id}
                 delay={id * 500}>
                 <RoundedIconContainer
+                  isBadge={true}
+                  badgeText={item.label === "chats" ? newChatMessages : item.label === "calls" ? 0 : 0}
                   size={25}
-                  onpress={() => navigation.navigate(item.navigate, { screenName: item.label })}
+                  onpress={() => {
+                    navigation.navigate(item.navigate, { screenName: item.label })
+                    setnewChatMessages(0)
+                  }}
                   label={item.label}
                   iconName={item.iconName}
                 />
@@ -476,14 +508,21 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
               justifyContent: 'flex-end',
               width: '90%',
               alignSelf: 'center',
+              rowGap:actuatedNormalize(5)
             }}>
+            <Text style={{ color: colors.white,textAlign:"center",fontFamily:fonts.NexaItalic }}>
+              {`'${todayquotes?.text}'`}
+            </Text>
+            <Text style={{ color: colors.white,textAlign:"center",fontFamily:fonts.NexaBold }}>
+              {todayquotes?.author}.
+            </Text>
             {/* <TalkNowButton
               label="Connect Now"
               onPress={intiateRandomConnection}
             /> */}
           </View>
           <SwipeButtonComponent updateSwipeStatus={intiateRandomConnection} />
-          <Text style={styles.infoText}>Swipe to connect to random caller</Text>
+          <Text style={styles.infoText}>Swipe to connect to random listener</Text>
           <View
             style={{
               flex: 1,

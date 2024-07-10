@@ -15,6 +15,7 @@ export interface Message {
   createdAt: string;
   sender?:string;
   isDelivered:boolean;
+  isDeletedBy?:string[]
 }
 
 export interface ChatList {
@@ -25,6 +26,9 @@ export interface ChatList {
   newMessagesId:string;
   allMessagesId:string;
   socketId?:string;
+  isBlocked:Boolean;
+  isBlockedBy:string[];
+  isDeleted:Boolean;
 }
 export interface ActiveUserList {
   _id: string,
@@ -40,7 +44,9 @@ interface MessageState {
   messageCount: number;
   activeUserList: ActiveUserList[];
   chatList: ChatList[];
-  newMessages: Message[]
+  newMessages: Message[];
+  BlockedUser:ChatList[];
+  ActiveUser:ChatList[];
 }
 
 const initialState: MessageState = {
@@ -49,7 +55,10 @@ const initialState: MessageState = {
   messageCount: 0,
   activeUserList: [],
   chatList: [],
-  newMessages: []
+  newMessages: [],
+  BlockedUser:[],
+  ActiveUser:[]
+
 };
 
 const MessageSlice = createSlice({
@@ -76,6 +85,9 @@ const MessageSlice = createSlice({
   pushChatlist:(state,action:PayloadAction<ChatList[]>)=>{
     console.log(action.payload,"chatlistpayload----->")
       state.chatList = action.payload
+      state.ActiveUser=action.payload.filter((el:ChatList)=>el.isBlocked === false)
+      state.BlockedUser=action.payload.filter((el:ChatList)=>el.isBlocked === true)
+
     },
     // pushNewMessage: (state, action: PayloadAction<{ id: string, payload: Message[] }>) => {
     //   const { id, payload } = action.payload;
@@ -96,6 +108,8 @@ const MessageSlice = createSlice({
     builder.addMatcher(ChatApi.endpoints.getChatlist.matchFulfilled, (state, { payload }) => {
       console.log(payload,"chatlistpayload------>")
       state.chatList = payload.chatList
+      state.ActiveUser=payload.chatList.filter((el:ChatList)=>el.isBlocked === false)
+      state.BlockedUser=payload.chatList.filter((el:ChatList)=>el.isBlocked === true)
     })
     builder.addMatcher(ChatApi.endpoints.sendMessage.matchFulfilled, (state, { payload }) => {
 
@@ -106,6 +120,8 @@ const MessageSlice = createSlice({
 export const { addMessage,resetMessages, setChatScreenActive, resetMessageCount, getActiveUserList,pushCurrentMessage,pushChatlist } = MessageSlice.actions;
 export const MessageSelector = (state: IRootState) => state.Message.messages
 export const chatListSelector = (state: IRootState) => state.Message.chatList
+export const ActiveUserSelector = (state: IRootState) => state.Message.ActiveUser
+export const BlockedUserSelector = (state: IRootState) => state.Message.BlockedUser
 export const newMessagesSelector = (state: IRootState) => state.Message.newMessages
 export const chatScreenActiveSelector = (state: IRootState) => state.Message.chatScreenActive
 export const MessageCountSelector = (state: IRootState) => state.Message.messageCount

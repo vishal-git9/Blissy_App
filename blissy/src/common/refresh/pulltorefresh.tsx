@@ -1,123 +1,238 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { StyleSheet, Text, Dimensions } from 'react-native';
+import {Text, SafeAreaView, StyleSheet, StatusBar, View} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {FlatList, PanGestureHandler} from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/Ionicons';
+import Lottie from 'lottie-react-native';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-  useAnimatedGestureHandler,
+  Extrapolate,
+  interpolate,
   runOnJS,
+  scrollTo,
+  useAnimatedGestureHandler,
+  useAnimatedRef,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
 } from 'react-native-reanimated';
-import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { actuatedNormalize } from '../../constants/PixelScaling';
-import { fonts } from '../../constants/fonts';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface PullToRefreshProps {
-  refreshing: boolean;
-  onRefresh: () => void;
   children: React.ReactNode;
+  onRefresh: () => void;
+  refreshing:boolean;
 }
 
-const PullToRefresh: React.FC<PullToRefreshProps> = ({ refreshing, onRefresh, children }) => {
-  const translateY = useSharedValue(0);
-  const [isRefreshing, setIsRefreshing] = useState(refreshing);
-  const [refreshText, setRefreshText] = useState('');
+const REFRESH_AREA_HEIGHT = 130;
 
-  const maxPullDistance = 150;
+const PullToRefresh:React.FC<PullToRefreshProps> = ({children, refreshing, onRefresh}) => {
+  const [toggleLottie, setToggleLottie] = useState(false);
+  const [toggleGesture, setToggleGesture] = useState(true);
+  const [gestureActive, setGestureActive] = useState(false);
 
+  const flatlistRef = useAnimatedRef();
+
+  const translationY = useSharedValue(0);
+  const pullUpTranslate = useSharedValue(0);
+
+  const fetchData = async () => {
+    // setTimeout(() => {
+    //   setRecipes([fDAta, ...recipes]);
+    // }, 2000);
+    onRefresh()
+    setTimeout(() => {
+      translationY.value = withTiming(0, {duration: 200}, finished => {
+        pullUpTranslate.value = 0;
+        runOnJS(setToggleLottie)(false);
+      });
+     }, 2000);
+  };
   useEffect(() => {
     if (!refreshing) {
-      translateY.value = withTiming(0, { duration: 300 });
+      translationY.value = withTiming(0, {duration: 200}, finished => {
+        pullUpTranslate.value = 0;
+        runOnJS(setToggleLottie)(false);
+      });
     }
-  }, [refreshing, translateY]);
+  }, [refreshing]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: translateY.value }],
-    };
-  });
+  const pullUpAnimation = () => {
+    pullUpTranslate.value = withDelay(
+      0,
+      withTiming(
+        pullUpTranslate.value === 0 ? -100 : 0,
+        {duration: 200},
+        finished => {
+          if (finished) {
+            runOnJS(setToggleLottie)(true);
+            runOnJS(fetchData)();
 
-  const textOpacity = useSharedValue(0);
-  const textAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: textOpacity.value,
-    };
-  });
+          }
+        },
+      ),
+    );
+  };
 
-  const resetTextAndRefreshState = useCallback(() => {
-    setRefreshText('');
-    setIsRefreshing(false);
-    translateY.value = withTiming(0, { duration: 300 }); // Reset translateY here
-  }, [translateY]);
-
-  const finishRefresh = useCallback(() => {
-    setRefreshText('Data Refreshed');
-    textOpacity.value = withTiming(1, { duration: 300 });
-
-    // Use a delayed animation to reset the text and refresh state
-    textOpacity.value = withDelay(1000, withTiming(0, { duration: 300 }, () => {
-      runOnJS(resetTextAndRefreshState)();
-    }));
-  }, [textOpacity, resetTextAndRefreshState]);
-
-  const handleRefresh = useCallback(() => {
-    setRefreshText('Hang on...');
-    textOpacity.value = withTiming(1, { duration: 300 });
-
-    setIsRefreshing(true);
-    onRefresh();
-
-    runOnJS(setTimeout)(() => {
-      runOnJS(finishRefresh)();
-    }, 2000);
-  }, [onRefresh, finishRefresh]);
-
-  const onGestureEvent = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, { y: number }>({
+  const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, ctx) => {
-      ctx.y = translateY.value;
+      ctx.startY = translationY.value;
+      runOnJS(setGestureActive)(true);
     },
     onActive: (event, ctx) => {
-      const pullDistance = ctx.y + event.translationY;
-      translateY.value = pullDistance < maxPullDistance ? pullDistance : maxPullDistance;
-      if (translateY.value > 10 && !isRefreshing) {
-        runOnJS(setRefreshText)('Pull down to refresh...');
-        textOpacity.value = withTiming(1, { duration: 300 });
+      const total = ctx?.startY as any + event.translationY;
+
+      if (total < REFRESH_AREA_HEIGHT) {
+        translationY.value = total;
+      } else {
+        translationY.value = REFRESH_AREA_HEIGHT;
+      }
+
+      if (total < 0) {
+        translationY.value = 0;
+        scrollTo(flatlistRef, 0, total * -1, false);
       }
     },
     onEnd: () => {
-      if (translateY.value >= maxPullDistance) {
-        translateY.value = withTiming(maxPullDistance);
-        textOpacity.value = withTiming(0, { duration: 300 });
-        runOnJS(handleRefresh)();
+      runOnJS(setGestureActive)(false);
+      if (translationY.value <= REFRESH_AREA_HEIGHT - 1) {
+        translationY.value = withTiming(0, {duration: 200});
       } else {
-        translateY.value = withTiming(0, { duration: 300 });
-        textOpacity.value = withTiming(0, { duration: 300 });
+        runOnJS(pullUpAnimation)();
+      }
+      if (!(translationY.value > 0)) {
+        console.log("I ran---->")
+        // runOnJS(setToggleGesture)(false);
       }
     },
   });
 
+  const handleOnScroll = (event: { nativeEvent: { contentOffset: { y: any; }; }; }) => {
+    const position = event.nativeEvent.contentOffset.y;
+    if (position === 0) {
+      setToggleGesture(true);
+    } else if (position > 0 && toggleGesture && !gestureActive) {
+      setToggleGesture(false);
+    }
+  };
+
+  const animatedSpace = useAnimatedStyle(() => {
+    return {
+      height: translationY.value,
+    };
+  });
+
+  const pullDownIconSection = useAnimatedStyle(() => {
+    const rotate = interpolate(
+      translationY.value,
+      [0, REFRESH_AREA_HEIGHT],
+      [0, 180],
+    );
+    return {
+      transform: [{rotate: `${rotate}deg`}],
+    };
+  });
+
+  const pullUpTranslateStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      translationY.value,
+      [58, REFRESH_AREA_HEIGHT],
+      [0, 1],
+    );
+
+    return {
+      opacity,
+      transform: [
+        {
+          translateY: pullUpTranslate.value,
+        },
+      ],
+    };
+  });
+
+  const statusBarStyle = useAnimatedStyle(() => {
+    const translate = interpolate(
+      translationY.value,
+      [80, REFRESH_AREA_HEIGHT],
+      [0, -40],
+      {extrapolateLeft: Extrapolate.CLAMP, extrapolateRight: Extrapolate.CLAMP},
+    );
+
+    return {
+      transform: [
+        {
+          translateY: translate,
+        },
+      ],
+    };
+  });
+
   return (
-    <PanGestureHandler onGestureEvent={onGestureEvent}>
-      <Animated.View style={[styles.container, animatedStyle]}>
-        <Animated.Text style={[styles.pullDownText, textAnimatedStyle]}>{refreshText}</Animated.Text>
-        {children}
-      </Animated.View>
-    </PanGestureHandler>
+    <>
+
+      <SafeAreaView style={{flex: 1}}>
+        <View style={styles.contentContainer}>
+          <Animated.View style={[styles.pullToRefreshArea, animatedSpace]}>
+            <Animated.View style={[styles.center, pullUpTranslateStyle]}>
+              <Animated.View style={pullDownIconSection}>
+                <Icon name="arrow-down-circle" color="white" size={35} />
+              </Animated.View>
+
+              <Text>Pull Down to Refresh</Text>
+            </Animated.View>
+            {toggleLottie && (
+              <Lottie
+                source={require('../../../assets/animation/loader2.json')}
+                style={styles.lottieView}
+                autoPlay
+              />
+            )}
+          </Animated.View>
+
+          <FlatList
+            {...children?.props}
+            ref={flatlistRef}
+            onScroll={handleOnScroll}
+            showsVerticalScrollIndicator={false}
+          />
+
+          {toggleGesture && (
+            <PanGestureHandler onGestureEvent={gestureHandler}>
+              <Animated.View style={styles.gesture} />
+            </PanGestureHandler>
+          )}
+        </View>
+      </SafeAreaView>
+      {/* <SafeAreaView style={{backgroundColor: 'white'}} /> */}
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  gesture: {
+    position: 'absolute',
+    top: -60,
+    left: 0,
+    //  backgroundColor:"green",
+    height: 100,
+    width: '100%',
+    zIndex: 2,
   },
-  pullDownText: {
-    textAlign: 'center',
-    // marginVertical: 10,
-    fontFamily:fonts.NexaRegular,
-    fontSize: actuatedNormalize(16),
+  lottieView: {
+    width: actuatedNormalize(200),
+    height: actuatedNormalize(200),
+    backgroundColor: 'transparent',
+    marginTop: -15,
   },
+  pullToRefreshArea: {
+    height: 140,
+    // backgroundColor:"red",
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    overflow: 'hidden',
+  },
+  contentContainer: {flex: 1, marginHorizontal: 15, marginVertical: 15},
+  center: {justifyContent: 'center', alignItems: 'center'},
 });
 
 export default PullToRefresh;

@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { BackHandler, Image } from 'react-native';
+import { Alert, BackHandler, Image, Keyboard } from 'react-native';
 import {
   View,
   Text,
@@ -11,81 +10,119 @@ import {
   Platform,
   Animated as NativeAnimated,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { actuatedNormalize } from '../../constants/PixelScaling';
-import { NavigationStackProps } from '../Prelogin/onboarding';
-import colors from '../../constants/colors';
-import { fonts } from '../../constants/fonts';
-import { RouteBackButton2 } from '../../common/button/BackButton';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { RootStackParamList } from '../../AppNavigation/navigatorType';
-import { RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ActiveUserList, ActiveUserListSelector, ChatList, Message, MessageSelector, addMessage, chatListSelector, chatScreenActiveSelector, getActiveUserList, pushChatlist, resetMessageCount, setChatScreenActive } from '../../redux/messageSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { AuthSelector } from '../../redux/uiSlice';
-import moment from 'moment';
-import { useGetChatlistQuery, useMarkReadMessageMutation, useSendMessageMutation } from '../../api/chatService';
-import generateRandomId from '../../utils/randomIdGenerator';
 import Animated, { SharedTransition, withSpring } from 'react-native-reanimated';
-import { FlashList } from '@shopify/flash-list';
-
-
-const debounce = <F extends (...args: any[]) => any>(func: F, wait: number): (...args: Parameters<F>) => void => {
-  let timeout: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<F>): void => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(null, args), wait);
-  };
-};
-
-const customTransition = SharedTransition.custom((values) => {
-  'worklet';
-  return {
-    height: withSpring(values.targetHeight),
-    width: withSpring(values.targetWidth),
-  };
-});
-
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"
+import { useDispatch, useSelector } from 'react-redux';
+import { GiftedChat, Bubble, InputToolbar, Send, SystemMessage, IMessage, Composer, Day } from 'react-native-gifted-chat';
+import { Swipeable } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActiveUserListSelector, chatListSelector, addMessage, pushChatlist, resetMessageCount, Message, ChatList, MessageSelector } from '../../redux/messageSlice';
+import { AuthSelector } from '../../redux/uiSlice';
+import { useGetChatlistQuery, useSendMessageMutation, useMarkReadMessageMutation, useDeleteChatHistoryMutation } from '../../api/chatService';
+import generateRandomId from '../../utils/randomIdGenerator';
 import { formatDateTime, getFormattedDate } from '../../utils/formatedateTime';
 import { playSendMsgSound } from '../../common/sound/notification';
-
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import moment from 'moment';
+import Ionicons from "react-native-vector-icons/Ionicons"
+import colors from '../../constants/colors';
+import ReplyMessageBar from '../../common/chats/ReplyMessageBar';
+import ChatMessageBox from '../../common/chats/ChatMessageBox';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React from 'react';
+import { actuatedNormalize } from '../../constants/PixelScaling';
+import { RouteBackButton2 } from '../../common/button/BackButton';
+import { fonts } from '../../constants/fonts';
+import ChatIntialInfo from '../../common/chats/Intialscreen';
+import { Button, Divider, Menu } from 'react-native-paper';
+import { displayCallNotificationAndroid } from '../../common/call/incoming';
+import { BlissyLoader } from '../../common/loader/blissy';
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ChatWindow'>;
-type HeaderItem = { type: 'header'; title: string };
-type MessageItem = { type: 'message'; message: Message };
-type ListItem = HeaderItem | MessageItem;
-
 interface ProfileScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
   route: ProfileScreenRouteProp;
 }
 
+export type ViewToken = {
+  item: any,
+  // The key of this item
+  key: string,
+  index?: number,
+  // indicated whether this item is viewable or not
+  isViewable: boolean,
+  section?: any
+};
 const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) => {
   const { userDetails, Chats, senderUserId } = route.params;
+  const insets = useSafeAreaInsets();
+  const dispatch = useDispatch();
   const currentTime = moment();
+  // const isKeyboardVisible = useRef(false);
+  const [inputText, setInputText] = useState('');
   const messageTimestamp = currentTime.format();
   const { socket, user } = useSelector(AuthSelector);
-  const [inputText, setInputText] = useState('');
-  const flashListRef = useRef<FlashList<ListItem>>(null);
   const { activeUserList } = useSelector(ActiveUserListSelector);
   const chatlistdata = useSelector(chatListSelector);
-  const [markRead] = useMarkReadMessageMutation();
-  const [isMounted, setIsMounted] = useState<boolean>(false);
-  const [isAtBottom, setIsAtBottom] = useState(true);
-  const [istyping, setIsTyping] = useState<boolean>(false);
-  const [isScrollingToEnd, setIsScrollingToEnd] = useState(false);
-  const [userScrolling, setUserScrolling] = useState<boolean>(false);
-  const [messageHeights, setMessageHeights] = useState<number[]>([]);
-
-  const [UserSocketId,SetUserSocketId] = useState<string|undefined>();
-  const timerRef = useRef<NodeJS.Timeout>();
-  const yValue = useRef(new NativeAnimated.Value(0)).current;
-  const [sendMsg, { isError, isLoading, isSuccess, reset, data }] = useSendMessageMutation();
-  const { refetch, isError: chatlisterror, isLoading: chatlistloading, data: newchatlistdata } = useGetChatlistQuery(user?._id);
-
   const messages = useSelector(MessageSelector);
+  const [markRead] = useMarkReadMessageMutation();
+  const [menuVisible, setMenuVisible] = useState<boolean>(false)
+  const [sendMsg] = useSendMessageMutation();
+  const [stickyHeaderDate, setStickyHeaderDate] = useState(null);
+  const [istyping, setIsTyping] = useState<boolean>(false);
+  const { refetch } = useGetChatlistQuery(user?._id);
+  const [deleteChathistory, { isLoading: isDeleteChatloading, isError: isDeleteChatError, isSuccess: isDeleteChatSuccess }] = useDeleteChatHistoryMutation()
+  const [replyMessage, setReplyMessage] = useState<IMessage | null>(null);
+  const swipeableRowRef = useRef<Swipeable | null>(null);
+  const yValue = useRef(new NativeAnimated.Value(0)).current;
+  const timerRef = useRef<NodeJS.Timeout>();
+  const [text, setText] = useState('');
+  const [UserSocketId, SetUserSocketId] = useState<string | undefined>();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const dispatch = useDispatch();
+  const TYPING_DELAY = 2000; // 2 seconds delay
+
+
+  useEffect(() => {
+    const socketId = Chats ? activeUserList?.find(el => el?.userId?._id === Chats?.chatPartner?._id) : activeUserList?.find(el => el?.userId?._id === senderUserId);
+    SetUserSocketId(socketId?.socketId);
+  }, [activeUserList?.length]);
+
+  useEffect(() => {
+    if (Chats) {
+      const newMessages = chatlistdata.find(el => el.chatPartner._id === Chats.chatPartner._id)?.newMessages;
+      if (newMessages && newMessages?.length > 0) {
+        timerRef.current = setTimeout(() => {
+          MarkMessageRead(newMessages);
+        }, 1000);
+      }
+    } else if (senderUserId) {
+      const newMessages = chatlistdata.find(el => el.chatPartner._id === senderUserId)?.newMessages;
+      if (newMessages && newMessages?.length > 0) {
+        timerRef.current = setTimeout(() => {
+          MarkMessageRead(newMessages);
+        }, 1000);
+      }
+    }
+
+    socket?.on('notify_typing_state', data => {
+      setIsTyping(data.typingState);
+    });
+
+    return () => {
+      clearTimeout(timerRef.current);
+    };
+  }, [chatlistdata, UserSocketId]);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
 
   const addMyMessage = useCallback(
     (message: Message, newChatlistdata: ChatList[]) => {
@@ -106,29 +143,9 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     [dispatch, chatlistdata?.length]
   );
 
-  const MarkMessageRead = useCallback(
-    async (newMessages: Message[] | undefined) => {
-      const newMessageIds: any[] = [];
-      newMessages?.forEach((el) => {
-        if (el.receiverId === user?._id && el.isRead === false) {
-          newMessageIds.push(el.messageId);
-          return;
-        }
-        return;
-      });
-      if (newMessageIds.length > 0) {
-        await markRead({ messageIds: newMessageIds, updateType: 'isRead' });
-        console.log(UserSocketId,"socket--id")
-        UserSocketId && socket?.emit('messageSeen', { userId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId });
-        refetch()
-          .then((res) => dispatch(pushChatlist(res.data.chatList)))
-          .catch((err) => console.log(err));
-      }
-    },
-    [dispatch,chatlistdata,UserSocketId]
-  );
 
   const sendMessage = async () => {
+    console.log(inputText, "inputText------>")
     if (inputText.trim()) {
       const newMessage: Message = {
         messageId: generateRandomId(24),
@@ -139,7 +156,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
         message: inputText.trim(),
         createdAt: messageTimestamp,
       };
-      yValue.setValue(0);
+      // yValue.setValue(0);
       Chats || senderUserId ? addMyMessage(newMessage, chatlistdata) : dispatch(addMessage(newMessage));
 
       if (UserSocketId) {
@@ -148,13 +165,11 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           playSendMsgSound();
           await sendMsg(newMessage);
           socket?.emit('privateMessageSendSuccessful', { messageId: newMessage.messageId, senderId: user?._id, receiverId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId, mysocketId: socket.id });
-          socket?.emit('private_typing_state', { socketId: UserSocketId, typingState: false });
-          flashListRef.current?.scrollToEnd({ animated: true });
-          NativeAnimated.timing(yValue, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }).start();
+          socket?.emit('private_typing_state', {
+            socketId: UserSocketId,
+            userData: user,
+            typingState: false
+          });
         } catch (error) {
           console.log('Error while sending message', error);
         }
@@ -163,262 +178,242 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           setInputText('');
           playSendMsgSound();
           await sendMsg(newMessage);
-          flashListRef.current?.scrollToEnd({ animated: true });
-          NativeAnimated.timing(yValue, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }).start();
         } catch (error) {
           console.log('Error while sending message', error);
         }
       }
       setInputText('');
-      flashListRef.current?.scrollToEnd({ animated: true });
-      NativeAnimated.timing(yValue, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
     }
   };
 
-  useEffect(() => {
-    const socketId = Chats ? activeUserList?.find((el) => el?.userId?._id === Chats?.chatPartner?._id) : activeUserList?.find((el) => el?.userId?._id === senderUserId)
 
-    SetUserSocketId(socketId?.socketId)
-  }, [activeUserList?.length])
 
-  useEffect(() => {
-    if (Chats) {
-      const newMessages = chatlistdata.find((el) => el.chatPartner._id === Chats.chatPartner._id)?.newMessages;
-      if (newMessages && newMessages?.length > 0) {
-        timerRef.current = setTimeout(() => {
-          MarkMessageRead(newMessages);
-        }, 1000);
+  const handleTyping = useCallback((text: string) => {
+    console.log(text, "text", istyping)
+    if (!istyping) {
+      console.log(text, "text", istyping,UserSocketId)
+      const TypingUserData = {
+        socketId: UserSocketId,
+        userData: user,
+        typingState: true
       }
-    } else if (senderUserId) {
-      const newMessages = chatlistdata.find((el) => el.chatPartner._id === senderUserId)?.newMessages;
-      if (newMessages && newMessages?.length > 0) {
-        timerRef.current = setTimeout(() => {
-          MarkMessageRead(newMessages);
-        }, 1000);
-      }
+
+      socket?.emit('private_typing_state', TypingUserData);
     }
 
+    setInputText(text)
 
-    socket?.on('notify_typing_state', (data) => {
-      // {
-      //   socketId:
-      //   userData:
-      //   typingState
-      // }
-      setIsTyping(data.typingState);
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      // setIsTyping(false);
+      const TypingUserData = {
+        socketId: UserSocketId,
+        userData: user,
+        typingState: false
+      }
+
+      socket?.emit('private_typing_state', TypingUserData);
+    }, TYPING_DELAY);
+  }, [istyping,activeUserList,UserSocketId]);
+
+
+
+  const MarkMessageRead = useCallback(async (newMessages: Message[] | undefined) => {
+    const newMessageIds: any[] = [];
+    newMessages?.forEach(el => {
+      if (el.receiverId === user?._id && el.isRead === false) {
+        newMessageIds.push(el.messageId);
+      }
     });
+    if (newMessageIds.length > 0) {
+      await markRead({ messageIds: newMessageIds, updateType: 'isRead' });
+      // UserSocketId && socket?.emit('messageSeen', { userId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId });
+      refetch()
+        .then(res => dispatch(pushChatlist(res?.data?.chatList)))
+        .catch(err => console.log(err));
+    }
+  }, [dispatch, chatlistdata, UserSocketId]);
+
+  const handleMenuVisible = () => {
+    setMenuVisible(true)
+  }
+
+  const handleMenuClose = () => {
+    setMenuVisible(false)
+  }
+
+  const handleDeleteChatHistory = () => {
+    console.log("chat history deleted-------->")
+    setMenuVisible(false)
+    deleteChathistory(Chats?.newMessagesId)
+    refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err)) // after getting refreshed chatlist
+  }
 
 
+  const onViewableItemsChanged = useCallback((info: {
+    viewableItems: Array<ViewToken>,
+    changed: Array<ViewToken>,
+  }) => {
+    console.log("lastItems------>")
 
-    return () => {
-      socket?.off('notify_typing_state');
-      clearTimeout(timerRef.current);
-    };
-  }, [chatlistdata,UserSocketId]);
+    if (info.viewableItems && info.viewableItems.length > 0) {
+      const lastItem = info.viewableItems.pop();
+      console.log(lastItem, "lastItemsinside------>")
+      if (lastItem && lastItem.item) {
+        setStickyHeaderDate(lastItem.item?.createdAt);
+      }
+    }
+  }, []);
 
+  // updateStickyDate = ({ viewableItems, changed }) => {
 
+  // };
+
+  const viewabilityConfigCallbackPairs = useRef([{
+    viewabilityConfig: {
+      itemVisiblePercentThreshold: 15,
+    },
+    onViewableItemsChanged
+  }]);
+
+  const updateRowRef = useCallback(
+    (ref: any) => {
+      if (ref && replyMessage && ref.props.children.props.currentMessage?._id === replyMessage._id) {
+        swipeableRowRef.current = ref;
+      }
+    },
+    [replyMessage]
+  );
 
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      dispatch(resetMessageCount());
-      return false;
-    });
-    return () => backHandler.remove();
-  }, []);
+    if (replyMessage && swipeableRowRef.current) {
+      swipeableRowRef.current.close();
+      swipeableRowRef.current = null;
+    }
+  }, [replyMessage]);
 
   const MessageChatlistData = useMemo(
     () =>
       Chats
-        ? chatlistdata.find((el) => el?.chatPartner?._id === Chats?.chatPartner?._id)?.allMessages
+        ? chatlistdata?.find((el) => el?.chatPartner?._id === Chats?.chatPartner?._id)?.allMessages
         : senderUserId
-          ? chatlistdata.find((el) => el?.chatPartner?._id === senderUserId)?.allMessages || null
+          ? chatlistdata?.find((el) => el?.chatPartner?._id === senderUserId)?.allMessages || null
           : messages,
-    [chatlistdata,senderUserId]
+    [chatlistdata, senderUserId]
   );
+  // console.log(MessageChatlistData, "MessageChatlistData-------->")
+  // const formattedMessages: IMessage[] = MessageChatlistData?.map(message => ({
+  //   _id: message._id || message.messageId,
+  //   text: message.message,
+  //   createdAt: message.createdAt,
+  //   sent: message.isDelivered,
+  //   received: message.isRead,
+  //   user: {
+  //     _id: message.senderId,
+  //     name: message.senderId === user?._id ? 'You' : userDetails?.name,
+  //     avatar: message.senderId === user?._id ? user?.profilePic : userDetails?.profilePic,
 
-  // console.log(MessageChatlistData,"MessageChatlistData----->")
+  //   },
+  // })).reverse();
 
-
-  let scrollTimeout = null;
-
-  const handleTyping = useCallback(
-    (text: string) => {
-      console.log("socketId---->",UserSocketId)
-      const TypingUserData = {
-        socketId:UserSocketId,
-        userData:user,
-        typingState:true
+  const formattedMessages: IMessage[] = useMemo(() => {
+    const MessageData = MessageChatlistData?.filter((el) => {
+      if (el.isDeletedBy && el.isDeletedBy?.length > 0) {
+        el.isDeletedBy[0] !== user?._id || el.isDeletedBy[1] !== user._id
+      } else {
+        return el
       }
-      socket?.emit('private_typing_state', TypingUserData);
-      setInputText(text);
-      // You can also dispatch typing state to the redux store or perform other actions here
-    },
-    [activeUserList.length,dispatch,senderUserId,inputText]
-  );
+    })
 
-  const handleScroll = (event:any) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    const contentHeight = event.nativeEvent.contentSize.height;
-    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+    console.log(MessageData, "MessageData------>")
+    if (!MessageData || !MessageData.length) return []; // Early return if MessageData is empty
 
-    if (offsetY + layoutHeight >= contentHeight - 10) {
-      setIsAtBottom(true);
-    } else {
-      setIsAtBottom(false);
-    }
+    // console.log(MessageData, "MessageData----->")
+    return MessageData.map(message => ({
+      _id: message._id || message.messageId,
+      text: message.message,
+      createdAt: message.createdAt,
+      //  pending:false,
+      sent: true,
+      received: message.isDelivered,
+      seen: message.isRead,
+      user: {
+        _id: message.senderId,
+        name: message.senderId === user?._id ? 'You' : userDetails?.name,
+        avatar: message.senderId === user?._id ? user?.profilePic : userDetails?.profilePic,
+      },
+      // isReply: { 
+      //    _id: message._id || message.messageId,
+      //   text: 'This is a sample replied message',
+      //   createdAt: new Date(),
+      //   user: {
+      //     _id: message.senderId,
+      //     name: 'John Doe',
+      //     avatar: 'https://via.placeholder.com/150',
+      //   }}
+    })).reverse();
+  }, [chatlistdata, senderUserId]);
+
+  const startCall = () => {
+    // const callId = 'call-12345';
+    // const callerName = 'John Doe';
+    // const hasVideo = false;
+
+    // displayCallNotificationAndroid({ callId, callerName, hasVideo });
+    navigation.navigate("Outgoing", { ConnectedUserData: Chats?.chatPartner, socketId: UserSocketId })
+
+    console.log('Calling...');
   };
 
-  const scrollToEnd = () => {
-    if (flashListRef.current && !isScrollingToEnd) {
-      setIsScrollingToEnd(true);
-      flashListRef.current.scrollToEnd({ animated: true });
-      setTimeout(() => setIsScrollingToEnd(false), 500); // Give enough time for the scroll to complete
-    }
-  };
-  useEffect(() => {
-    if (isAtBottom && MessageChatlistData && MessageChatlistData.length>0) {
-      scrollToEnd();
-    }
-  }, [isMounted, MessageChatlistData]);
+  console.log(inputText, "inputText------>")
+  console.log(UserSocketId, "UserSocketId------>")
 
 
-  useEffect(() => {
-    if (isMounted && isAtBottom && flashListRef.current) {
-      flashListRef.current.scrollToEnd({ animated: true });
-    }
-  }, [isMounted, MessageChatlistData, isAtBottom]);
 
+  const renderInputToolbar = (props: any) => (
+    <InputToolbar
+      {...props}
 
-  const MessageItem = useCallback(
-    ({ item, index }: { item: Message; index: number }) => {
-      const isLastMessage = index === MessageChatlistData?.length;
-      const messageStyle = isLastMessage
-        ? {
-          transform: [
-            {
-              translateY: yValue.interpolate({
-                inputRange: [0, 1],
-                outputRange: [50, 0],
-              }),
-            },
-          ],
-          opacity: yValue.interpolate({
-            inputRange: [0, 0.5, 1],
-            outputRange: [0, 0.5, 1],
-          }),
-        }
-        : {};
-      return (
-        <View
-          onLayout={(event) => {
-            const { height } = event.nativeEvent.layout;
-            setMessageHeights((prevHeights) => [...prevHeights, height]);
-          }}
-        >
-          <Animated.View
-          
-            style={[
-              styles.messageView,
-              item.senderId === user?._id ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' },
-            ]}
-          >
-            <View style={[styles.messageBubble, item.senderId === user?._id ? styles.myMessage : styles.theirMessage]}>
-              <Text style={styles.messageText}>{item.message}</Text>
-            </View>
-            <View
-              style={[
-                styles.messageStatus,
-                item.senderId === user?._id ? { marginRight: actuatedNormalize(20) } : { marginLeft: actuatedNormalize(20) },
-              ]}
-            >
-              <Text style={[styles.messageText, { color: colors.gray, fontSize: actuatedNormalize(10) }]}>
-                {formatDateTime(item.createdAt,"")}
-              </Text>
-              {item.senderId === user?._id ? (
-                item.isDelivered && item.isRead ? (
-                  <Ionicons name='checkmark-done' size={actuatedNormalize(20)} color={colors.primary} />
-                ) : !item.isDelivered && !item.isRead ? (
-                  <Ionicons name='checkmark' size={actuatedNormalize(20)} color={colors.lightGray} />
-                ) : (
-                  <Ionicons name='checkmark-done' size={actuatedNormalize(20)} color={colors.lightGray} />
-                )
-              ) : null}
-            </View>
-          </Animated.View>
-        </View>
-      );
-    },
-    [MessageChatlistData?.length, yValue, user?._id]
+      // renderComposer={() => <Composer
+      //   multiline={true}
+      //   composerHeight={actuatedNormalize(50)}
+      //   placeholder={Chats?.isBlocked ? "Messaging disabled for this user" : "Type message here..."}
+      //   disableComposer={Chats?.isBlocked as boolean}
+      //   // composerHeight={140}
+
+      // />}
+      containerStyle={{
+        borderTopLeftRadius: actuatedNormalize(10),
+        borderTopRightRadius: actuatedNormalize(10),
+        padding: actuatedNormalize(5),
+        borderTopColor: colors.transparent, borderWidth: 0, backgroundColor: colors.dark,
+      }}
+    // renderActions={() => (
+    //   <View style={{ height: 44, justifyContent: 'center', alignItems: 'center', left: 5 }}>
+    //     <Ionicons name="add" color={colors.primary} size={28} />
+    //   </View>
+    // )}
+    >
+
+    </InputToolbar>
   );
 
-
-  const averageItemSize = useMemo(() => {
-    if (messageHeights.length === 0) return 70; // Default value if no heights measured
-    const totalHeight = messageHeights.reduce((sum, height) => sum + height, 0);
-    return totalHeight / messageHeights.length;
-  }, [messageHeights]);
-
-  const lastMessageIndex = useMemo(
-    () => (Chats ? chatlistdata?.filter((el) => el?.chatPartner?._id === Chats?.chatPartner?._id)[0].allMessages?.length - 1 : messages.length),
-    [chatlistdata, messages.length]
-  );
-  const initialScrollIndex = useMemo(() => {
-    return MessageChatlistData && MessageChatlistData.length >= 9 ? lastMessageIndex : null;
-  }, [MessageChatlistData?.length]);
-
-  const sections = useMemo(() => {
-
-    if(MessageChatlistData && MessageChatlistData.length > 0) {
-      const grouped = MessageChatlistData.reduce((acc, message) => {
-        const messageDate = getFormattedDate(message.createdAt);
-        if (!acc[messageDate]) {
-          acc[messageDate] = { title: messageDate, data: [] };
-        }
-        acc[messageDate].data.push(message);
-        return acc;
-      }, {} as Record<string, { title: string; data: typeof MessageChatlistData }>);
-  
-      return Object.entries(grouped).flatMap(([date, { title, data }]) => [
-        { type: 'header', title },
-        ...data.map(message => ({ type: 'message', message })),
-      ]) as ListItem[];
-   
-    }
-  }, [MessageChatlistData]);
-
-  const stickyHeaderIndices = sections?.map((item, index) => {
-    if (item.type === "header") {
-      return index;
-    } else {
-      return null;
-    }
-  })
-  .filter((item) => item !== null) as number[];
-
-  const onLayout = () => {
-    // setIsMounted(true);
-    if (MessageChatlistData && MessageChatlistData.length > 0 && flashListRef.current) {
-      // console.log("Iamhere------>")
-      flashListRef.current.scrollToIndex({ index: MessageChatlistData.length - 1, animated: true });
-    }
-  };
-
-  // console.log(sections,"sections----->")
 
   return (
     <SafeAreaView style={styles.container}>
+      {isDeleteChatloading && <BlissyLoader />}
       <View style={styles.header}>
         <RouteBackButton2
-          onPress={async () => {
-            socket?.emit('private_typing_state', { socketId: UserSocketId, typingState: false });
+          onPress={() => {
+            socket?.emit('private_typing_state', {
+              socketId: UserSocketId,
+              userData: user,
+              typingState: false
+            });
+            // socket?.emit('private_typing_state', { socketId: UserSocketId, typingState: false });
             navigation.goBack();
           }}
         />
@@ -436,139 +431,148 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
             </View>
           </TouchableOpacity>
         </View>
-      </View>
 
-      <KeyboardAvoidingView style={styles.flex}>
-        <FlashList
-          ref={flashListRef}
-          data={sections}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={(item, index) => (item.type === 'header' ? `header-${index}` : `message-${item.message.messageId}`)}
-          renderItem={({ item }) => {
-            if (item.type === 'header') {
-              return (
-                <View style={styles.dateHeader}>
-                  <Text style={styles.dateHeaderText}>{item.title}</Text>
-                </View>
-              )
-            }else{
-              return <MessageItem index={parseInt(item.message.messageId)} item={item.message} />
-            }
-          }}   
-          getItemType={(item) => {
-            // To achieve better performance, specify the type based on the item
-            return item.type === "header" ? "sectionHeader" : "row";
-          }}
-          stickyHeaderIndices={stickyHeaderIndices}
-          contentContainerStyle={{ paddingTop: actuatedNormalize(10), paddingBottom: actuatedNormalize(10) }}
-          initialScrollIndex={initialScrollIndex}
-          estimatedItemSize={averageItemSize} // Estimated item size for optimization
-          // onLayout={() => {
-          //   if (isMounted && MessageChatlistData && MessageChatlistData.length > 0) {
-          //     flashListRef.current?.scrollToIndex({ index: lastMessageIndex, animated: true });
-          //   }
-          // }}
-          
-          onScrollBeginDrag={() => setUserScrolling(true)}
-          onMomentumScrollBegin={() => setUserScrolling(true)}
-          onScrollEndDrag={() => setUserScrolling(false)}
-          onMomentumScrollEnd={() => setUserScrolling(false)}
-          onScroll={handleScroll}
-          onLayout={onLayout}
-          onContentSizeChange={() => {
-            if (isAtBottom && MessageChatlistData && MessageChatlistData.length > 0) {
-              scrollToEnd();
-            }
-          }}
-          viewabilityConfig={{
-            itemVisiblePercentThreshold: 50,
-          }}
+        <View style={styles.callMoreIconCotainer}>
+          <TouchableOpacity
+            onPress={startCall}
+          >
+            <Ionicons name='call' size={25} color={colors.white} />
+          </TouchableOpacity>
+          <TouchableOpacity
+          // onPress={() => navigation.navigate('ChatPartnerDetails', { chatPartner: userDetails })}
+          >
+            <Menu
+              visible={menuVisible}
+              onDismiss={handleMenuClose}
+              anchor={<Ionicons name='ellipsis-vertical' onPress={handleMenuVisible} size={25} color={colors.white} />}>
 
-        // initialNumToRender={20}
-        // maxToRenderPerBatch={20}
-        // removeClippedSubviews={true}
-        />
-        <View style={styles.inputContainer}>
-          <TextInput
-            value={inputText}
-            onChangeText={(text) => {
-              handleTyping(text)
-            }}
-            placeholder='Type here...'
-            style={styles.input}
-            placeholderTextColor={colors.gray}
-          />
-          <TouchableOpacity style={styles.iconContainer} onPress={sendMessage}>
-            <MaterialCommunityIcons style={styles.sendIcon} name='send-circle' size={40} />
+              <Menu.Item onPress={handleDeleteChatHistory} title="Delete Chat" />
+              {/* <Menu.Item onPress={() => { }} title="Item 2" /> */}
+              {/* <Menu.Item onPress={() => { }} title="Item 3" /> */}
+            </Menu>
+
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+      </View>
+      {formattedMessages.length <= 3 && <ChatIntialInfo UserImage={user?.profilePic} partnerImage={userDetails?.profilePic} partnerName={Chats?.chatPartner.name} userName={user?.name} />}
+      {stickyHeaderDate && (
+        <View style={styles.stickyHeader}>
+          <Text style={styles.stickyHeaderText}>{getFormattedDate(stickyHeaderDate)}</Text>
+        </View>
+      )}
+
+      {Chats?.isBlocked && (
+        <View style={[styles.stickyHeader, { top: "15%", backgroundColor: colors.primary, width: "60%" }]}>
+          <Text style={[styles.stickyHeaderText, { color: colors.white, textAlign: "center" }]}>{Chats.isBlockedBy.some((el) => el === user?._id) ? "Messaging disabled for this user as the user is blocked by you" : "Messaging disabled for this user as the user has blocked you"}</Text>
+        </View>
+      )}
+      <GiftedChat
+        messages={formattedMessages}
+        onSend={sendMessage}
+        text={inputText}
+        onInputTextChanged={handleTyping}
+        user={{
+          _id: user?._id || 1,
+          avatar: user?.profilePic
+        }}
+
+
+        isTyping={istyping}
+        showUserAvatar={false}
+        alwaysShowSend={true}
+        shouldUpdateMessage={() => true}
+        renderSystemMessage={props => <SystemMessage {...props} textStyle={{ color: colors.gray }} />}
+        bottomOffset={insets.bottom}
+        renderAvatarOnTop={true}
+        keyboardShouldPersistTaps={"never"}
+        listViewProps={{
+          contentContainerStyle: { paddingTop: stickyHeaderDate ? 10 : 0 },
+          showsVerticalScrollIndicator: false, viewabilityConfigCallbackPairs: viewabilityConfigCallbackPairs.current
+        }}
+        textInputProps={styles.input}
+
+        renderBubble={props => (
+          <Bubble
+            {...props}
+            textStyle={{
+              left: { color: colors.white },
+              right: { color: colors.white },
+            }}
+            tickStyle={{ color: !props.currentMessage?.seen ? colors.white : colors.skyBlue }}
+            wrapperStyle={{
+              left: { backgroundColor: colors.dark, borderTopLeftRadius: 15 },
+              right: { backgroundColor: colors.primary, borderTopRightRadius: 15 },
+            }}
+            containerToPreviousStyle={{
+              right: { borderTopRightRadius: 15 },
+              left: { borderTopLeftRadius: 15 },
+            }}
+            containerToNextStyle={{
+              right: { borderTopRightRadius: 15 },
+              left: { borderTopLeftRadius: 15 },
+            }}
+            containerStyle={{
+              right: { borderTopRightRadius: 15 },
+              left: { borderTopLeftRadius: 15 },
+            }}
+
+
+          >
+
+
+
+            {/* {props?.currentMessage?.repliedMessage && (
+              <View style={styles.repliedMessageContainer}>
+                <Text style={styles.repliedMessageText}>
+                  {props.currentMessage?.repliedMessage?.sender}: {props.currentMessage?.repliedMessage?.text}
+                </Text>
+              </View>
+            )} */}
+          </Bubble>
+        )}
+
+        // renderDay={props => (
+        //   <Day {...props} dateFormat='ll'/>
+        // )}
+        renderSend={props => (
+          <View
+            // onPress={sendMessage}
+            style={{
+              height: "100%",
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 14,
+              // backgroundColor:"white",
+              paddingHorizontal: 5,
+            }}>
+            <Send
+              {...props}
+              alwaysShowSend={true}
+              containerStyle={{
+                justifyContent: 'center',
+                alignSelf: "flex-end",
+                //  backgroundColor:"red"
+              }}>
+              <MaterialCommunityIcons style={styles.sendIcon} name='send-circle' size={40} />
+            </Send>
+          </View>
+        )}
+        disableComposer={Chats?.isBlocked as boolean}
+        renderInputToolbar={renderInputToolbar}
+        renderChatFooter={() => <ReplyMessageBar clearReply={() => setReplyMessage(null)} message={replyMessage} />}
+        onLongPress={(context, message) => setReplyMessage(message)}
+        renderMessage={props => <ChatMessageBox {...props} setReplyOnSwipeOpen={setReplyMessage} updateRowRef={updateRowRef} />}
+      />
+
+
     </SafeAreaView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-  messageView: {
-    maxWidth: '80%',
-    flexDirection: "column",
-    rowGap: actuatedNormalize(5),
-    marginVertical: actuatedNormalize(5)
-  },
-  messageBubble: {
-    padding: actuatedNormalize(10),
-    borderRadius: actuatedNormalize(20),
-    width: '80%',
-  },
-  messageStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-end",
-    columnGap: actuatedNormalize(2)
-  },
-  myMessage: {
-    backgroundColor: colors.primary,
-    alignSelf: 'flex-end',
-    marginRight: actuatedNormalize(20),
-  },
-  theirMessage: {
-    backgroundColor: colors.dark,
-    marginLeft: actuatedNormalize(20),
-  },
-  messageText: {
-    fontSize: actuatedNormalize(16),
-    color: colors.white,
-    fontFamily: fonts.NexaRegular
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    // backgroundColor: '#ffffff',
-    alignItems: 'center',
-    borderRadius: 20, // Updated to make the container rounded
-    margin: 10,
-    color: colors.black,
-    position: "relative",
-  },
-
-  input: {
-    flex: 1,
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    color: colors.white,
-    borderRadius: 20, // Updated for rounded corners
-    backgroundColor: colors.dark, // Updated for the input background color
-    // Remove borderWidth and borderColor if previously set
-  },
-
-  iconContainer: {
-    position: 'absolute',
-    right: 10,
-    height: '100%',
-    justifyContent: 'center',
+    flex: 1
   },
 
   sendIcon: {
@@ -584,6 +588,22 @@ const styles = StyleSheet.create({
     // backgroundColor:colors.dark,
     // marginHorizontal:actuatedNormalize(10),borderRadius:actuatedNormalize(10)
   },
+  stickyHeader: {
+    position: 'absolute',
+    top: 80,
+    width: '30%',
+    borderRadius: 10,
+    alignSelf: "center",
+    alignItems: 'center',
+    backgroundColor: colors.lightGray,
+    paddingVertical: 5,
+    zIndex: 1,
+  },
+  stickyHeaderText: {
+    fontSize: 12,
+    fontFamily: fonts.NexaRegular,
+    color: colors.gray,
+  },
   headerContent: {
     flex: 1,
     flexDirection: 'row',
@@ -591,11 +611,24 @@ const styles = StyleSheet.create({
     columnGap: actuatedNormalize(10),
     padding: actuatedNormalize(5)
   },
-  backButton: {
-    fontSize: 18,
-    color: '#fff',
-    padding: 8,
-    marginLeft: 10,
+  callMoreIconCotainer: {
+    flexDirection: 'row',
+    columnGap: actuatedNormalize(25),
+    alignItems: "center",
+    justifyContent: "flex-end",
+    marginRight: 10,
+    flex: 1,
+  },
+  composer: {
+    backgroundColor: colors.dark,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.lightGray,
+    paddingHorizontal: 10,
+    padding: 30,
+    paddingTop: 8,
+    fontSize: 16,
+    marginVertical: 4,
   },
   userName: {
     fontSize: actuatedNormalize(16),
@@ -613,58 +646,40 @@ const styles = StyleSheet.create({
     borderRadius: actuatedNormalize(30), // Makes it circular
   },
 
-  messageContainer: {
-    width: "65%",
-    marginVertical: 3,
-    marginHorizontal: 16,
-    paddingVertical: 10,
-    flexDirection: "row",
-    borderRadius: 5,
-  },
-  leftMessageArrow: {
-    height: 0,
-    width: 0,
-    borderLeftWidth: 10,
-    borderLeftColor: "transparent",
-    borderTopColor: colors.lightGray,
-    borderTopWidth: 10,
-    alignSelf: "flex-start",
-    borderRightColor: "black",
-    right: 10,
-    bottom: 10,
+  inputContainer: {
+    flexDirection: 'row',
+    // backgroundColor: '#ffffff',
+    alignItems: 'center',
+    borderRadius: 20, // Updated to make the container rounded
+    margin: 10,
+    color: colors.black,
+    position: "relative",
   },
 
-  timeAndReadContainer: {
-    flexDirection: "row",
+  input: {
+    paddingHorizontal: 5,
+    fontSize: 16,
+    marginVertical: 4,
+    width: "80%",
+    // Remove borderWidth and borderColor if previously set
   },
-  timeText: {
+
+  iconContainer: {
+    position: 'absolute',
+    right: 10,
+    height: '100%',
+    justifyContent: 'center',
+  },
+
+  repliedMessageContainer: {
+    padding: 5,
+    backgroundColor: colors.lightGray,
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  repliedMessageText: {
     fontSize: 12,
     color: colors.gray,
-  },
-  rightMsgArrow: {
-    height: 0,
-    width: 0,
-    borderRightWidth: 10,
-    borderRightColor: "transparent",
-    borderTopColor: colors.green2,
-    borderTopWidth: 10,
-    alignSelf: "flex-start",
-    left: 6,
-    bottom: 10,
-  },
-  dateHeader: {
-    backgroundColor: colors.primary,
-    width:actuatedNormalize(100),
-    padding: actuatedNormalize(10),
-    borderRadius: actuatedNormalize(20),
-    alignSelf:"center",
-    alignItems: 'center',
-    marginVertical: actuatedNormalize(10),
-  },
-  dateHeaderText: {
-    fontSize: actuatedNormalize(12),
-    color: colors.white,
-    fontFamily:fonts.NexaItalic
   },
 });
 

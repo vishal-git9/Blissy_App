@@ -1,13 +1,13 @@
 import * as React from 'react';
-import {LinkingOptions, NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import { LinkingOptions, NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OnboardingScreen from '../container/Prelogin/onboarding';
-import {Registration} from '../container/Registration/Registration';
-import {RootStackParamList} from './navigatorType';
-import {LoginScreen} from '../container/login/login';
+import { Registration } from '../container/Registration/Registration';
+import { RootStackParamList } from './navigatorType';
+import { LoginScreen } from '../container/login/login';
 import { HealerList } from '../common/healerList/healerlist';
 import { Healerdetails } from '../common/healerList/healerdetails';
-import {DrawerNavigator} from './Drawer';
+import { DrawerNavigator } from './Drawer';
 import NetInfo from '@react-native-community/netinfo';
 import ChatListScreen from '../container/Connection/chatlist';
 import ChatWindowScreen from '../container/Connection/chatwindow';
@@ -25,6 +25,13 @@ import { setConnectionStatus } from '../redux/uiSlice';
 import { ConnectionModal } from '../container/InfoModal/ConnectionModal';
 import BugReportScreen from '../container/feedback/bugreport';
 import UserreviewScreen from '../container/feedback/userreview';
+import OutgoingCallScreen from '../container/Home/outgoing';
+import colors from '../constants/colors';
+import { TouchableOpacity } from 'react-native';
+import Ionicons from "react-native-vector-icons/Ionicons"
+import CalllistData from '../container/Connection/callinfo';
+import { fonts } from '../constants/fonts';
+import { actuatedNormalize } from '../constants/PixelScaling';
 // import { navigationRef } from '../utils/notificationService';
 
 const deepLinksConf = {
@@ -107,24 +114,24 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
   }, [dispatch]);
 
 
-  console.log(isLoggedIn,isNewUser,"isLoggedin")
+  console.log(isLoggedIn, isNewUser, "isLoggedin")
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
-       initialRouteName={
-        isLoggedIn
-          ? isNewUser
-            ? 'Registration' // If the user is logged in and is a new user, navigate to the 'Registration' screen.
-            : 'Drawer' // If the user is logged in but is not a new user, navigate to the 'Home' screen.
-          : 'Onboarding' // If the user is not logged in, navigate to the 'Onboarding' screen.
-      }
+        initialRouteName={
+          isLoggedIn
+            ? isNewUser
+              ? 'Registration' // If the user is logged in and is a new user, navigate to the 'Registration' screen.
+              : 'Drawer' // If the user is logged in but is not a new user, navigate to the 'Home' screen.
+            : 'Onboarding' // If the user is not logged in, navigate to the 'Onboarding' screen.
+        }
         screenOptions={{
           headerShown: false,
           gestureEnabled: true,
           animationTypeForReplace: 'push',
           animation: 'slide_from_left',
           animationDuration: 2000,
-          contentStyle: {backgroundColor: 'rgb(0, 0, 0)'},
+          contentStyle: { backgroundColor: 'rgb(0, 0, 0)' },
         }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -132,20 +139,60 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="Healerlist" component={HealerList} />
         <Stack.Screen name="Healerdetails" component={Healerdetails} />
         <Stack.Screen name="Drawer" component={DrawerNavigator} />
-        <Stack.Screen name="Chatlist" component={ChatListScreen} />
-        <Stack.Screen name="Calllist" component={CallListScreen} />
+        <Stack.Screen name="Chatlist" options={{
+          headerShown: true,
+          headerTitle: 'Chats',
+          gestureEnabled: true,
+          headerTintColor: colors.white,
+          headerTitleStyle: { color: colors.white, fontFamily: fonts.NexaRegular, fontSize: actuatedNormalize(20) },
+          headerLargeTitle: true,
+          headerTransparent: true,
+          headerBlurEffect: 'regular',
+          headerStyle: {
+            backgroundColor: colors.transparent,
+          },
+        }} component={ChatListScreen} />
+        <Stack.Screen options={{
+          headerShown: true,
+          headerTitle: 'Calls',
+          gestureEnabled: true,
+          headerTintColor: colors.white,
+          headerTitleStyle: { color: colors.white, fontFamily: fonts.NexaRegular, fontSize: actuatedNormalize(20) },
+          headerLargeTitle: true,
+          headerTransparent: true,
+          headerBlurEffect: 'regular',
+          headerStyle: {
+            backgroundColor: colors.transparent,
+          },
+          // headerSearchBarOptions: {
+          //   placeholder: 'Search Calls..',
+          //   hideWhenScrolling: true,
+          //   obscureBackground: true,
+          //   shouldShowHintSearchIcon: true,
+          //   tintColor: colors.white,
+          //   headerIconColor: colors.white,
+
+          // },
+
+          // headerRight: () => (
+          //   <TouchableOpacity>
+          //     <Ionicons name="call-outline" color={colors.white} size={30} />
+          //   </TouchableOpacity>
+          // ),
+        }} name="Calllist" component={CalllistData} />
         <Stack.Screen name="ChatWindow" component={ChatWindowScreen} />
-        <Stack.Screen name="ReviewScreen" component={ReviewScreen} /> 
-        <Stack.Screen name="AudioCallScreen" component={VoiceCall} /> 
-        <Stack.Screen name="CouponsScreen" component={Coupons}/>
-        <Stack.Screen name="ComingsoonScreen" component={ComingSoon} /> 
-        <Stack.Screen name='ChatPartnerDetails' component={ChatPartnerDetails}/>
-        <Stack.Screen name="Bugreport" component={BugReportScreen} /> 
-        <Stack.Screen name="Userreview" component={UserreviewScreen} /> 
+        <Stack.Screen name="ReviewScreen" component={ReviewScreen} />
+        <Stack.Screen name="AudioCallScreen" component={VoiceCall} />
+        <Stack.Screen name="CouponsScreen" component={Coupons} />
+        <Stack.Screen name="ComingsoonScreen" component={ComingSoon} />
+        <Stack.Screen name='ChatPartnerDetails' component={ChatPartnerDetails} />
+        <Stack.Screen name="Bugreport" component={BugReportScreen} />
+        <Stack.Screen name="Userreview" component={UserreviewScreen} />
+        <Stack.Screen name="Outgoing" component={OutgoingCallScreen} />
       </Stack.Navigator>
-      <GlobalBackHandler/>
-      {/* <SessionError title='Session Expired' description='Your session has expired please login again'/> */}
-      <ConnectionModal title='OFFLINE!' description='Please check your internet connection' onPressPrimaryButton={()=>console.log("networkhi--->")}/> 
+      <GlobalBackHandler />
+      <SessionError title='Session Expired!' description='Your session has expired please login again' />
+      <ConnectionModal title='OFFLINE!' description='Please check your internet connection' onPressPrimaryButton={() => console.log("networkhi--->")} />
     </NavigationContainer>
   );
 };

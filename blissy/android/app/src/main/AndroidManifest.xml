@@ -67,7 +67,13 @@
       </intent-filter>
       </activity>
 
-
+      <activity
+        android:name="com.myapp.CustomActivity"
+        android:showWhenLocked="true"
+        android:turnScreenOn="true"
+        android:launchMode="singleTop"
+        android:showOnLockScreen="true"
+      />
          <!-- <activity
         android:name="com.example.CustomActivity"
         android:showWhenLocked="true"

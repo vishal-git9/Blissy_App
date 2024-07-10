@@ -24,6 +24,8 @@ import FaceComponent from '../../common/animation/face';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { RouteProp } from '@react-navigation/native';
+import { usePostUserRatingMutation } from '../../api/rewardservice';
+import generateRandomId from '../../utils/randomIdGenerator';
 
 interface ReviewScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -31,10 +33,16 @@ interface ReviewScreenProps {
 }
 
 const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
-  const [rating, setRating] = useState(4);
+  const [rating, setRating] = useState(2);
   const ratingRef = useRef<Animatable.AnimatableComponent<any, any>>(null);  ;
   const color = ratingColors[rating] || colors.yellow;
+  const [postRating,{isLoading,isError,isSuccess}] = usePostUserRatingMutation()
   const {user,socketId} = route.params;
+
+  const handleSubmitReview = async()=>{
+    await postRating({appId:generateRandomId(24),userId:user?._id,rating})
+    navigation.navigate("Drawer")
+  }
 useEffect(()=>{
   const backHandler = BackHandler.addEventListener(
     'hardwareBackPress',
@@ -135,7 +143,7 @@ useEffect(()=>{
             iconame="send"
             label="Submit"
             iconcolor={colors.white}
-            onpress={() =>navigation.navigate("Drawer")}
+            onpress={handleSubmitReview}
             size={18}
             styles={styles.PrimaryButton}
             textSize={actuatedNormalize(18)}

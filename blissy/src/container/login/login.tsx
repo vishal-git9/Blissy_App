@@ -14,6 +14,7 @@ import { useGetUserQuery } from '../../api/userService';
 import { TextInput } from 'react-native-paper';
 import { Loader } from '../../common/loader/loader';
 import { actuatedNormalize } from '../../constants/PixelScaling';
+import HelloModal from '../../common/modals/middleScreen';
 
 interface LoginInterface {
   email: string;
@@ -52,9 +53,11 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
   const [resendOtp, setResendOtp] = useState<boolean>(false)
   const [modalState, setModalState] = useState<boolean>(true)
+  const [AlreadyloggedinCase, setAlreadyloggedinCase] = useState<boolean>(false)
   const [progressDuration, setProgressDuration] = useState(60);
-  const [otpAlreadySentCase,SetotpAlreadySentCase] = useState(false)
+  const [otpAlreadySentCase, SetotpAlreadySentCase] = useState(false)
   const [invalidEmail, setEnvalidEmail] = useState<boolean>(false);
+  const [welcomeModal, setwelcomeModal] = useState<{ visible: boolean, isNew: boolean }>({ visible: false, isNew: false });
   const timerRef = useRef<NodeJS.Timeout>();
   const [getOtp, { error, data, isLoading, reset: resetMobile }] = useGetOtpMutation();
   const { token, isAuthenticated, user, isNewUser, isRegisterd } = useSelector(AuthSelector)
@@ -66,14 +69,16 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const handleSubmitMobileNumber = async () => {
     if (validateEmail(state.email)) {
       const res = await getOtp({ email: `${state.email}` });
-      console.log(res, "---res-----",error)
+      console.log(res, "---res-----", error)
       if ('data' in res) {
         console.log(data, "data of MobileNumber")
         setIsOtpSent(true);
       } else if ('error' in res) {
-        if(res.error?.data?.message === "OTP already sent"){
+        if (res.error?.data?.message === "OTP already sent") {
           setIsOtpSent(true);
           SetotpAlreadySentCase(true)
+        } else if (res.error?.data?.code === "GEN_800") {
+          setAlreadyloggedinCase(true)
         }
         console.log(error)
       }
@@ -86,7 +91,7 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     const res = await OtpVerify({ email: `${state.email}`, otp: parseInt(state.OTP) });
     if ('data' in res) {
       console.log(res, "data of OTP")
-      const isNewuser = await refetch()
+      const isNewuser =  (await refetch()).data
       // fetch user details
       console.log(isNewUser, "newUser from login---")
       clearInterval(timerRef.current);
@@ -94,9 +99,9 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       console.log(isNewuser, "---user isnewuser")
       if (isNewuser?.data?.data?.user?.isNewUser) {
         reduxDispatch(setSessionStatus(false))
-        navigation.navigate('Registration', { UserData: null });
+        setwelcomeModal({ visible: true, isNew: true })
       } else {
-        navigation.navigate('Drawer');
+        setwelcomeModal({ visible: true, isNew: false })
         reduxDispatch(setSessionStatus(false))
         reduxDispatch(setUserState(false))
       }
@@ -140,8 +145,38 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       resetScrollToCoords={{ x: 0, y: 0 }}
       scrollEnabled={true}
       style={styles.container}>
+
+      {
+        welcomeModal.visible ? welcomeModal.isNew ? <HelloModal
+          modalTitleStyle={{ marginTop: actuatedNormalize(-20) }}
+          onPressPrimaryButton={() => {
+            setwelcomeModal({ visible: false, isNew: false })
+            navigation.navigate('Registration', { UserData: null });
+          }}
+          showLottie={true}
+          lottieAnimationPath={require('../../../assets/animation/hello.json')}
+          title={`Hello Healer`}
+          description="there is lot to discover out there but let's set you up first"
+          visible={welcomeModal.visible}
+          onClose={() => console.log("closed")}
+        /> : <HelloModal
+          modalTitleStyle={{ marginTop: actuatedNormalize(-20) }}
+          onPressPrimaryButton={() => {
+            setwelcomeModal({ visible: false, isNew: false })
+            navigation.navigate('Drawer');
+          }}
+          showLottie={true}
+          lottieAnimationPath={require('../../../assets/animation/hello.json')}
+          title={`Welcome Back`}
+          description={`${user?.name} We're glad to have you with us again`}
+          visible={welcomeModal.visible}
+          onClose={() => console.log("closed")}
+        /> : null
+      }
       {!isOtpSent ? (
         <MobileInput
+          AlreadyloggedinCase={AlreadyloggedinCase}
+          setAlreadyloggedinCase={setAlreadyloggedinCase}
           invalidEmail={invalidEmail}
           isLoading={isLoading}
           modalState={modalState}
@@ -152,8 +187,8 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
         />
       ) : (
         <OTPInput
-        otpAlreadySent={otpAlreadySentCase}
-        setAlreadyOtpSent={SetotpAlreadySentCase}
+          otpAlreadySent={otpAlreadySentCase}
+          setAlreadyOtpSent={SetotpAlreadySentCase}
           setIsOtpSent={setIsOtpSent}
           setResendOtp={setResendOtp}
           isError={verifyOtpErr}

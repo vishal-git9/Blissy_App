@@ -22,6 +22,7 @@ interface LabelInputProps {
   onChangeText: Dispatch<Action>;
   type: string;
   name: string;
+  multiline?:boolean;
   value: string;
   id?: string;
   hasErrors?: boolean;
@@ -44,6 +45,7 @@ const LabelInputComponent: React.FC<LabelInputProps> = ({
   name,
   value,
   id,
+  multiline,
   hasErrors,
   errorText,
   IconProvider,
@@ -79,6 +81,7 @@ const LabelInputComponent: React.FC<LabelInputProps> = ({
         activeUnderlineColor={colors.transparent}
         contentStyle={{fontFamily: fonts.NexaBold, color: colors.white}}
         value={value}
+        multiline={multiline}
         editable={editable}
         left={
           IconProvider && (
@@ -131,7 +134,7 @@ const LabelInputComponent: React.FC<LabelInputProps> = ({
       />
       {errorText && (
         <HelperText
-          style={{fontFamily: fonts.NexaRegular, fontSize: 12, color:colors.red}}
+          style={{fontFamily: fonts.NexaRegular, fontSize: 12, color:colors.lightRed2}}
           type="error"
           visible={validate}>
           {errorText}

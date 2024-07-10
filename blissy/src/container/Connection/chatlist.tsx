@@ -7,10 +7,24 @@ import { RouteBackButton } from '../../common/button/BackButton';
 import { Image } from 'react-native';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { fonts } from '../../constants/fonts';
-import { Badge } from 'react-native-paper';
+import { Badge, Searchbar, Snackbar } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
+import Animated, {
+  CurvedTransition,
+  FadeInUp,
+  FadeOutUp,
+  SlideInUp,
+  SlideOutLeft,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import Ionicons from "react-native-vector-icons/Ionicons"
 import {
   ActiveUserListSelector,
+  ActiveUserSelector,
+  BlockedUserSelector,
   ChatList,
   Message,
   MessageSelector,
@@ -20,29 +34,133 @@ import {
   newMessagesSelector,
   pushChatlist
 } from '../../redux/messageSlice';
-import { AuthSelector } from '../../redux/uiSlice';
+import { AuthSelector, UserInterface } from '../../redux/uiSlice';
 import { formatDateTime } from '../../utils/formatedateTime';
 import ChatItemSkeleton from '../../common/loader/skeleton';
 import { Empty } from '../../common/Empty/Empty';
 import moment from 'moment';
-import PullToRefresh from '../../common/refresh/pulltorefresh';
+import AppleStyleSwipeableRow from '../../common/animation/swipeable';
+import { useBlockUserMutation, useDeleteUserMutation, useGetChatlistQuery, useUnblockUserMutation } from '../../api/chatService';
+import { BlissyLoader } from '../../common/loader/blissy';
+import PullToRefresh from '../../common/refresh/pull';
+import { SegmentedControl } from '../../common/tab/segmented';
+import { ScrollView } from 'react-native';
+import { defaultStyles } from '../../common/styles/defaultstyles';
+import SearchBar from '../../common/header/searchbar';
+interface AlertMessage {
+  show: boolean;
+  message: string;
+}
+
+const transition = CurvedTransition.delay(100)
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const newMessages = useSelector(MessageSelector);
   const chatlistdata = useSelector(chatListSelector);
+  const BlockedUsers = useSelector(BlockedUserSelector)
+  const ActiveUsers = useSelector(ActiveUserSelector)
   const { socket, user } = useSelector(AuthSelector);
   const loadItems = useRef<any[]>(new Array(5).fill(0));
+  const [chatData, setChatData] = useState<ChatList[]>(ActiveUsers)
+  const [searchQueryData, setsearchQueryData] = useState<ChatList[]>(chatlistdata)
+  const [searchQuerytext, SetsearchQuerytext] = useState<string>("")
+  const [selectedOption, setSelectedOption] = useState('Active');
+  const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isScrollable, setIsScrollable] = useState(false);
+  const [containerHeight, setContainerHeight] = useState(0);
+  const ITEM_HEIGHT = 40; // Example item height
   const dispatch = useDispatch();
+  const [AlertMessage, setAlertMessage] = useState<AlertMessage>({ show: false, message: "" })
+  const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery(user?._id)
+  const [deleteUser, { isLoading: isdeleteloading, isError: isdeleteerror, isSuccess: isdeletesccuess }] = useDeleteUserMutation()
+  const [typingUser, setTypingUser] = useState<{ userData: UserInterface, typingState: boolean }>()
+  const [blockUser, { isLoading: isblockloading, isError: isblockerror, isSuccess: isblocksccuess }] = useBlockUserMutation()
+  const [UnblockUser, { isLoading: isunblockloading, isError: isunblockerror, isSuccess: isunblocksccuess }] = useUnblockUserMutation()
   const { activeUserList } = useSelector(ActiveUserListSelector);
+  const editing = useSharedValue(-30);
+  const height = useSharedValue(100);
 
+
+  React.useEffect(() => {
+    console.log("hi-->", isSearchActive)
+    if (isSearchActive) {
+      navigation.setOptions({
+        headerShown: false,
+        // headerRight:()=><Searchbar value='bar'/>
+      });
+    } else {
+      navigation.setOptions({
+        headerShown: true,
+
+        // headerRight:()=><Searchbar value='bar'/>
+      });
+    }
+  }, [navigation, isSearchActive]);
+
+  console.log("isSearchActive-->", isSearchActive)
+
+  const onSegmentChange = (option: string) => {
+    setSelectedOption(option);
+  };
+
+  const handleSearchFriendsQuery = useCallback((text: string) => {
+    console.log(text, 'text---->')
+    SetsearchQuerytext(text)
+    const Searchfiltered = chatlistdata.filter(user =>
+      user.chatPartner.name.toLowerCase().startsWith(text.toLowerCase())
+    );
+    setsearchQueryData(Searchfiltered)
+  }, [selectedOption, searchQuerytext])
+
+  const animatedRowStyles = useAnimatedStyle(() => ({
+    transform: [{ translateX: withTiming(editing.value) }],
+  }));
+
+  const animatedPosition = useAnimatedStyle(() => ({
+    transform: [{ translateX: withTiming(editing.value) }],
+  }));
+
+
+  const onLayout = (event: { nativeEvent: { layout: { height: any; }; }; }) => {
+    console.log( event.nativeEvent.layout.height,"height------>")
+    const { height } = event.nativeEvent.layout;
+    setContainerHeight(Math.ceil(height));
+  };
+
+  const checkIfScrollable = useCallback(() => {
+    const totalItemsHeight = chatlistdata.length * ITEM_HEIGHT;
+    console.log(totalItemsHeight,containerHeight,"totalItemsHeight----->")
+    setIsScrollable(totalItemsHeight > containerHeight);
+  },[containerHeight]);
+
+  useEffect(() => {
+    height.value = withTiming(isSearchActive ? 10 : 100, { duration: 500 }, (finished) => {
+      if (finished) {
+        // runOnJS(setHeightIncreased)(true);
+      }
+    });  
+  },[isSearchActive]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      height: height.value,
+    };
+  });
+
+  const RefreshNewMessages = async () => {
+    await refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err)) // after getting refreshed chatlist
+    findNewMessage() // sort by new messages
+  }
   const getLatestMessageTimestamp = (item: ChatList) => {
-    if (item.allMessages.length === 0) return null;
+    if (item?.allMessages?.length === 0) return null;
     return item.allMessages.reduce((latest, message) => {
       return moment(latest.createdAt).isAfter(moment(message.createdAt)) ? latest : message;
     }).createdAt;
   };
 
-  const dataWithTimestamps = chatlistdata.map(item => ({
+  const dataWithTimestamps = chatlistdata?.map(item => ({
     ...item,
     latestMessageTimestamp: getLatestMessageTimestamp(item)
   }));
@@ -54,8 +172,73 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       return moment(b.latestMessageTimestamp).diff(moment(a.latestMessageTimestamp));
     });
     dispatch(pushChatlist(sortedData));
-    console.log(sortedData, "sortedData-------->");
   }, [dispatch, chatlistdata]);
+
+
+  // handling swipe right actions on chatlist
+
+  const handleRightActions = useCallback(async (text: string, item: ChatList) => {
+    if (text === "Delete") {
+      // make delete api call
+      try {
+        await deleteUser(item.chatPartner._id);
+        await refetch()
+          .then((res) => dispatch(pushChatlist(res.data.chatList)))
+          .catch((err) => console.log(err)); // after getting refreshed chatlist
+        setAlertMessage({ show: true, message: "User Deleted" });
+      } catch (error) {
+        console.log(error);
+      }
+    } else if (text === "Block") {
+      // make block api call
+      try {
+        await blockUser(item.chatPartner._id);
+        await refetch()
+          .then((res) => {
+            dispatch(pushChatlist(res.data.chatList))
+            // const filteredData = res.data.chatList.filter((el: ChatList) => el.isBlocked === false)
+            // setChatData(filteredData)
+          })
+          .catch((err) => console.log(err)); // after getting refreshed chatlist  
+        setAlertMessage({ show: true, message: "User Blocked" });
+      } catch (error) {
+        console.log(error);
+      }
+    } else if (text === "Unblock") {
+      // make unblock api call
+      try {
+        await UnblockUser(item.chatPartner._id);
+        await refetch()
+          .then((res) => {
+            dispatch(pushChatlist(res.data.chatList))
+            // const filteredData = res.data.chatList.filter((el: ChatList) => el.isBlocked === true)
+            // setChatData(filteredData)
+          })
+          .catch((err) => console.log(err)); // after getting refreshed chatlist
+
+        setAlertMessage({ show: true, message: "User Unblocked" });
+        // const filteredData = chatlistdata.filter((el)=>el.isBlocked === true)
+        // setChatData(filteredData)  
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, [chatlistdata, selectedOption, setAlertMessage]);
+
+  const renderChatlistData = useCallback(() => {
+
+    if (!isSearchActive) {
+      if (selectedOption === "Active") {
+        return ActiveUsers
+      } else {
+        return BlockedUsers
+      }
+    } else {
+      return searchQueryData
+    }
+
+  }, [isSearchActive, chatlistdata, selectedOption, searchQueryData])
+
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
@@ -64,7 +247,36 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     return unsubscribe;
   }, [navigation, chatlistdata]);
 
-  const renderChatItem = ({ item }: { item: ChatList }) => {
+  useEffect(() => {
+    socket?.on('notify_typing_state', data => {
+      setTypingUser(data);
+    });
+
+
+    return () => {
+      socket?.off('notify_typing_state');
+    };
+  }, [])
+
+
+  const AvatarWithBanIcon = ({ item }: { item: ChatList }) => (
+    <View style={styles.avatarContainer}>
+      <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
+      {item.isBlocked && (
+        <Ionicons
+          name={'ban'}
+          size={50}
+          color={colors.darkRed}
+          style={styles.banIcon}
+        />
+      )}
+    </View>
+  );
+
+
+
+
+  const renderChatItem = ({ item, index }: { item: ChatList, index: number }) => {
     const newMessageIds: any[] = [];
     const FindSender = () => {
       item.allMessages.forEach((el) => {
@@ -78,64 +290,174 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
     FindSender();
 
+    const userActions = item.isBlockedBy.includes(user?._id as string) && item.isBlocked ? [{ name: "Delete", text: "Delete", color: colors.red, width: 192 }, { name: item.isBlocked ? "Unblock" : "Block", text: item.isBlocked ? "Unblock" : "Block", color: colors.bag9Bg, width: 128 }] : item.isBlockedBy.length === 0 ? [{ name: "Delete", text: "Delete", color: colors.red, width: 192 }, { name: "Block", text: "Block", color: colors.bag9Bg, width: 128 }] : [{ name: "Delete", text: "Delete", color: colors.red, width: 192 }]
+
+
     const socketId = activeUserList?.find((el) => el?.userId?._id === item?.chatPartner?._id);
 
     return (
-      <TouchableOpacity
-        style={styles.chatItem}
-        onPress={() => {
-          navigation.navigate('ChatWindow', {
-            socketId: socketId?.socketId,
-            userDetails: item.chatPartner,
-            Chats: item,
-            senderUserId: null
-          });
-        }}
-      >
-        <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
-        <View style={styles.chatDetails}>
-          <Text style={styles.chatName}>{item.chatPartner.name}</Text>
-          <View style={{ flexDirection: 'row', columnGap: actuatedNormalize(10), alignItems: 'center', marginTop: actuatedNormalize(5) }}>
-            <Text style={styles.lastMessage}>{item.allMessages[item.allMessages?.length - 1].message}</Text>
-            {newMessageIds?.length > 0 && (
-              <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>
-                {newMessageIds?.length}
-              </Badge>
-            )}
+      <AppleStyleSwipeableRow item={item} actions={userActions} pressHandler={handleRightActions}>
+        <Animated.View
+          entering={FadeInUp.delay(index * 20)}
+          exiting={FadeOutUp}
+          style={{ flexDirection: 'row', alignItems: 'center' }}
+        >
+          {/* <AnimatedTouchableOpacity
+                          style={[animatedPosition, { paddingLeft: 8 }]}
+                          onPress={() => removeCall(item)}
+                        >
+                          <Ionicons name="remove-circle" size={24} color={colors.red} />
+                        </AnimatedTouchableOpacity> */}
+          <Animated.View
+            style={[defaultStyles.item, { paddingLeft: 20 }, animatedRowStyles]}
+          >
+            <AnimatedTouchableOpacity style={{
+              flexDirection: "row", paddingLeft: 20, alignItems: 'center'
+            }} onPress={() => {
+              navigation.navigate('ChatWindow', {
+                socketId: socketId?.socketId,
+                userDetails: item.chatPartner,
+                Chats: item,
+                senderUserId: null
+              });
+            }}>
+              <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
+              <View style={styles.chatDetails}>
+                <Text style={styles.chatName}>{item.chatPartner.name}</Text>
+
+                {/* isusertyping or not */}
+                {
+                  (typingUser?.typingState && typingUser?.userData._id === item.chatPartner._id) ? <Text style={[styles.chatName, { color: colors.darkprimary, fontSize: actuatedNormalize(12) }]}>Typing...</Text> : <View style={{ flexDirection: 'row', columnGap: actuatedNormalize(10), alignItems: 'center', marginTop: actuatedNormalize(5) }}>
+                    <Text numberOfLines={1} style={styles.lastMessage}>{item.allMessages[item.allMessages?.length - 1]?.message || ""}</Text>
+                    {newMessageIds?.length > 0 && (
+                      <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>
+                        {newMessageIds?.length}
+                      </Badge>
+                    )}
+                  </View>
+                }
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.timestamp}>{item?.allMessages[item?.allMessages?.length - 1]?.createdAt ? formatDateTime(item?.allMessages[item?.allMessages?.length - 1]?.createdAt, 'Date_time') : ""}</Text>
+                {/* <Ionicons name="information-circle-outline" size={24} color={colors.primary} /> */}
+              </View>
+            </AnimatedTouchableOpacity>
+          </Animated.View>
+        </Animated.View>
+        {/* <TouchableOpacity
+          style={[styles.chatItem, { borderLeftColor: item.isBlocked ? colors.red : colors.darkprimary, borderLeftWidth: 2 }]}
+          onPress={() => {
+            navigation.navigate('ChatWindow', {
+              socketId: socketId?.socketId,
+              userDetails: item.chatPartner,
+              Chats: item,
+              senderUserId: null
+            });
+          }}
+        >
+          {item.isBlocked ? <AvatarWithBanIcon item={item} /> : <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
+          }
+          <View style={styles.chatDetails}>
+            <Text style={styles.chatName}>{item.chatPartner.name}</Text>
+            {
+              (typingUser?.typingState && typingUser?.userData._id === item.chatPartner._id) ? <Text style={[styles.chatName, { color: colors.darkprimary, fontSize: actuatedNormalize(12) }]}>Typing...</Text> : <View style={{ flexDirection: 'row', columnGap: actuatedNormalize(10), alignItems: 'center', marginTop: actuatedNormalize(5) }}>
+                <Text numberOfLines={1} style={styles.lastMessage}>{item.allMessages[item.allMessages?.length - 1]?.message || ""}</Text>
+                {newMessageIds?.length > 0 && (
+                  <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>
+                    {newMessageIds?.length}
+                  </Badge>
+                )}
+              </View>
+            }
           </View>
-        </View>
-        <Text style={styles.timestamp}>{formatDateTime(item?.allMessages[item?.allMessages?.length - 1].createdAt, 'Date_time')}</Text>
-      </TouchableOpacity>
+          <Text style={styles.timestamp}>{item?.allMessages[item?.allMessages?.length - 1]?.createdAt ? formatDateTime(item?.allMessages[item?.allMessages?.length - 1]?.createdAt, 'Date_time') : ""}</Text>
+        </TouchableOpacity> */}
+      </AppleStyleSwipeableRow>
     );
   };
 
+  console.log(height.value, "isScrollable-----")
+
   return (
     <View style={styles.container}>
-      <RouteBackButton onPress={() => navigation.goBack()} />
+      {/* <RouteBackButton onPress={() => navigation.goBack()} />
       <Text style={{ color: colors.white, alignSelf: 'center', fontFamily: fonts.NexaBold, fontSize: actuatedNormalize(23), marginTop: actuatedNormalize(20) }}>
         Chats
-      </Text>
+      </Text> */}
+      <View style={[styles.header]}>
+        <Animated.View style={[animatedStyle]}>
+        <SearchBar height={height.value} querytext={searchQuerytext} isSearchActive={isSearchActive} setIsSearchActive={setIsSearchActive} onSearch={handleSearchFriendsQuery} />
+        </Animated.View>
+        {
+          !isSearchActive && <SegmentedControl
+            options={['Active', 'Blocked']}
+            selectedOption={selectedOption}
+            onOptionPress={onSegmentChange}
+          />
+        }
+
+        {/* <TouchableOpacity onPress={onEdit}>
+          <Text style={{ color: colors.white, fontSize: actuatedNormalize(18),fontFamily:fonts.NexaRegular }}>
+            {isEditing ? 'Done' : 'Edit'}
+          </Text>
+        </TouchableOpacity> */}
+      </View>
       {/* Icons can be added here */}
-      {false ? (
-        loadItems.current.map(el => <ChatItemSkeleton key={el} />)
-      ) : (
-        chatlistdata.length > 0 ? (
-          <PullToRefresh refreshing={false} onRefresh={findNewMessage}>
-            <FlatList
-              data={chatlistdata}
-              contentContainerStyle={{
-                rowGap: actuatedNormalize(10),
-                marginHorizontal: actuatedNormalize(10),
-                marginTop: actuatedNormalize(40),
-              }}
-              keyExtractor={item => item.chatPartner._id}
-              renderItem={renderChatItem}
-            />
+      {/* <SearchBar onSearch={handleSearchFriendsQuery} /> */}
+      {
+        chatlistdata?.length > 0 ? (
+          <PullToRefresh refreshing={false} onRefresh={RefreshNewMessages}>
+            <ScrollView
+              contentInsetAdjustmentBehavior="automatic"
+              contentContainerStyle={{}} nestedScrollEnabled={true}>
+              <Animated.View onLayout={onLayout}
+                style={[defaultStyles.block, { borderTopColor: colors.lightGray, borderWidth: 2, width: "100%", alignSelf: "center" }]} layout={transition}>
+                <Animated.FlatList
+                  skipEnteringExitingAnimations
+                  layout={transition}
+                  data={renderChatlistData()}
+                  onContentSizeChange={checkIfScrollable}
+                  renderItem={renderChatItem}
+                  keyExtractor={(item, index) => item?._id}
+                  ItemSeparatorComponent={() => (
+                    <View style={[defaultStyles.separator, { marginLeft: 90 }]} />
+                  )}
+                  scrollEnabled={false}
+                />
+              </Animated.View>
+            </ScrollView>
           </PullToRefresh>
         ) : (
           <Empty />
         )
-      )}
+      }
+
+      <Snackbar
+        duration={2000}
+        visible={AlertMessage.show}
+        style={{ backgroundColor: colors.dark }}
+        onDismiss={() => setAlertMessage({ show: false, message: "" })}
+        action={{
+          theme: {
+            fonts: {
+              regular: { fontFamily: fonts.NexaRegular },
+              medium: { fontFamily: fonts.NexaBold },
+              light: { fontFamily: fonts.NexaBold },
+              thin: { fontFamily: fonts.NexaRegular },
+            },
+            colors: { inversePrimary: colors.white, surface: colors.white, accent: colors.white }
+          },
+
+          label: 'Okay',
+          textColor: "red",
+          labelStyle: { fontFamily: fonts.NexaBold, color: colors.white },
+          onPress: () => {
+            // Do something
+            setAlertMessage({ show: false, message: "" });
+          },
+        }}>
+        {AlertMessage.message}
+      </Snackbar>
     </View>
   );
 };
@@ -159,6 +481,25 @@ const styles = StyleSheet.create({
     borderRadius: actuatedNormalize(30), // Makes it circular
     marginRight: actuatedNormalize(15),
   },
+  avatarContainer: {
+    position: 'relative',
+    width: 60, // adjust to your needs
+    height: 60, // adjust to your needs
+    marginRight: actuatedNormalize(15),
+    justifyContent: "center",
+    alignItems: "center"
+
+  },
+  // avatar: {
+  //   width: '100%',
+  //   height: '100%',
+  //   borderRadius: 25, // adjust to make it a circle
+  // },
+  banIcon: {
+    position: 'absolute',
+    right: "20%"
+    // right: -10,
+  },
   chatDetails: {
     flex: 1,
     rowGap: actuatedNormalize(5),
@@ -171,10 +512,21 @@ const styles = StyleSheet.create({
   lastMessage: {
     color: colors.gray,
     fontSize: actuatedNormalize(14),
+    width: "75%"
   },
   timestamp: {
     color: colors.gray,
     fontSize: actuatedNormalize(12),
+  },
+  header: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    // padding: actuatedNormalize(16),
+    rowGap: 10,
+    alignItems: "flex-start",
+    marginTop: actuatedNormalize(20),
+    marginHorizontal: 16,
+    // backgroundColor: colors.red,
   },
 });
 

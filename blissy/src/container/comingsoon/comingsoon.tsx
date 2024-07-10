@@ -35,7 +35,7 @@ export const ComingSoon:React.FC<AppProps> = ({navigation,route}) => {
 export const ComingSoonComponent:React.FC<AppProps2> = ({navigation,screenName}) => {
     return (
         <View style={styles.container}>
-            <RouteBackButton  onPress={()=>navigation.goBack()}/>
+            {/* <RouteBackButton  onPress={()=>navigation.goBack()}/> */}
             <LottieView autoPlay
               loop source={require("../../../assets/animation/comingsoon.json")} style={{ width: actuatedNormalize(300), height: actuatedNormalize(300),alignSelf:"center" }} />
               <Text style={styles.description}>

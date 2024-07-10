@@ -1,69 +1,323 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  BackHandler,
+} from 'react-native';
+import Entypo from 'react-native-vector-icons/Entypo';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import colors from '../../constants/colors';
+import {actuatedNormalize} from '../../constants/PixelScaling';
+import {fonts} from '../../constants/fonts';
+import AnimatedCounter from '../../common/counter/counter';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AuthSelector, UserInterface } from '../../redux/uiSlice';
+import { Socket } from 'socket.io-client';
+import { useDispatch, useSelector } from 'react-redux';
+import {  MessageCountSelector, chatScreenActiveSelector } from '../../redux/messageSlice';
+import ProfileScreenModal from '../../common/modals/profile';
+import { Snackbar } from 'react-native-paper';
+import { RouteProp } from '@react-navigation/native';
 
-const IncomingCallScreen: React.FC = () => {
+interface IconContainerProps {
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+  leave:()=>void;
+  ConnectedUserData:UserInterface,
+  socketId:string | null;
+}
+type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'Outgoing'>;
+
+interface CallingScreenProps extends IconContainerProps {
+  socket:Socket;
+  route: ProfileScreenRouteProp;
+}
+
+const IconContainer: React.FC<IconContainerProps> = ({navigation,leave}) => {
   return (
-    <LinearGradient colors={[colors.primary, colors.dark]} style={styles.container}>
-      <Text style={styles.callStatus}>Incoming Call</Text>
-      <Image
-        source={{ uri: 'https://via.placeholder.com/100' }} // Replace with the caller's image URL
-        style={styles.callerImage}
-      />
-      <Text style={styles.callerName}>Katy Perry</Text>
-      <Text style={styles.callerNumber}>+380 44 333 4545</Text>
-      <TouchableOpacity style={styles.answerButton}>
-        <Icon name="call" size={30} color="#fff" />
-        <Text style={styles.answerText}>Slide to answer</Text>
+    <View style={styles.iconContainer}>
+      {/* <TouchableOpacity style={[styles.icon, styles.leftIcon,{backgroundColor:muteEnabled ? colors.primary : colors.white}]} onPress={toggleMic}>
+        <Entypo name="sound-mute" color={muteEnabled ? colors.white : colors.black} size={30} />
+      </TouchableOpacity> */}
+
+      <TouchableOpacity
+        style={[styles.icon, styles.middleIcon]}
+        onPress={() =>{
+          leave()
+          navigation.navigate('Drawer')
+        }
+        }>
+        <MaterialIcons name="call-end" color={'white'} size={30} />
       </TouchableOpacity>
-    </LinearGradient>
+
+      {/* <TouchableOpacity style={[styles.icon, styles.rightIcon,{backgroundColor:speakerEnabled ? colors.primary : colors.white}]} onPress={toggleSpeaker}>
+        <Entypo name="sound" color={speakerEnabled ? colors.white : colors.black} size={30} />
+      </TouchableOpacity> */}
+    </View>
+  );
+};
+
+const CallingScreen: React.FC<CallingScreenProps> = ({navigation,route}) => {
+  const {ConnectedUserData,socketId} = route.params 
+  const {socket} = useSelector(AuthSelector)
+  const [errorSnackbar,setErrorSnackbar] = useState<boolean>(false)
+  // const [messageCount,setMessageCount] = useState<number>(0)
+// const [userChannel,setUserChannel] = useState<string>("Call")
+const isChatStateActive = useSelector(chatScreenActiveSelector)
+// console.log(ConnectedUserData)
+const messageCount = useSelector(MessageCountSelector)
+// console.log(isChatStateActive)
+const dispatch = useDispatch()
+
+  // switch (userChannel) {
+  //   case "Chat" :
+  //     return <ChatWindowScreen navigation={navigation} />
+  //   case "Profile" :
+  //     return <UserProfile navigation={navigation}/>
+  // }
+
+  const handleLeave = ()=>{
+    navigation.goBack()
+  }
+
+  useEffect(()=>{
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        return true; // Return true to prevent default behavior (going back)
+      }
+    );
+    return () => backHandler.remove();
+  })
+
+
+  useEffect(() => {
+
+    // socket.on('privateMessageSuccessfulAdd', (messageObject) => {
+    //   const newMessage = {...messageObject.message,sender:"them"}
+
+    //   console.log(messageObject,"messageobject------>")
+    //   dispatch(addMessage(newMessage));
+    //   playNotificationSound()
+    // });
+
+
+    // Cleanup on component unmount
+ 
+  }, [isChatStateActive]);
+
+
+
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* User section */}
+      {/* <ProfileScreenModal onClose={()=>setProfileModal(false)} visible={profileModal} userdata={ConnectedUserData}/> */}
+      <View style={styles.userSection}>
+        {/* <View style={{justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={styles.connectedText}>You connected with {ConnectedUserData?.name}</Text>
+          <Text style={styles.timeText}>
+            {Math.floor(seconds / 60)
+              .toString()
+              .padStart(2, '0')}{' '}
+            mins ago
+          </Text>
+        </View> */}
+        <View style={styles.avatarContainer}>
+          <Image
+            // blurRadius={10}
+            source={{uri: ConnectedUserData?.profilePic}} // Replace with actual image path
+            style={styles.avatar}
+          />
+        </View>
+        {/* <View style={{justifyContent: 'center', alignItems: 'center',width:"100%"}}>
+          <Text style={styles.knowText}>
+            Know What {ConnectedUserData?.name} and You have common
+          </Text>
+          <TouchableOpacity style={styles.readReceiptsButton}  onPress={handleProfileUsermodal}>
+            <Text style={styles.readReceiptsText}>View Profile</Text>
+          </TouchableOpacity> */}
+
+            {/* <IconButton
+            IsBadge={ messageCount > 0 ? true : false}
+            BadgeCount={messageCount}
+            IconProvider={MaterialIcons}
+            iconame="chat"
+            label="Chat"
+            iconcolor={colors.white}
+            onpress={() =>{
+              dispatch(setChatScreenActive(true))
+              navigation.navigate("ChatWindow",{userDetails:ConnectedUserData,socketId:socketId || undefined})
+            }}   
+               size={18}
+            styles={styles.SecondaryButton}
+            textSize={actuatedNormalize(18)}
+            textcolor={colors.white}
+          /> */}
+          {/* <TouchableOpacity style={styles.readReceiptsButton}>
+            <Text style={styles.readReceiptsText}>View Profile</Text>
+          </TouchableOpacity> */}
+        {/* </View> */}
+        {/* <AnimatedCounter seconds={seconds} setSeconds={setSeconds} /> */}
+      </View>
+
+      {/* Action buttons */}
+      <IconContainer ConnectedUserData={ConnectedUserData} navigation={navigation} leave={handleLeave} socketId={socketId}  />
+      {/* <Snackbar
+            duration={otherUserMute ? 10000 : 2000}
+            visible={errorSnackbar}
+            style={{backgroundColor: colors.black}}
+            onDismiss={() => setErrorSnackbar(false)}
+            action={{
+              theme: {
+                fonts: {
+                  regular: {fontFamily: fonts.NexaRegular},
+                  medium: {fontFamily: fonts.NexaBold},
+                  light: {fontFamily: fonts.NexaBold},
+                  thin: {fontFamily: fonts.NexaRegular},
+                },
+              },
+              label: 'Okay',
+              labelStyle: {fontFamily: fonts.NexaBold},
+              onPress: () => {
+                // Do something
+                setErrorSnackbar(false);
+              },
+            }}>
+            {otherUserMute ? `${ConnectedUserData?.name} is on mute` : `${ConnectedUserData?.name} has unmute`}
+          </Snackbar> */}
+
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.black, 
+    paddingVertical:actuatedNormalize(10)
+  },
+  userSection: {
+    flex: 1,
+    marginTop:actuatedNormalize(50),
+    alignItems: 'center',
+    rowGap: actuatedNormalize(20),
+  },
+  connectedText: {
+    fontSize: actuatedNormalize(22),
+    fontFamily: fonts.NexaBold,
+    color: colors.white,
+    textAlign:"center"
+  },
+  timeText: {
+    fontSize: actuatedNormalize(16),
+    color: colors.gray,
+    fontFamily: fonts.NexaRegular,
+  },
+  avatar: {
+    width: actuatedNormalize(110),
+    height: actuatedNormalize(110),
+    borderRadius: actuatedNormalize(60),
+    alignSelf: 'center',
+  },
+  avatarContainer: {
+    width: actuatedNormalize(120),
+    height: actuatedNormalize(120),
+    borderRadius: actuatedNormalize(60),
+    borderWidth: 3,
+    justifyContent: 'center',
+    borderColor: colors.primary,
+  },
+  knowText: {
+    fontSize: actuatedNormalize(16),
+    color: colors.lightGray,
+    textAlign: 'center',
+    width:"80%",
+    lineHeight:actuatedNormalize(20),
+    fontFamily: fonts.NexaRegular,
+    marginBottom: actuatedNormalize(16),
+  },
+  readReceiptsButton: {
+    backgroundColor: '#fff',
+    borderRadius: actuatedNormalize(10),
+    paddingHorizontal: actuatedNormalize(16),
+    paddingVertical: actuatedNormalize(10),
+  },
+  readReceiptsText: {
+    color: colors.black,
+    fontSize: actuatedNormalize(16),
+    fontFamily: fonts.NexaBold,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingBottom: 40,
+  },
+  micIcon: {
+    fontSize: 36,
+    color: '#fff',
+  },
+  messageIcon: {
+    fontSize: 36,
+    color: '#fff',
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.black,
+    width: '90%',
+    alignSelf: 'center',
+    borderRadius: 50,
+    justifyContent: 'space-around',
+  },
+  icon: {
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
-  callStatus: {
-    fontSize: 24,
-    color: '#fff',
-    marginBottom: 20,
+  leftIcon: {
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    width: 50,
+    height: 50,
   },
-  callerImage: {
-    width: 100,
-    height: 100,
+  middleIcon: {
+    position: 'relative',
+    top: -30,
+    backgroundColor: colors.red,
     borderRadius: 50,
-    marginBottom: 10,
-  },
-  callerName: {
-    fontSize: 22,
-    color: '#fff',
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  callerNumber: {
-    fontSize: 18,
-    color: '#fff',
-    marginBottom: 40,
-  },
-  answerButton: {
-    flexDirection: 'row',
+    alignSelf: 'center',
+    width: 70,
+    height: 70,
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#34C759',
-    padding: 10,
-    borderRadius: 25,
-    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    shadowOffset: {width: 0, height: 2},
+    elevation: 5,
   },
-  answerText: {
-    color: '#fff',
-    fontSize: 16,
-    marginLeft: 10,
+  rightIcon: {
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    width: 50,
+    height: 50,
+  },
+
+  SecondaryButton: {
+    borderRadius: actuatedNormalize(10),
+    paddingHorizontal: actuatedNormalize(16),
+    paddingVertical: actuatedNormalize(10),
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    marginTop:actuatedNormalize(10),
+    borderColor: colors.lightGray,
+    columnGap: actuatedNormalize(10),
   },
 });
 
-export default IncomingCallScreen;
+export default CallingScreen;

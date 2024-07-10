@@ -1,25 +1,46 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, KeyboardAvoidingView } from 'react-native';
+import { View, TextInput, StyleSheet, KeyboardAvoidingView, Pressable } from 'react-native';
 import { Button, Card } from 'react-native-paper';
 import { PrimaryButton } from '../../common/button/PrimaryButton';
 import { RouteBackButton } from '../../common/button/BackButton';
 import { Text } from 'react-native';
 import colors from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import ReportCard from '../../common/cards/reportcard';
 import { ScrollView } from 'react-native';
 import LiveItUpComponent from '../../common/drawer/liveitup';
+import MaterialIcons from "react-native-vector-icons/MaterialIcons"
+import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
 
 interface BugreportProps {
-    navigation: NativeStackNavigationProp<RootStackParamList>;
+    navigation: DrawerNavigationProp<RootStackParamList>;
 
 }
 
-const BugReportScreen: React.FC<BugreportProps> = ({ navigation }) => {
+const BugReportScreen: React.FC<BugreportProps> = ( props ) => {
     const [text, setText] = useState<string>('');
+
+
+    React.useLayoutEffect(()=>{
+        props.navigation.setOptions(({
+            headerShown: true,
+            headerTitle: '',
+            headerTintColor: colors.white,
+            headerTitleStyle: { color: colors.white, fontFamily: fonts.NexaRegular, fontSize: actuatedNormalize(20) },
+            headerTransparent: true,
+            headerLeft: ({ }) => (
+                <Pressable onPress={props.navigation.goBack} style={{marginRight:10}}>
+                    {/* <Ionicons name="arrow-back" size={24} color={colors.white} /> */}
+                    <MaterialIcons name="segment" size={actuatedNormalize(30)} color={colors.white} />
+                </Pressable >
+              ),
+            headerStyle: {
+              backgroundColor: colors.transparent,
+            },
+                }))
+    },[props.navigation])
 
     const handlePress = () => {
         console.log('Button Pressed with Text:', text);
@@ -43,8 +64,8 @@ const BugReportScreen: React.FC<BugreportProps> = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <RouteBackButton onPress={() => navigation.goBack()} />
-            <Text style={{ color: colors.white, alignSelf: "center", fontFamily: fonts.NexaBold, fontSize: actuatedNormalize(23), marginTop: actuatedNormalize(5) }}>Bug Report</Text>
+            {/* <RouteBackButton onPress={() => navigation.goBack()} /> */}
+            {/* <Text style={{ color: colors.white, alignSelf: "center", fontFamily: fonts.NexaBold, fontSize: actuatedNormalize(23), marginTop: actuatedNormalize(5) }}>Bug Report</Text> */}
 
             <View style={styles.buttonContainer}>
                 <Button buttonColor={view === "create" ? colors.primary : "transparent"} labelStyle={{ fontFamily: fonts.NexaRegular }} mode={view === "create" ? "contained" : "outlined"} textColor={colors.white} onPress={() => setView('create')} style={styles.button}>

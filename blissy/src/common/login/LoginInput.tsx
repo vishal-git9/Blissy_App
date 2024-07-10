@@ -1,4 +1,4 @@
-import React, {Dispatch} from 'react';
+import React, { Dispatch } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,20 +6,21 @@ import {
   Dimensions,
   useWindowDimensions,
 } from 'react-native';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import {actuatedNormalize} from '../../constants/PixelScaling';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { actuatedNormalize } from '../../constants/PixelScaling';
 import Modal from 'react-native-modal';
 import Entypo from 'react-native-vector-icons/Entypo';
-import {fonts} from '../../constants/fonts';
+import { fonts } from '../../constants/fonts';
 import LottieView from 'lottie-react-native';
 import colors from '../../constants/colors';
-import {PrimaryButton} from '../button/PrimaryButton';
-import {RouteBackButton} from '../button/BackButton';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../../AppNavigation/navigatorType';
+import { PrimaryButton } from '../button/PrimaryButton';
+import { RouteBackButton } from '../button/BackButton';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import LabelInputComponent from '../inputs/labelInput';
-import {Action} from '../../container/Registration/Registration';
-import {Loader} from '../loader/loader';
+import { Action } from '../../container/Registration/Registration';
+import { Loader } from '../loader/loader';
+import { Snackbar } from 'react-native-paper';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 interface LoginScreenProps {
@@ -31,7 +32,9 @@ interface LoginScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
   modalState: boolean;
   isLoading: boolean;
-  invalidEmail:boolean;
+  invalidEmail: boolean;
+  AlreadyloggedinCase: boolean;
+  setAlreadyloggedinCase: (val: boolean) => void;
 }
 
 export const validateEmail = (email: string) => {
@@ -47,9 +50,11 @@ const MobileInput: React.FC<LoginScreenProps> = ({
   state,
   modalState,
   isLoading,
-  invalidEmail
+  invalidEmail,
+  AlreadyloggedinCase,
+  setAlreadyloggedinCase
 }) => {
-  const {width: SCREEN_WIDTH} = useWindowDimensions();
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
 
   return (
     <>
@@ -62,7 +67,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
         hasBackdrop={false}
         // statusBarTranslucent={true}
         animationOut="slideOutDown">
-        {!isLoading && <RouteBackButton onPress={() => navigation.canGoBack() ?  navigation.goBack(): null}/>}
+        {!isLoading && <RouteBackButton onPress={() => navigation.canGoBack() ? navigation.goBack() : null} />}
         {isLoading ? (
           <View style={styles.loaderContainer}>
             <Loader size={50} />
@@ -112,13 +117,13 @@ const MobileInput: React.FC<LoginScreenProps> = ({
                 <LabelInputComponent
                   value={state.email}
                   type={'email'}
-                  labelStyle={{width: '100%'}}
+                  labelStyle={{ width: '100%' }}
                   name={'name'}
                   // maxLength={10}
                   placeholder="@"
-                  validate={invalidEmail}
+                  validate={invalidEmail || AlreadyloggedinCase}
                   keyboardType={'email-address'}
-                  errorText={'Please Enter valid Email'}
+                  errorText={invalidEmail ? 'Please Enter valid Email' : AlreadyloggedinCase ? "Email already logged in on another device." : ""}
                   onChangeText={dispatch}
                   IconProvider={Entypo}
                   IconName={'mail'}
@@ -126,7 +131,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
                 <PrimaryButton
                   // disabled={state.email.length < 10}
                   styles={{
-                    backgroundColor: 
+                    backgroundColor:
                       colors.primary,
                   }}
                   handleFunc={() => handleOtp()}
@@ -134,9 +139,40 @@ const MobileInput: React.FC<LoginScreenProps> = ({
                 />
               </View>
             </View>
+            {/* <Snackbar
+        duration={2000}
+        visible={AlreadyloggedinCase}
+        style={{ backgroundColor: colors.black }}
+        onDismiss={() => setAlreadyloggedinCase(false)}
+        action={{
+          theme: {
+            fonts: {
+              regular: { fontFamily: fonts.NexaRegular },
+              medium: { fontFamily: fonts.NexaBold },
+              light: { fontFamily: fonts.NexaBold },
+              thin: { fontFamily: fonts.NexaRegular },
+              
+            },
+            colors:{
+              primary:colors.white,
+              secondary:colors.white,
+
+            }
+          },
+          label: 'Okay',
+          textColor:colors.white,
+          labelStyle: { fontFamily: fonts.NexaBold,color:colors.white },
+          onPress: () => {
+            // Do something
+            setAlreadyloggedinCase(false);
+          },
+        }}>
+        {"Email is already logged in to other device"}
+      </Snackbar> */}
           </>
         )}
       </Modal>
+     
     </>
   );
 };

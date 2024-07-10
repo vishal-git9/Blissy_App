@@ -9,11 +9,21 @@ import {API} from './Api';
 export const ChatApi = API.injectEndpoints({
   endpoints: builder => ({
     getChatlist: builder.query<any, any>({
-      query: (userId) => ({
-        url: `chat/get-chat-list/${userId}`,
+      query: () => ({
+        url: `chat/get-chat-list/`,
         method: 'GET',
       }),
+      // serializeQueryArgs: ({ endpointName }) => {
+      //   return endpointName
+      //  },
+      //  // Always merge incoming data to the cache entry
+      //  merge: (currentCache, newItems) => {
+      //    currentCache.push(...newItems)
+      //  },
       keepUnusedDataFor: 0,
+      // forceRefetch({ currentArg, previousArg }) {
+      //   return currentArg !== previousArg
+      // },
     }),
     getChatwindowList:builder.query<any,any>({
       query: (query) => ({
@@ -51,7 +61,36 @@ export const ChatApi = API.injectEndpoints({
         }),
         keepUnusedDataFor: 0,
       }),
+      blockUser: builder.mutation<any, any>({
+        query: (blockerId) => ({
+          url: `chat/blockuser`,
+          method: 'POST',
+          body:{blockerId}
+        }),
+      }),
+     unblockUser: builder.mutation<any, any>({
+        query: (blockerId) => ({
+          url: `chat/unblockUser`,
+          method: 'POST',
+          body:{blockerId}
+        }),
+      }),
+      deleteUser: builder.mutation<any, any>({
+        query: (deleteUserId) => ({
+          url: `chat/delete-chatuser`,
+          method: 'DELETE',
+          body:{deleteUserId}
+        }),
+      }),
+      deleteChatHistory: builder.mutation<any, any>({
+        query: (chatId) => ({
+          url: `chat/delete-chathistory`,
+          method: 'DELETE',
+          body:{chatId}
+        }),
+      }),
   })
+  
 });
 
-export const {useGetChatlistQuery,useSendMessageMutation,useGetNewMessageQuery,useAddNewUserToListMutation,useGetChatwindowListQuery,useMarkReadMessageMutation} = ChatApi;
+export const {useGetChatlistQuery,useSendMessageMutation,useGetNewMessageQuery,useAddNewUserToListMutation,useGetChatwindowListQuery,useMarkReadMessageMutation,useDeleteChatHistoryMutation,useBlockUserMutation,useDeleteUserMutation,useUnblockUserMutation} = ChatApi;

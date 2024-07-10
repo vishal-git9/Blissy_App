@@ -24,7 +24,14 @@ export const AuthApi = API.injectEndpoints({
                 body
             })
         }),
+        logoutUserSession:builder.mutation<any,Partial<loginInterface>>({
+            query:()=>({
+                url:"auth/logout",
+                method:'POST',
+                
+            })
+        }),
     })
 })
 
-export const {useGetOtpMutation,useVerifyOtpMutation} = AuthApi
+export const {useGetOtpMutation,useVerifyOtpMutation,useLogoutUserSessionMutation} = AuthApi

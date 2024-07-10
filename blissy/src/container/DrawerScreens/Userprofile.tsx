@@ -1,5 +1,5 @@
 // UserProfileScreen.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ScrollView, Image } from 'react-native';
 import AvatarPulse from '../../common/animation/avatarpulse';
 import { RouteBackButton } from '../../common/button/BackButton';
@@ -13,12 +13,24 @@ import AvatarRingsAnimation from '../../common/animation/avatarpulse';
 import { PrimaryButton } from '../../common/button/PrimaryButton';
 import { useSelector } from 'react-redux';
 import { AuthSelector } from '../../redux/uiSlice';
+import PullToRefresh from '../../common/refresh/pull';
+import { useGetUserQuery } from '../../api/userService';
 
 const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
   // Sample user data - replace with real data as needed
 
   const { user } = useSelector(AuthSelector)
+  const [refreshing, setRefreshing] = useState(false);
+  const { data, isLoading: userLoading, refetch } = useGetUserQuery()
 
+  const handleRefresh = async() => {
+    setRefreshing(true);
+    // Simulate a network request
+    await refetch()
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  };
   console.log(user, "useroftoday=======")
   const userData = {
     mobileNumber: '123-456-7890',
@@ -48,8 +60,9 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
   );
 
   return (
+    <PullToRefresh refreshing={refreshing} onRefresh={handleRefresh}>
     <View style={styles.container}>
-      <RouteBackButton onPress={() => navigation.goBack()} />
+      {/* <RouteBackButton onPress={() => navigation.goBack()} /> */}
       <View style={styles.avatarContainer}>
         {/* <ShockwavePulseButton>
           <Image source={{uri: userData.profilePic}} width={actuatedNormalize(100)} style={styles.avatarStyles} height={actuatedNormalize(100)}/>
@@ -62,6 +75,7 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
             flexDirection: 'row',
             alignItems: 'center',
             columnGap: actuatedNormalize(10),
+            alignSelf:"center"
           }}>
           <Text style={styles.nameText}>{`${user?.name}`}</Text>
           <Icon
@@ -71,32 +85,32 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
           />
         </View>
         <Text style={styles.detailText}>Age: {user?.age.toString()}</Text>
-        <Text style={[styles.detailText, { marginTop: actuatedNormalize(10) }]}>{`[${userData.mentalHealthIssues.join(",")}]`}</Text>
+        <Text style={[styles.detailText, { marginTop: actuatedNormalize(10),textAlign:"center" }]}>{`[${user?.mentalIssues?.join(",")}]`}</Text>
       </View>
 
       <View style={styles.userPerformaceContainer}>
         <View style={styles.userPerformaceContainer2}>
           <Text style={styles.title}>Total Calls</Text>
-          <Text style={styles.number}>{userData.callStatus.totalCalls}</Text>
+          <Text style={styles.number}>{user?.UserCallsInfoList.length}</Text>
         </View>
         <View style={styles.userPerformaceContainer2}>
           <Text style={styles.title}>Successful Calls</Text>
-          <Text style={styles.number}>{userData.callStatus.successfulCalls}</Text>
+          <Text style={styles.number}>{user?.UserCallsInfoList.filter((el)=>el.isSuccessful===true).length}</Text>
         </View>
         <View style={styles.userPerformaceContainer2}>
           <Text style={styles.title}>Rating</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.number}>{userData.callStatus.rating}</Text>
+            <Text style={styles.number}>{user?.UserRating[0]?.rating || 0}</Text>
             <Icon name='star' size={actuatedNormalize(20)} color={colors.yellow} />
           </View>
         </View>
       </View>
-      <ScrollView nestedScrollEnabled={true} contentContainerStyle={styles.infoContainer}>
+      <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} contentContainerStyle={styles.infoContainer}>
 
         {/* details Container */}
         <View style={styles.descContainer}>
           <LabelWithIcon iconName="person" label="Your story" />
-          <Text style={styles.bioText}>{userData.bio}</Text>
+          <Text style={styles.bioText}>{user?.bio || userData.bio}</Text>
         </View>
         <View style={styles.descContainer}>
           <LabelWithIcon iconName="tennisball" label="Interest" />
@@ -112,6 +126,7 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
             />
           </View>
         </View>
+
         <View style={styles.descContainer}>
           <LabelWithIcon iconName="text" label="Languages you speak" />
           <View style={styles.interestsContainer}>
@@ -137,15 +152,22 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
           horizontal
           showsHorizontalScrollIndicator={false}
         /> */}
+        <View style={{rowGap:actuatedNormalize(5)}}>
         <Text style={styles.quote}>
           {`'${userData.userQuote}'`}
         </Text>
+        <Text style={[styles.quote,{fontFamily:fonts.NexaBold}]}>
+          {`'E.E. Cummings'`}
+        </Text>
+        </View>
+        
       </ScrollView>
-
-      <PrimaryButton styles={{ backgroundColor: colors.transparent, borderWidth: 1, borderColor: colors.gray }} label='Edit Profile' handleFunc={() => navigation?.navigate("Registration", { UserData: user })} />
-
+      <View style={{position:"absolute",bottom:0,width:"100%"}}>
+      <PrimaryButton styles={{ backgroundColor: colors.transparent, borderWidth: 1, borderColor: colors.gray }} label='Edit Profile' handleFunc={() => navigation?.navigate("Registration", { UserData: user})} />
+      </View>
       {/* Additional user info like language, coins, etc. can be added here */}
     </View>
+    </PullToRefresh>
   );
 };
 
@@ -154,17 +176,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingTop: 50,
+    width:"100%",
+    alignSelf:"center"
   },
 
   avatarContainer: {},
   userPerformaceContainer: {
     flexDirection: "row",
-    paddingHorizontal: actuatedNormalize(10),
+    // paddingHorizontal: actuatedNormalize(10),
     marginTop: actuatedNormalize(20),
     justifyContent: "space-between",
     borderRadius: actuatedNormalize(10),
     alignSelf: "center",
-    width: "90%",
+    width: "100%",
+    // backgroundColor:'red'
 
   },
   userPerformaceContainer2: {
@@ -178,6 +203,8 @@ const styles = StyleSheet.create({
   },
   interestsContainer: {
     flexDirection: 'row',
+    width:"100%",
+    // backgroundColor:"red"
   },
   interestItem: {
     backgroundColor: colors.primary,
@@ -194,6 +221,7 @@ const styles = StyleSheet.create({
   },
   TitleContainer: {
     marginTop: actuatedNormalize(30),
+    // backgroundColor:"red"
   },
   nameText: {
     fontFamily: fonts.NexaBold,
@@ -213,13 +241,17 @@ const styles = StyleSheet.create({
   },
   mentalHealthText: {},
   descContainer: {
-    rowGap: actuatedNormalize(10)
+    rowGap: actuatedNormalize(10),
+    width:"100%",
+    alignSelf:"flex-start"
   },
   infoContainer: {
-    flex: 1,
     marginTop: actuatedNormalize(30),
     rowGap: actuatedNormalize(20),
-    width:"90%",
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingBottom: 70,
+    width:"100%",
   },
   number: {
     fontFamily: fonts.NexaBold,
