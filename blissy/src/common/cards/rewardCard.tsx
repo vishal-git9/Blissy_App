@@ -6,19 +6,21 @@ import colors from '../../constants/colors';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import * as Animatable from 'react-native-animatable';
 import {fonts} from '../../constants/fonts';
+import AnimatedNumber from '../../container/coupons/AnimatedNumber';
 interface Props {
   shouldAnimate?: boolean;
-  coins: String;
+  coins: number;
+  coinsAdded:number
 }
 
-const RewardCard: React.FC<Props> = ({shouldAnimate, coins}) => {
+const RewardCard: React.FC<Props> = ({shouldAnimate, coins, coinsAdded}) => {
   return (
     <Animatable.View
       style={{}}
       animation={shouldAnimate ? 'bounceInLeft' : undefined}
       useNativeDriver={true}
       iterationCount={1}
-      delay={500 * 500}>
+      delay={500}>
       <Card style={styles.card} elevation={5}>
         {/* <Card.Cover source={{ uri: imageUrl }} /> */}
         <Card.Content>
@@ -34,14 +36,15 @@ const RewardCard: React.FC<Props> = ({shouldAnimate, coins}) => {
               </View>
             </View>
             <View style={styles.details}>
-              <Title
+              {/* <Title
                 style={{
                   color: colors.white,
                   fontFamily: fonts.NexaBold,
                   fontSize: 30,
                 }}>
                 {coins}
-              </Title>
+              </Title> */}
+              <AnimatedNumber initialValue={coins} finalValue={coins+coinsAdded} />
                 <Text
                     style={{
                       color: colors.white,
@@ -73,6 +76,9 @@ const styles = StyleSheet.create({
   },
   details: {
     marginLeft: 10,
+    // justifyContent:'center',
+    alignItems:'center',
+    gap:actuatedNormalize(5)
   },
   iconContainer: {
     width: actuatedNormalize(60),

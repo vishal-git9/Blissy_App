@@ -5,7 +5,12 @@ import { actuatedNormalize } from "../../constants/PixelScaling";
 import { fonts } from "../../constants/fonts";
 import colors from "../../constants/colors";
 
-export const Empty: React.FC = () => {
+interface EmptyProps{
+  head:string,
+  description:string
+}
+
+export const Empty: React.FC<EmptyProps> = ({head, description}) => {
   return (
     <View style={styles.mainContainer}>
       <View style={styles.gifCont}>
@@ -19,8 +24,8 @@ export const Empty: React.FC = () => {
         />
       </View>
       <View style={styles.textCont}>
-      <Text style={styles.upperTextStyle}>Your space is Empty</Text>
-      <Text style={styles.textStyle}>No Records To Be Shown Right Now</Text>
+      <Text style={styles.upperTextStyle}>{head}</Text>
+      <Text style={styles.textStyle}>{description}</Text>
       </View>
     </View>
   );

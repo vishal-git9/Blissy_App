@@ -1,160 +1,172 @@
-import React, { useEffect, useRef } from 'react'
-import {View, FlatList, Text, TouchableOpacity, StyleSheet, Animated as NativeAnimated, Button} from 'react-native';
-import { NavigationStackProps } from '../Prelogin/onboarding';
-import { RouteBackButton } from '../../common/button/BackButton';
+import React, {useEffect, useRef, useState} from 'react';
+import {View, Text, StyleSheet, Animated as NativeAnimated, FlatList, UIManager, Platform, LayoutAnimation} from 'react-native';
+import {NavigationStackProps} from '../Prelogin/onboarding';
+import {RouteBackButton} from '../../common/button/BackButton';
 import colors from '../../constants/colors';
-import { fonts } from '../../constants/fonts';
-import { actuatedNormalize } from '../../constants/PixelScaling';
-import {AuthSelector} from '../../redux/uiSlice'
-import { useSelector } from 'react-redux';
+import {fonts} from '../../constants/fonts';
+import {actuatedNormalize} from '../../constants/PixelScaling';
+import {AuthSelector} from '../../redux/uiSlice';
+import {useSelector} from 'react-redux';
 import LottieView from 'lottie-react-native';
 import RewardCard from '../../common/cards/rewardCard';
-import { Empty } from '../../common/Empty/Empty';
-import Animated, { Easing, useSharedValue, withTiming } from 'react-native-reanimated'
-const HEADER_MAX_HEIGHT = 350;
-const HEADER_MIN_HEIGHT = 90;
+import {Empty} from '../../common/Empty/Empty';
+import CouponCard from './CouponCard';
+import {FlashList} from '@shopify/flash-list';
+import Swipable from './TestAnimation';
+import Typewriter from '../../common/animation/Typewritter';
+
+const HEADER_MAX_HEIGHT = 240;
+const HEADER_MIN_HEIGHT = 84;
 const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
-
-type animatedProps = {
-  value : any,
-  duration:any
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
- const AnimatedNumber:React.FC<animatedProps> = ({ value, duration }) => {
-    const animatedValue = useSharedValue(10);
-  
-    useEffect(() => {
-      animatedValue.value = withTiming(value, {
-        duration: duration || 1000,
-        easing: Easing.linear,
-      });
-    }, [value, duration, animatedValue]);
-  
-    return (
-      <Animated.Text style={[{ fontSize: 24, fontWeight: 'bold', color:colors.white }]}>
-        {animatedValue.value}
-      </Animated.Text>
-    );
-  };
+type animatedProps = {
+  value: any;
+  duration: any;
+};
 
 export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
-  const {user} = useSelector(AuthSelector)
+  const {user} = useSelector(AuthSelector);
+  const [points, setPoints] = useState(0);
+  const flashListRef = useRef<FlashList<any>>(null);
+  const initialCoupons = [
+    {id: 1, name: 'Summer Sale', rewardPoints: 5},
+    {id: 2, name: 'Winter Sale', rewardPoints: 10},
+    {id: 3, name: 'Spring Sale', rewardPoints: 7},
+    {id: 4, name: 'Winter Sale', rewardPoints: 10},
+    {id: 5, name: 'Spring Sale', rewardPoints: 7},
+    // {id: 6, name: 'Winter Sale', rewardPoints: 10},
+    // {id: 7, name: 'Spring Sale', rewardPoints: 7},
+    // {id: 8, name: 'Winter Sale', rewardPoints: 10},
+    // {id: 9, name: 'Spring Sale', rewardPoints: 7},
+  ];
 
-  const scrollY = useRef(new NativeAnimated.Value(0)).current;
+  const [coupons, setCoupons] = useState(initialCoupons);
 
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE],
-    outputRange: [0, -HEADER_SCROLL_DISTANCE],
-    extrapolate: 'clamp',
-  });
+  const addPoints = (rewardAmount: number) => {
+    setPoints(points + rewardAmount); // Add 100 points for example
+  };
 
-  const imageOpacity = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-    outputRange: [1, 0.5, 0],
-    extrapolate: 'clamp',
-  });
-  const imageTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE],
-    outputRange: [0, 100],
-    extrapolate: 'clamp',
-  });
-
-  const titleScale = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-    outputRange: [1, 1, 0.9],
-    extrapolate: 'clamp',
-  });
-  const titleTranslateY = scrollY.interpolate({
-    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
-    outputRange: [0, -HEADER_SCROLL_DISTANCE / 2, -380],
-    extrapolate: 'clamp',
-  });
-
+  const layoutAnimConfig = {
+    duration: 300,
+    update: {
+      type: LayoutAnimation.Types.easeInEaseOut, 
+    },
+    delete: {
+      duration: 100,
+      type: LayoutAnimation.Types.easeInEaseOut,
+      property: LayoutAnimation.Properties.opacity,
+    },
+  };
+  const handleClaimCoupon = (id: number, rewardPoints: number) => {
+    addPoints(rewardPoints);
+    // setTimeout(() => {
+      setCoupons(prevCoupons => prevCoupons.filter(coupon => coupon.id !== id));
+      flashListRef.current?.prepareForLayoutAnimationRender();
+      LayoutAnimation.configureNext(layoutAnimConfig);
+    // }, 500);
+  };
 
   return (
     <View style={styles.container}>
-      <RouteBackButton  onPress={()=>navigation.goBack()}/>
-      <NativeAnimated.ScrollView contentContainerStyle={[
-          {paddingTop: HEADER_MAX_HEIGHT + 60},
-          {padding:30},
-        ]}
-        scrollEventThrottle={16}
-        onScroll={NativeAnimated.event(
-          [{nativeEvent: {contentOffset: {y: scrollY}}}],
-          {useNativeDriver: true},
-        )}>
-      <View style={styles.usernameContainer}>
-          <Text style={styles.username}>Hi, {user?.name?.split(" ")[0]}</Text>
-          <LottieView autoPlay
-              loop source={require("../../../assets/animation/hey.json")} style={{ width: actuatedNormalize(300), height: actuatedNormalize(300),alignSelf:"center" }} />
+      <RouteBackButton onPress={() => navigation.goBack()} />
+      <View style={styles.header}>
+        <View style={styles.titleBar}>
+          <Text style={styles.username}>Hi , {user?.name?.split(' ')[0]}</Text>
+        </View>
+        <LottieView
+          autoPlay
+          loop
+          source={require('../../../assets/animation/hey.json')}
+          style={{
+            width: actuatedNormalize(300),
+            height: actuatedNormalize(300),
+            alignSelf: 'center',
+          }}
+        />
       </View>
       <View style={styles.cardContainer}>
-        <RewardCard coins={"200"} shouldAnimate={false} />
-        <AnimatedNumber duration={500} value={100} />
+        <RewardCard coins={5} shouldAnimate={false} coinsAdded={points} />
       </View>
-      <Empty/>
-
-      </NativeAnimated.ScrollView>
-      <NativeAnimated.View
-        style={[styles.header, {transform: [{translateY: headerTranslateY}]}]}>
-          {/* <ProfilePic launchingCamera={setProfilePic}/> */}
-          {/* <Button /> */}
-        <NativeAnimated.Image
-          style={[
-            styles.headerBackground,
-            {
-              opacity: imageOpacity,
-              transform: [{translateY: imageTranslateY}],
-            },
-          ]}
-          source={{uri:'https://ik.imagekit.io/gqdvppqpv/avatar_men/avatar-punjabiboy.png?updatedAt=1713636201775'}}
-          
-        />
-      </NativeAnimated.View>
+      <View style={styles.badge}>
+      {/* <Text style={styles.text}>Healers will soon be available for you.</Text> */}
+      <Typewriter loop={true} text='You can use POINTS once the Healers get Listed' speed={50} />
     </View>
-  )
-}
+      <View style={{flex:1}}>
+        <FlashList
+          data={coupons}
+          ref={flashListRef}
+          contentContainerStyle={styles.listContainer}
+          keyExtractor={item => item.id.toString()}
+          renderItem={({item}) => {
+            return (
+              // <Swipable>
+                <CouponCard
+                  key={item.id}
+                  id={item.id}
+                  name={item.name}
+                  rewardPoints={item.rewardPoints}
+                  onPressClaim={() =>
+                    handleClaimCoupon(item.id, item.rewardPoints)
+                  }
+                />
+              // </Swipable>
+            );
+          }}
+          estimatedItemSize={100}
+          ListEmptyComponent={<Empty head="You Don't have enough Coupons" description="Get on calls to get more" />}
+        />
+
+      </View>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
-      flex: 1,
-      // alignItems: 'center',
-      // padding:actuatedNormalize(30),
-      // paddingTop: actuatedNormalize(70),
+    flex: 1,
   },
-  username:{
-      color:colors.white,
-      fontFamily:fonts.NexaBold,
-      fontSize:actuatedNormalize(40),
+  username: {
+    color: colors.white,
+    fontFamily: fonts.NexaBold,
+    fontSize: actuatedNormalize(30),
   },
-  usernameContainer:{
-    flexDirection:"row",
-    height:"30%",
-    backgroundColor:colors.accent,
-    padding:actuatedNormalize(30),
-    paddingTop: actuatedNormalize(65),
+  titleBar: {
+    backgroundColor: 'transparent',
+    marginTop: actuatedNormalize(40),
+    height: actuatedNormalize(40),
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
-  cardContainer:{
+  cardContainer: {
     // width:'90%',
-    marginTop:actuatedNormalize(-45),
-    alignItems:'center',
+    marginTop: actuatedNormalize(-45),
+    alignItems: 'center',
   },
   header: {
-    position: 'absolute',
+    // position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'white',
+    backgroundColor: colors.primary,
     overflow: 'hidden',
-    height: HEADER_MAX_HEIGHT,
+    height: actuatedNormalize(HEADER_MAX_HEIGHT),
+    borderBottomRightRadius: actuatedNormalize(40),
+    borderBottomLeftRadius: actuatedNormalize(40),
   },
-  headerBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    width: null,
-    height: HEADER_MAX_HEIGHT,
-    resizeMode: 'cover',
+  listContainer:{
+    padding:actuatedNormalize(5)
   },
-})
+  badge:{
+    backgroundColor: colors.primary,
+    borderRadius: actuatedNormalize(5), 
+    paddingHorizontal: actuatedNormalize(16),
+    paddingVertical: actuatedNormalize(8),
+    margin:actuatedNormalize(5)
+  }
+});
