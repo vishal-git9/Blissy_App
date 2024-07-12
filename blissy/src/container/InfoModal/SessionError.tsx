@@ -12,9 +12,9 @@ import { AuthSelector, logoutUser, setSessionStatus } from "../../redux/uiSlice"
 import { UserApi, useGetUserQuery } from "../../api/userService";
 import { AuthApi, useLogoutUserSessionMutation } from "../../api/authService";
 import { ChatApi } from "../../api/chatService";
-import { useNavigation } from "@react-navigation/native";
-import { NavigationStackProps } from "../Prelogin/onboarding";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { navigate } from "../../utils/RootNavigation";
+import { RootStackParamList } from "../../AppNavigation/navigatorType";
 
 interface SessionError {
     title: string;
@@ -26,7 +26,7 @@ export const SessionError: React.FC<SessionError> = ({ title, description }) => 
     const {token, isRegisterd, user, isNewUser, sessionStatus } = useSelector(AuthSelector)
     const [modalVisible, setModalVisible] = useState(false)
     const [logoutUserSession,{}] = useLogoutUserSessionMutation()
-    const navigation = useNavigation<NavigationStackProps>()
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>()
     const { data: userData, isLoading, refetch } = useGetUserQuery()
     const dispatch = useDispatch()
     console.log(isNewUser, "----user----", sessionStatus)
@@ -67,8 +67,12 @@ export const SessionError: React.FC<SessionError> = ({ title, description }) => 
                 </View>
                 <PrimaryButton styles={{ width: "70%" }} textStyles={{ fontSize: actuatedNormalize(16) }} handleFunc={() => {
                     setModalVisible(false)
-                    navigate("Login")
-                }
+                   // navigate("Login")
+                   navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Login' }],
+                    })
+                 }
                 } label="Login" />
             </View>
         </View>

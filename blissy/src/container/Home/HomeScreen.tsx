@@ -36,6 +36,7 @@ import DeviceInfo from 'react-native-device-info';
 import { getDeviceUniqueId } from '../../utils/getDeviceUniqueId';
 import { playNotificationSound } from '../../common/sound/notification';
 import { useAddmyquotesMutation, useGetmyTodayquotesQuery } from '../../api/feedbackservice';
+import { Animated } from 'react-native';
 
 interface iconsLabelI {
   id: number;
@@ -73,7 +74,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const chatlistdata = useSelector(chatListSelector);
   const { todayquotes } = useSelector(AuthSelector)
   const { refetch: refetchQuote, isLoading: isquotesLoading, isSuccess: isquotesSuccess, isError: isquotesError } = useGetmyTodayquotesQuery({})
-  const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery(user?._id)
+  const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery({})
   const { refetch: refetchUser, isError: isErrorUser, isLoading: isLoadingUser, isSuccess: isSuccessUser } = useGetUserQuery()
   const [postDeviceinfo, { isError: postDeviceinfoError, isLoading: postDeviceinfoLoading, data: postDeviceinfoData }] = usePostUserDevieInfoMutation()
   const [postrandomequote, { }] = useAddmyquotesMutation()
@@ -87,6 +88,8 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [markRead, { }] = useMarkReadMessageMutation()
   const [permissionType, setpermissionType] = useState('');
   const otherUserScoketId = useRef<string | null>(null);
+
+  const scrollY = useRef(new Animated.Value(0)).current
   console.log(user, "user home screens")
   const socket = useMemo(
     () =>
@@ -182,7 +185,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
     // verifyMicroPhonePermissions()
     // verifyLocationPermissions()
-    console.log(activeUserList, "Home screen activeuserList From redux")
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
@@ -454,7 +456,33 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   }, []);
 
   console.log(chatlistdata, "chatlistdata")
-
+  const getCardHeight = () => {
+    const cardMarginBottom = actuatedNormalize(20);
+    const cardPaddingHorizontal = actuatedNormalize(5);
+    const avatarSize = 48;
+    const detailsMarginLeft = 10;
+    const rowSpacing = actuatedNormalize(5);
+    const textSizeLarge = actuatedNormalize(16);
+    const textSizeMedium = actuatedNormalize(14);
+    const textSizeSmall = actuatedNormalize(14);
+    const additionalSpacing = 15; // Additional spacing for margin and padding between elements
+  
+    // Calculate total height
+    const cardHeight = 
+      cardMarginBottom +
+      cardPaddingHorizontal * 2 + 
+      avatarSize + 
+      detailsMarginLeft + 
+      rowSpacing * 3 + 
+      textSizeLarge + 
+      textSizeMedium + 
+      textSizeSmall * 2 + 
+      additionalSpacing;
+  
+    return cardHeight;
+  };
+  const ITEM_SIZE = getCardHeight() + 40
+  console.log(ITEM_SIZE,"ITEM_SIZE----->")
   return (
     // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}>
     <View style={styles.container}>
@@ -463,12 +491,29 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       {value === 'healers' ? (
         <View style={styles.healerContainer}>
           <OfferBadge />
-          <FlatList
+          <Animated.FlatList
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
             data={data}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <ProfileCard shouldAnimate={healerAnimate} {...item} />
-            )}
+            renderItem={({ item, index }) => {
+
+              const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)]
+              const opacityInputRange = [-1,0,ITEM_SIZE * index, ITEM_SIZE * (index + 1)]
+              const scale = scrollY.interpolate({
+                inputRange,
+                outputRange: [1, 1, 1, 0]
+              })
+              const opacity = scrollY.interpolate({
+                inputRange:opacityInputRange,
+                outputRange: [1, 1, 1, 0]
+              })
+              console.log("hey------>",scale,opacity)
+
+              return (<Animated.View style={{transform:[{scale}],opacity:opacity}}>
+                <ProfileCard shouldAnimate={healerAnimate} {...item} />
+              </Animated.View>)
+
+            }}
             keyExtractor={(item, index) => index.toString()}
             onEndReached={loadMoreData} // Load more data when user reaches the end
             onEndReachedThreshold={0.1} // Load more when 90% of the list is scrolled
@@ -508,12 +553,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
               justifyContent: 'flex-end',
               width: '90%',
               alignSelf: 'center',
-              rowGap:actuatedNormalize(5)
+              rowGap: actuatedNormalize(5)
             }}>
-            <Text style={{ color: colors.white,textAlign:"center",fontFamily:fonts.NexaItalic }}>
+            <Text style={{ color: colors.white, textAlign: "center", fontFamily: fonts.NexaItalic }}>
               {`'${todayquotes?.text}'`}
             </Text>
-            <Text style={{ color: colors.white,textAlign:"center",fontFamily:fonts.NexaBold }}>
+            <Text style={{ color: colors.white, textAlign: "center", fontFamily: fonts.NexaBold }}>
               {todayquotes?.author}.
             </Text>
             {/* <TalkNowButton

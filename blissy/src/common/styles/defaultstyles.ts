@@ -4,7 +4,7 @@ import colors from '../../constants/colors';
 export const defaultStyles = StyleSheet.create({
   block: {
     backgroundColor: colors.dark,
-    borderRadius: 10,
+    // borderRadius: 10,
     marginHorizontal: 14,
     // marginTop: 20,
     width:"100%",

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   useWindowDimensions,
+  Dimensions,
 } from 'react-native';
 import {
   DrawerContentScrollView,
@@ -16,29 +17,31 @@ import messaging from '@react-native-firebase/messaging';
 
 import Entypo from 'react-native-vector-icons/Entypo';
 import colors from '../../constants/colors';
-import {SCREEN_HEIGHT, actuatedNormalize} from '../../constants/PixelScaling';
-import {fonts} from '../../constants/fonts';
+import { SCREEN_HEIGHT, actuatedNormalize } from '../../constants/PixelScaling';
+import { fonts } from '../../constants/fonts';
 import * as Animatable from 'react-native-animatable';
 import Styles from '../../constants/styles';
-import {ModalComponent} from '../modals/modalcomponent';
-import {LabelWithIcon} from './iconlabel';
-import {ProfileBox } from './profilebox';
+import { ModalComponent } from '../modals/modalcomponent';
+import { LabelWithIcon } from './iconlabel';
+import { ProfileBox } from './profilebox';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthSelector, logoutUser } from '../../redux/uiSlice';
 import { AuthApi, useLogoutUserSessionMutation } from '../../api/authService';
 import { UserApi, useDeleteFcmTokenMutation } from '../../api/userService';
 import { ChatApi } from '../../api/chatService';
 import { BlissyLoader } from '../loader/blissy';
+const screenHeight = Dimensions.get('window').height;
+const screenWidth = Dimensions.get('window').width;
 
 const CustomDrawer: React.FC<any> = props => {
   const [ConfirmModal, setConfirmModal] = useState<boolean>(false);
   const { user } = useSelector(AuthSelector)
   const dispatch = useDispatch()
-  const [deleteFcmToken,{isLoading,isError,isSuccess}] = useDeleteFcmTokenMutation()
-  const [logoutUserSession,{isLoading:islogoutLoading}] = useLogoutUserSessionMutation()
+  const [deleteFcmToken, { isLoading, isError, isSuccess }] = useDeleteFcmTokenMutation()
+  const [logoutUserSession, { isLoading: islogoutLoading }] = useLogoutUserSessionMutation()
 
-  console.log(props,"props of drawer----->",user)
-  
+  console.log(props, "props of drawer----->", user)
+
 
   const confirmModalBody = (
     <Animatable.View
@@ -66,18 +69,18 @@ const CustomDrawer: React.FC<any> = props => {
               onPress={() => {
                 setConfirmModal(false);
               }}>
-              <View style={{justifyContent: 'center', alignItems: 'center'}}>
+              <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                 <Animatable.View
                   style={[
                     Styles.neuoMorphism,
-                    {borderRadius: 50, backgroundColor: 'white', padding: 5},
+                    { borderRadius: 50, backgroundColor: 'white', padding: 5 },
                   ]}
                   animation="rotate"
                   delay={500}
                   iterationCount={1}>
                   <Entypo name={'emoji-happy'} color={colors.primary} size={35} />
                 </Animatable.View>
-                <Text style={[styles.textStyle,{marginTop:actuatedNormalize(5)}]}>No</Text>
+                <Text style={[styles.textStyle, { marginTop: actuatedNormalize(5) }]}>No</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity
@@ -95,18 +98,18 @@ const CustomDrawer: React.FC<any> = props => {
                 props.navigation.replace('Login');
                 // console.log('Yes');
               }}>
-              <View style={{justifyContent: 'center', alignItems: 'center'}}>
+              <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                 <Animatable.View
                   animation="rotate"
                   delay={600}
                   style={[
                     Styles.neuoMorphism,
-                    {borderRadius: 50, backgroundColor: 'white', padding: 5},
+                    { borderRadius: 50, backgroundColor: 'white', padding: 5 },
                   ]}
                   iterationCount={1}>
                   <Entypo name={'emoji-sad'} color={colors.red} size={35} />
                 </Animatable.View>
-                <Text style={[styles.textStyle,{marginTop:actuatedNormalize(5)}]}>Yes</Text>
+                <Text style={[styles.textStyle, { marginTop: actuatedNormalize(5) }]}>Yes</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -116,11 +119,12 @@ const CustomDrawer: React.FC<any> = props => {
   );
 
   return (
-    <View style={{flex: 1, marginTop: actuatedNormalize(15)}}>
-      {isLoading || islogoutLoading && <BlissyLoader/>}
+    <View style={{ flex: 1, marginTop: actuatedNormalize(15) }}>
+      {isLoading || islogoutLoading && <View style={styles.loaderContainer}>
+        <BlissyLoader /></View>}
       <DrawerContentScrollView {...props}>
-        <ProfileBox {...user}/>
-        <View style={{flex: 1, marginTop: actuatedNormalize(15)}}>
+        <ProfileBox {...user} />
+        <View style={{ flex: 1, marginTop: actuatedNormalize(15) }}>
           <View
             style={{
               flexDirection: 'row',
@@ -147,12 +151,12 @@ const CustomDrawer: React.FC<any> = props => {
           </View>
 
           {/* Drawer item list */}
-          <View style={{marginTop: actuatedNormalize(10)}}>
+          <View style={{ marginTop: actuatedNormalize(10) }}>
             <DrawerItemList {...props} />
           </View>
 
           {/* communication */}
-          <View style={{width: '90%', alignSelf: 'center'}}>
+          <View style={{ width: '90%', alignSelf: 'center' }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -181,8 +185,8 @@ const CustomDrawer: React.FC<any> = props => {
                 rowGap: actuatedNormalize(20),
                 marginTop: actuatedNormalize(20),
               }}>
-              <LabelWithIcon onPress={()=>props.navigation.navigate("Bugreport")} iconName="bug" label="Report a Problem" />
-              <LabelWithIcon onPress={()=>props.navigation.navigate("Userreview")}  iconName="pencil" label="Write a Review" />
+              <LabelWithIcon onPress={() => props.navigation.navigate("Bugreport")} iconName="bug" label="Report a Problem" />
+              <LabelWithIcon onPress={() => props.navigation.navigate("Userreview")} iconName="pencil" label="Write a Review" />
             </View>
           </View>
         </View>
@@ -193,15 +197,15 @@ const CustomDrawer: React.FC<any> = props => {
           borderTopWidth: 0.5,
           borderTopColor: colors.gray,
         }}>
-          <View style={{rowGap:actuatedNormalize(20)}}>
-          <LabelWithIcon onPress={()=>props.navigation.navigate("ComingsoonScreen",{screenName:"Tell a Friend"})} iconName="share-social-outline" label="Tell a Friend" />
-        <LabelWithIcon
-          onPress={() => setConfirmModal(true)}
-          iconName="exit-outline"
-          label="Sign Out"
-        />
-          </View>
-        
+        <View style={{ rowGap: actuatedNormalize(20) }}>
+          <LabelWithIcon onPress={() => props.navigation.navigate("ComingsoonScreen", { screenName: "Tell a Friend" })} iconName="share-social-outline" label="Tell a Friend" />
+          <LabelWithIcon
+            onPress={() => setConfirmModal(true)}
+            iconName="exit-outline"
+            label="Sign Out"
+          />
+        </View>
+
       </View>
       <ModalComponent
         children={confirmModalBody}
@@ -253,6 +257,16 @@ const styles = StyleSheet.create({
   },
   modalChildContainer: {
     height: SCREEN_HEIGHT / 4,
+  },
+  loaderContainer: {
+    position: 'absolute',
+    zIndex: 2,
+    flex: 1,
+    height: screenHeight,
+    width: screenWidth,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.darkOverlayColor2,
   },
 });
 

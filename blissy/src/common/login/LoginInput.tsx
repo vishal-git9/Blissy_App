@@ -21,6 +21,7 @@ import LabelInputComponent from '../inputs/labelInput';
 import { Action } from '../../container/Registration/Registration';
 import { Loader } from '../loader/loader';
 import { Snackbar } from 'react-native-paper';
+import { BlissyLoader } from '../loader/blissy';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 interface LoginScreenProps {
@@ -70,7 +71,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
         {!isLoading && <RouteBackButton onPress={() => navigation.canGoBack() ? navigation.goBack() : null} />}
         {isLoading ? (
           <View style={styles.loaderContainer}>
-            <Loader size={50} />
+            <BlissyLoader/>
           </View>
         ) : (
           <>

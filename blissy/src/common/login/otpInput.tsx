@@ -21,6 +21,7 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from '@reduxjs/toolkit';
 import { PrimaryButton } from '../button/PrimaryButton';
 import { Snackbar } from 'react-native-paper';
+import { BlissyLoader } from '../loader/blissy';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
@@ -76,7 +77,7 @@ const OTPInput: React.FC<OTPInputProps> = ({
         <RouteBackButton onPress={changeMobileNumber} />
         {isLoading && (
           <View style={styles.loaderContainer}>
-            <Loader size={50} />
+            <BlissyLoader/>
           </View>
         )}
         {isError ? (
@@ -98,10 +99,10 @@ const OTPInput: React.FC<OTPInputProps> = ({
                 fontSize: actuatedNormalize(20),
                 marginTop: actuatedNormalize(-50),
               }}>
-              Wrong OTP
+                {progressDuration === 0 ? "OTP Expired" : "Wrong OTP"}
             </Text>
             <PrimaryButton
-              label="Re-Enter"
+              label={progressDuration === 0 ? "Resend" :"Try again"}
               styles={{
                 width: '50%',
                 backgroundColor: colors.transparent,

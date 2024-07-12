@@ -9,7 +9,7 @@ const OfferBadge: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* <Text style={styles.text}>Healers will soon be available for you.</Text> */}
-      <Typewriter loop={true} text='Healers will soon be available for you.' speed={50} />
+      <Typewriter loop={false} text='Healers will soon be available for you.' speed={50} />
     </View>
   );
 };

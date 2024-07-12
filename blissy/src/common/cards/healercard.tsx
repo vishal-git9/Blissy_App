@@ -9,7 +9,6 @@ import { actuatedNormalize } from '../../constants/PixelScaling';
 import * as Animatable from 'react-native-animatable';
 import { fonts } from '../../constants/fonts';
 import TalkNowButton from '../button/Talknow';
-import { BlurView } from '@react-native-community/blur';
 
 interface Props {
   name: string;
@@ -38,18 +37,21 @@ const ProfileCard: React.FC<Props> = ({
   id,
   shouldAnimate
 }) => {
+
+  
   return (
-    <Animatable.View
-      style={{}}
-      animation={shouldAnimate ? 'bounceInLeft' : undefined}
-      useNativeDriver={true}
-      iterationCount={1}
-      delay={id * 500}
-    >
+    <>
+    {/* // <Animatable.View
+    //   style={{}}
+    //   animation={shouldAnimate ? 'bounceInLeft' : undefined}
+    //   useNativeDriver={true}
+    //   iterationCount={1}
+    //   delay={id * 500}
+    // > */}
       <Card style={styles.card} elevation={5}>
         <Card.Content>
           <View style={styles.header}>
-            <Avatar.Image size={48} source={{ uri: imageUrl }} />
+            <Image width={50} height={50} blurRadius={10} style={{borderRadius:30}}   source={{ uri: imageUrl }} />
             <View style={styles.details}>
               <Title style={{ color: colors.white, fontFamily: fonts.NexaBold }}>
                 {name}
@@ -95,15 +97,16 @@ const ProfileCard: React.FC<Props> = ({
         </Card.Content>
 
       </Card>
-      <BlurView
+      {/* <BlurView
         style={styles.absolute}
         blurType="ultraThinMaterialLight"
         blurAmount={3}
-      />
+      /> */}
       <View style={styles.overlay}>
         <TalkNowButton label='Coming Soon..' onPress={() => console.log("first")} />
       </View>
-    </Animatable.View>
+    {/* // </Animatable.View> */}
+    </>
   );
 };
 
@@ -173,6 +176,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
+    backgroundColor:colors.darkOverlayColor2,
     alignItems: 'center',
   }
 });

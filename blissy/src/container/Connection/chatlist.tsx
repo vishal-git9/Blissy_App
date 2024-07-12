@@ -409,7 +409,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
           <PullToRefresh refreshing={false} onRefresh={RefreshNewMessages}>
             <ScrollView
               contentInsetAdjustmentBehavior="automatic"
-              contentContainerStyle={{}} nestedScrollEnabled={true}>
+              contentContainerStyle={{marginTop:isSearchActive ? actuatedNormalize(20) : actuatedNormalize(5)}} nestedScrollEnabled={true}>
               <Animated.View onLayout={onLayout}
                 style={[defaultStyles.block, { borderTopColor: colors.lightGray, borderWidth: 2, width: "100%", alignSelf: "center" }]} layout={transition}>
                 <Animated.FlatList

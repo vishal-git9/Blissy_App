@@ -38,7 +38,7 @@ const AppleStyleSwipeableRow: React.FC<AppleStyleSwipeableRowProps> = ({ childre
 
     return (
       <Animated.View key={color} style={{ flex: 1, transform: [{ translateX: trans }] }}>
-        <RectButton style={[styles.rightAction, { backgroundColor: color }]} onPress={() => {
+        <RectButton style={[styles.rightAction, { backgroundColor: color, }]} onPress={() => {
           close()
           pressHandler(text,item)}
       }>
@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
   rightAction: {
     alignItems: 'center',
     flex: 1,
+    // borderRadius:30,
     justifyContent: 'center',
   },
 });

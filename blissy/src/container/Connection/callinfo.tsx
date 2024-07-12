@@ -8,13 +8,16 @@ import {
   TouchableOpacity,
   Vibration,
 } from 'react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Animated, {
   CurvedTransition,
+  Extrapolate,
   FadeInUp,
   FadeOutUp,
+  interpolate,
   runOnJS,
+  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -36,6 +39,7 @@ import SearchBar from '../../common/header/searchbar';
 
 const transition = CurvedTransition.delay(100);
 
+
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
@@ -47,11 +51,40 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [searchQueryData, setsearchQueryData] = useState(items)
   const { refetch, isLoading, isError, isSuccess } = useGetmyCallInfoQuery({})
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
-  const [heightIncreased,setHeightIncreased] = useState<boolean>(false)
+  const [heightIncreased, setHeightIncreased] = useState<boolean>(false)
   const height = useSharedValue(100);
+  const scrollY = useSharedValue(0);
+  const ITEM_SIZE =   120
+  const inputRange = useRef([-1, 0, ITEM_SIZE * 1, ITEM_SIZE * (1 + 2)])
+  const opacityInputRange = useRef([-1, 0, ITEM_SIZE * 1, ITEM_SIZE * (1 + 1)])
+
+  const getInputRanges = (index:number, ITEM_SIZE:number) => {
+    const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)];
+    const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)];
+    return { inputRange, opacityInputRange };
+  };
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
 
 
 
+
+  const listanimatedStyle = useAnimatedStyle(() => {
+    const scale = interpolate(scrollY.value, inputRange.current, [1, 1, 1, 0], Extrapolate.CLAMP);
+    const opacity = interpolate(scrollY.value, opacityInputRange.current, [1, 1, 1, 0], Extrapolate.CLAMP);
+    console.log("hey------>",scale,opacity)
+
+    return {
+      transform: [{ scale }],
+      opacity,
+    };
+  });
+
+  console.log(inputRange.current,opacityInputRange.current,scrollY.value,"------->")
 
   React.useEffect(() => {
     console.log("hi-->", isSearchActive)
@@ -111,8 +144,8 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
       if (finished) {
         runOnJS(setHeightIncreased)(true);
       }
-    });  
-  },[isSearchActive]);
+    });
+  }, [isSearchActive]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -122,29 +155,30 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
 
 
   return (
-      <View style={{ flex: 1 }}>
-        {/* <HeaderComponent title='Calls' onPress={()=>console.log("back")}/> */}
-        <Animated.View style={[animatedStyle, { marginTop: actuatedNormalize(40),marginHorizontal:16 }]}>
-          <SearchBar height={height.value} querytext={searchQuerytext} isSearchActive={isSearchActive} setIsSearchActive={setIsSearchActive} onSearch={handleSearchFriendsQuery} />
-        </Animated.View>
-        {!isSearchActive && <View style={styles.header}>
+    <View style={{ flex: 1 }}>
+      {/* <HeaderComponent title='Calls' onPress={()=>console.log("back")}/> */}
+      <Animated.View style={[animatedStyle, { marginTop: actuatedNormalize(40), marginHorizontal: 16 }]}>
+        <SearchBar height={height.value} querytext={searchQuerytext} isSearchActive={isSearchActive} setIsSearchActive={setIsSearchActive} onSearch={handleSearchFriendsQuery} />
+      </Animated.View>
+      {!isSearchActive && <View style={styles.header}>
 
-          <SegmentedControl
-            options={['All', 'Missed']}
-            selectedOption={selectedOption}
-            onOptionPress={onSegmentChange}
-          />
-          <TouchableOpacity onPress={onEdit}>
-            <Text style={{ color: colors.white, fontSize: actuatedNormalize(18), fontFamily: fonts.NexaRegular }}>
-              {isEditing ? 'Done' : 'Edit'}
-            </Text>
-          </TouchableOpacity>
-        </View>}
-        <PullToRefresh onRefresh={() => console.log("refreshed")} refreshing>
+        <SegmentedControl
+          options={['All', 'Missed']}
+          selectedOption={selectedOption}
+          onOptionPress={onSegmentChange}
+        />
+        <TouchableOpacity onPress={onEdit}>
+          <Text style={{ color: colors.white, fontSize: actuatedNormalize(18), fontFamily: fonts.NexaRegular }}>
+            {isEditing ? 'Done' : 'Edit'}
+          </Text>
+        </TouchableOpacity>
+      </View>}
+      <PullToRefresh onRefresh={() => console.log("refreshed")} refreshing>
 
         <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingBottom: 40, marginTop: actuatedNormalize(10) }}>
           <Animated.View style={[defaultStyles.block, { borderTopColor: colors.lightGray, borderWidth: 2 }]} layout={transition}>
             <Animated.FlatList
+            onScroll={scrollHandler}
               skipEnteringExitingAnimations
               data={isSearchActive ? searchQueryData : items}
               scrollEnabled={false}
@@ -153,48 +187,62 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
               itemLayoutAnimation={transition}
               keyExtractor={(item) => item.id.toString()}
               // ItemSeparatorComponent={() => <View style={defaultStyles.separator} />}
-              renderItem={({ item, index }) => (
-                <SwipeableRow onDelete={() => removeCall(item)}>
-                  <Animated.View
-                    entering={FadeInUp.delay(index * 20)}
-                    exiting={FadeOutUp}
-                    style={{ flexDirection: 'row', alignItems: 'center' }}
-                  >
-                    <AnimatedTouchableOpacity
-                      style={[animatedPosition, { paddingLeft: 8 }]}
-                      onPress={() => removeCall(item)}
-                    >
-                      <Ionicons name="remove-circle" size={24} color={colors.red} />
-                    </AnimatedTouchableOpacity>
+              renderItem={({ item, index }) => {
+                const { inputRange, opacityInputRange } = getInputRanges(index, ITEM_SIZE)
+                // const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)]
+                // const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)]       
+                  
+                // const scale = scrollY.interpolate({
+                //   inputRange,
+                //   outputRange: [1, 1, 1, 0]
+                // })
+                // const opacity = scrollY.interpolate({
+                //   inputRange: opacityInputRange,
+                //   outputRange: [1, 1, 1, 0]
+                // })
+                return (
+                  <SwipeableRow onDelete={() => removeCall(item)}>
                     <Animated.View
-                      style={[defaultStyles.item, { paddingLeft: 10 }, animatedRowStyles]}
+                      entering={FadeInUp.delay(index * 20)}
+                      exiting={FadeOutUp}
+                      style={[listanimatedStyle,{ flexDirection: 'row', alignItems: 'center' }]}
                     >
-                      <Image source={{ uri: item.img }} style={styles.avatar} />
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <Text style={{ fontFamily: fonts.NexaRegular, fontSize: actuatedNormalize(18), color: item.missed ? colors.lightRed2 : colors.white }}>
-                          {item.name}
-                        </Text>
-                        <View style={{ flexDirection: 'row', gap: actuatedNormalize(6), alignItems: "center" }}>
-                          <Ionicons name={item.video ? 'videocam' : 'call'} size={16} color={colors.gray} />
-                          <Text style={{ fontSize: actuatedNormalize(14), color: colors.gray, flex: 1, fontFamily: fonts.NexaItalic }}>
-                            {item.incoming ? 'Incoming' : 'Outgoing'}
+                      <AnimatedTouchableOpacity
+                        style={[animatedPosition, { paddingLeft: 8 }]}
+                        onPress={() => removeCall(item)}
+                      >
+                        <Ionicons name="remove-circle" size={24} color={colors.red} />
+                      </AnimatedTouchableOpacity>
+                      <Animated.View
+                        style={[defaultStyles.item, { paddingLeft: 10 }, animatedRowStyles]}
+                      >
+                        <Image source={{ uri: item.img }} style={styles.avatar} />
+                        <View style={{ flex: 1, gap: 2 }}>
+                          <Text style={{ fontFamily: fonts.NexaRegular, fontSize: actuatedNormalize(18), color: item.missed ? colors.lightRed2 : colors.white }}>
+                            {item.name}
                           </Text>
+                          <View style={{ flexDirection: 'row', gap: actuatedNormalize(6), alignItems: "center" }}>
+                            <Ionicons name={item.video ? 'videocam' : 'call'} size={16} color={colors.gray} />
+                            <Text style={{ fontSize: actuatedNormalize(14), color: colors.gray, flex: 1, fontFamily: fonts.NexaItalic }}>
+                              {item.incoming ? 'Incoming' : 'Outgoing'}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
-                      <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                        <Text style={{ fontSize: actuatedNormalize(12), color: colors.gray, fontFamily: fonts.NexaRegular }}>{getFormattedDate(item.date)}</Text>
-                        {/* <Ionicons name="information-circle-outline" size={24} color={colors.primary} /> */}
-                      </View>
+                        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                          <Text style={{ fontSize: actuatedNormalize(12), color: colors.gray, fontFamily: fonts.NexaRegular }}>{getFormattedDate(item.date)}</Text>
+                          {/* <Ionicons name="information-circle-outline" size={24} color={colors.primary} /> */}
+                        </View>
+                      </Animated.View>
                     </Animated.View>
-                  </Animated.View>
-                </SwipeableRow>
-              )}
+                  </SwipeableRow>
+                )
+              }}
             />
           </Animated.View>
         </ScrollView>
-        </PullToRefresh>
+      </PullToRefresh>
 
-      </View>
+    </View>
   );
 };
 

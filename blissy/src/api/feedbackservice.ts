@@ -6,9 +6,10 @@ import {API} from './Api';
 export const FeebackApi = API.injectEndpoints({
   endpoints: builder => ({
     postAppreview: builder.mutation<any, any>({
-      query: () => ({
+      query: (body) => ({
         url: `/app-reviews/`,
         method: 'POST',
+        body
       }),
     }),
     getAppreview: builder.query<any, any>({
@@ -19,9 +20,10 @@ export const FeebackApi = API.injectEndpoints({
       keepUnusedDataFor: 0,
     }),
     postBugReports: builder.mutation<any, any>({
-      query: () => ({
+      query: (body) => ({
         url: `/bug-reports/`,
         method: 'POST',
+        body
       }),
     }),
     getmyBugReports: builder.query<any, any>({

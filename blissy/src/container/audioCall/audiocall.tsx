@@ -76,7 +76,25 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
 
   let remoteRTCMessage = useRef<RTCSessionDescription | null>(null);
 
+
   useEffect(() => {
+    const handleCallEnded = () => {
+      navigation.navigate("ReviewScreen", { user: otherUserData.current, socketId: otherUserScoketId.current });
+      postCallInfotoDB();
+      // dispatch(resetMessages());
+    };
+    socket?.on("callEnded", () => {
+      handleCallEnded()
+      // dispatch(resetMessages())
+    })
+    return () => {
+      socket?.off("callEnded")
+    }
+  }, [seconds])
+
+  useEffect(() => {
+
+
     socket?.on(
       'newCall',
       (data: { rtcMessage: RTCSessionDescription; callerId: string, callerData: UserInterface }) => {
@@ -102,11 +120,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     })
 
 
-    socket?.on("callEnded", () => {
-      navigation.navigate("ReviewScreen", { user: otherUserData.current, socketId: otherUserScoketId.current })
-      postCallInfotoDB()
-      // dispatch(resetMessages())
-    })
+
 
     socket?.on('callAnswered', (data: { rtcMessage: RTCSessionDescription }) => {
       remoteRTCMessage.current = data.rtcMessage;
@@ -306,8 +320,8 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   }
 
 
-  const postCallInfotoDB = useCallback(()=>{
-
+  const postCallInfotoDB = useCallback(() => {
+    console.log(seconds, "seconds-------->")
     if (seconds >= 120) {
       const callInfobody = {
         callType: "Random", // individual  or random
@@ -332,7 +346,8 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       postcallInfo(callInfobody)
 
     }
-  },[seconds])
+  }, [seconds])
+  console.log(seconds, "seconds-------->")
 
 
 
