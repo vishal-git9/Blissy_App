@@ -28,11 +28,13 @@ export const CallApi = API.injectEndpoints({
     }),
     deleteSingleCallInfo:builder.mutation<any,any>({
       query:(id)=>({
-        url:`/delete/${id}`,
+        url:`/call-record/delete`,
         method: 'DELETE',
+        body:{id},
+        // responseHandler:"text"
       })
     })
   })
 });
 
-export const {useUpdateCallInfoMutation,useGetmyCallInfoQuery,usePostCallInfoMutation} = CallApi;
+export const {useUpdateCallInfoMutation,useGetmyCallInfoQuery,usePostCallInfoMutation,useDeleteSingleCallInfoMutation} = CallApi;

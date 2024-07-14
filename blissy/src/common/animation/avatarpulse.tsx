@@ -28,7 +28,7 @@ const AvatarRingsAnimation: React.FC<{source:string | undefined,width:number,hei
       Animated.sequence([
         animateRing(fadeAnim1),
         animateRing(fadeAnim2),
-        animateRing(fadeAnim3),
+        // animateRing(fadeAnim3),
       ]).start(() => loopAnimation()); // Recursively restart the animation sequence
     };
   
@@ -43,7 +43,7 @@ const AvatarRingsAnimation: React.FC<{source:string | undefined,width:number,hei
       </View>
       <Animated.View style={[styles.ring, styles.ring1, { opacity: fadeAnim1 }]} />
       <Animated.View style={[styles.ring, styles.ring2, { opacity: fadeAnim2 }]} />
-      <Animated.View style={[styles.ring, styles.ring3, { opacity: fadeAnim3 }]} />
+      {/* <Animated.View style={[styles.ring, styles.ring3, { opacity: fadeAnim3 }]} /> */}
     </View>
   );
 };

@@ -14,7 +14,7 @@ export const FeebackApi = API.injectEndpoints({
     }),
     getAppreview: builder.query<any, any>({
       query: () => ({
-        url: `/app-reviews/`,
+        url: `/app-reviews/getmyreview`,
         method: 'GET',
       }),
       keepUnusedDataFor: 0,

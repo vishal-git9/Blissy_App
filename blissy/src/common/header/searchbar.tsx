@@ -46,7 +46,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const closeSearch = () => {
-      translateY.value = withTiming(0, { duration: 800 });
+    translateY.value = withTiming(0, { duration: 800 });
 
     runOnJS(setIsSearchActive)(false);
   };
@@ -65,6 +65,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               value={querytext}
               iconColor={colors.white}
               placeholder={placeholder}
+             selectionColor={colors.white}
               placeholderTextColor={colors.white}
               autoFocus={true}
               onChangeText={onSearch}
@@ -75,8 +76,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <Searchbar
             value={querytext}
             iconColor={colors.white}
+            selectionColor={colors.white}
             placeholderTextColor={colors.white}
-            onPressIn={openSearch}
+          onPressIn={openSearch}
             placeholder={placeholder}
             style={styles.searchBar}
           />
@@ -108,6 +110,8 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     marginLeft: 10,
+    tintColor: colors.white,
+    color: colors.white,
     backgroundColor: colors.dark
   },
 });

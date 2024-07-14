@@ -75,7 +75,9 @@ const App: React.FC = () => {
                 backgroundColor={colors.black}
               />
               <PaperProvider theme={{
-                
+                // colors: {
+                //   placeholder: colors.white
+                // }
               }}>
 
                 <Navigator />

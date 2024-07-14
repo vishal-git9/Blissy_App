@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid, Linking, Platform } from 'react-native';
+import { StyleSheet, Text, View, BackHandler, Alert, PermissionsAndroid, Linking, Platform, Dimensions } from 'react-native';
 import colors from '../../constants/colors';
 import { NavigationStackProps } from '../Prelogin/onboarding';
 import TopBar from '../../common/tab/topbar';
@@ -37,6 +37,10 @@ import { getDeviceUniqueId } from '../../utils/getDeviceUniqueId';
 import { playNotificationSound } from '../../common/sound/notification';
 import { useAddmyquotesMutation, useGetmyTodayquotesQuery } from '../../api/feedbackservice';
 import { Animated } from 'react-native';
+import { useGetmyCallInfoQuery } from '../../api/callService';
+import { BlissyLoader } from '../../common/loader/blissy';
+const screenHeight = Dimensions.get('window').height;
+const screenWidth = Dimensions.get('window').width;
 
 interface iconsLabelI {
   id: number;
@@ -76,10 +80,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const { refetch: refetchQuote, isLoading: isquotesLoading, isSuccess: isquotesSuccess, isError: isquotesError } = useGetmyTodayquotesQuery({})
   const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery({})
   const { refetch: refetchUser, isError: isErrorUser, isLoading: isLoadingUser, isSuccess: isSuccessUser } = useGetUserQuery()
-  const [postDeviceinfo, { isError: postDeviceinfoError, isLoading: postDeviceinfoLoading, data: postDeviceinfoData }] = usePostUserDevieInfoMutation()
-  const [postrandomequote, { }] = useAddmyquotesMutation()
+  const [postDeviceinfo, { isError: isPostDeviceinfoError, isLoading: isPostDeviceinfoLoading, data: postDeviceinfoData }] = usePostUserDevieInfoMutation()
+  const { refetch:getCallinfo, isLoading:isCallinfoloading, isError:isCallinfoerror, isSuccess:isCallinfosuccess } = useGetmyCallInfoQuery({})
 
-  const [postFcmToken, { }] = useAddFcmTokenMutation()
+  // const [postrandomequote, { }] = useAddmyquotesMutation()
+
+  const [postFcmToken, {isLoading:isPostfcmtokenLoading,isError:isPostfcmtokeError,isSuccess:isPostfcmtokeSuccess }] = useAddFcmTokenMutation()
   const [newChatMessages, setnewChatMessages] = useState<number>(0)
   // const {refetch:fetchNewMsg,isError:newMsgerr,isLoading:newMsgLoading,isSuccess:newMsgsuccess} = useGetNewMessageQuery({userId:user?._id})
   const [healerAnimate, sethealerAnimate] = useState(true);
@@ -413,10 +419,10 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   }, [chatlistdata, socket]);
 
   useEffect(() => {
-    // dispatch(resetMessages())
-    refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
-    // postrandomequote()
+   refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
     refetchQuote()
+    getCallinfo()
+    // dispatch(resetMessages())
     socket.on("connect", () => {
       console.log("user connected", socket.id)
       console.log(socket, "sockeet state")
@@ -439,7 +445,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       dispatch(getActiveUserList(user))
       console.log(user, "activeUserList new-------->")
     })
-
     return () => {
       socket.off("initiateCall")
       socket.off('activeUserList')
@@ -483,8 +488,13 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   };
   const ITEM_SIZE = getCardHeight() + 40
   console.log(ITEM_SIZE,"ITEM_SIZE----->")
+  console.log(isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading,"isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading")
   return (
-    // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}>
+    <>
+           {(isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading) && <View style={styles.loaderContainer}> <BlissyLoader/></View> }
+
+   
+    {/* // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}> */}
     <View style={styles.container}>
       <TopBar navigation={navigation} />
       <ToggleButton value={value} setValue={setValue} />
@@ -581,7 +591,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       )}
       <PermissionDenied visible={permission} permissionType={permissionType} close={() => { Linking.openSettings(); setpermission(false); }} />
     </View>
-    // </AnimatedBackground>
+    </>
   );
 };
 
@@ -608,5 +618,15 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     fontSize: actuatedNormalize(12),
     marginTop: actuatedNormalize(5)
-  }
+  },
+  loaderContainer: {
+    position: 'absolute',
+    zIndex: 2,
+    flex: 1,
+    height: screenHeight,
+    width: screenWidth,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.darkOverlayColor2,
+  },
 });

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Vibration,
+  ViewToken,
 } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -17,6 +18,7 @@ import Animated, {
   FadeOutUp,
   interpolate,
   runOnJS,
+  useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
@@ -32,10 +34,14 @@ import { CallInfoData as calls } from '../../mockdata/call';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { fonts } from '../../constants/fonts';
 import { HeaderComponent } from '../../common/header/screenheader';
-import { useGetmyCallInfoQuery } from '../../api/callService';
+import { useDeleteSingleCallInfoMutation, useGetmyCallInfoQuery } from '../../api/callService';
 import PullToRefresh from '../../common/refresh/pull';
 import { NavigationStackProps } from '../Prelogin/onboarding';
 import SearchBar from '../../common/header/searchbar';
+import CallinforRow from '../../common/call/callinforow';
+import { useDispatch, useSelector } from 'react-redux';
+import { CallInfoSelector, Calls, pushCalllist } from '../../redux/callSlice';
+import { Snackbar } from 'react-native-paper';
 
 const transition = CurvedTransition.delay(100);
 
@@ -46,45 +52,66 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [selectedOption, setSelectedOption] = useState('All');
   const [items, setItems] = useState(calls);
   const [searchQuerytext, SetsearchQuerytext] = useState<string>("")
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const editing = useSharedValue(-30);
-  const [searchQueryData, setsearchQueryData] = useState(items)
   const { refetch, isLoading, isError, isSuccess } = useGetmyCallInfoQuery({})
+  const  [deleteCall,{isLoading:isdeleteloading,isError:isdeleteerror,isSuccess:isdeletesccuess}] = useDeleteSingleCallInfoMutation()
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
+  const [isCallDeleted,setisCallDeleted] = useState<boolean>(false)
   const [heightIncreased, setHeightIncreased] = useState<boolean>(false)
   const height = useSharedValue(100);
   const scrollY = useSharedValue(0);
-  const ITEM_SIZE =   120
+  const ITEM_SIZE = 120
   const inputRange = useRef([-1, 0, ITEM_SIZE * 1, ITEM_SIZE * (1 + 2)])
   const opacityInputRange = useRef([-1, 0, ITEM_SIZE * 1, ITEM_SIZE * (1 + 1)])
+  const viewableItems = useSharedValue<ViewToken[]>([]);
+  const [isScrollable, setIsScrollable] =  useState<boolean>(false);
+  const scrollRef = useAnimatedRef<Animated.FlatList<any>>();
+  const [contentHeight, setContentHeight] = useState<number>(0);
+  const {Calls,missedCalls} = useSelector(CallInfoSelector)
+  const [searchQueryData, setsearchQueryData] = useState(Calls)
+const dispatch = useDispatch()
+  // const getInputRanges = (index:number, ITEM_SIZE:number) => {
+  //   const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)];
+  //   const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)];
+  //   return { inputRange, opacityInputRange };
+  // };
+// console.log(Calls,"UserCallinfo------>")
+  // const scrollHandler = useAnimatedScrollHandler({
+  //   onScroll: (event) => {
+  //     console.log("scrolling------>", event)
+  //     scrollY.value = event.contentOffset.y;
+  //   },
 
-  const getInputRanges = (index:number, ITEM_SIZE:number) => {
-    const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)];
-    const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)];
-    return { inputRange, opacityInputRange };
+  // });
+
+  const updatePanState = (offset: number) => {
+    'worklet';
+    if (offset > 0) {
+      runOnJS(setIsScrollable)(true);
+    } else {
+      runOnJS(setIsScrollable)(false);
+    }
   };
 
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
+  const handleOnScroll = useAnimatedScrollHandler({
+    onScroll({ contentOffset }) {
+      console.log(contentOffset.y, "contentOffset.y----->")
+      updatePanState(contentOffset.y);
+      scrollY.value = contentOffset.y;
     },
   });
+  // const myHandler = useCallback(({viewableItems, changed}) => {
+  //   console.log("Visible items are", viewableItems);
+  //   console.log("Changed in this iteration", changed);
+  // }, 
+  // [])
 
 
 
 
-  const listanimatedStyle = useAnimatedStyle(() => {
-    const scale = interpolate(scrollY.value, inputRange.current, [1, 1, 1, 0], Extrapolate.CLAMP);
-    const opacity = interpolate(scrollY.value, opacityInputRange.current, [1, 1, 1, 0], Extrapolate.CLAMP);
-    console.log("hey------>",scale,opacity)
 
-    return {
-      transform: [{ scale }],
-      opacity,
-    };
-  });
 
-  console.log(inputRange.current,opacityInputRange.current,scrollY.value,"------->")
 
   React.useEffect(() => {
     console.log("hi-->", isSearchActive)
@@ -102,6 +129,11 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
     }
   }, [navigation, isSearchActive]);
 
+  // React.useEffect(() => {
+
+  //   refetch().then((res) => console.log(res.data,"resofcall-------->")).catch((err) => console.log(err))
+  // }, [])
+
   const onSegmentChange = (option: string) => {
     setSelectedOption(option);
     if (option === 'All') {
@@ -111,18 +143,34 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
     }
   };
 
+  const handlerefreshMessage = async()=>{
+    await refetch()
+  }
+
   const handleSearchFriendsQuery = useCallback((text: string) => {
     console.log(text, 'text---->')
     SetsearchQuerytext(text)
-    const Searchfiltered = items.filter(user =>
-      user.name.toLowerCase().startsWith(text.toLowerCase())
+    const Searchfiltered = Calls.filter(user =>
+      user?.UserCallsInfoList[0]?.name.toLowerCase().startsWith(text.toLowerCase())
     );
     setsearchQueryData(Searchfiltered)
   }, [selectedOption, searchQuerytext])
 
-  const removeCall = (toDelete: any) => {
+  const removeCall = async (toDelete: Calls) => {
     Vibration.vibrate(500);
-    setItems(items.filter((item) => item.id !== toDelete.id));
+    console.log(toDelete,"toDelete---->")
+
+    const data = await deleteCall(toDelete._id)
+    console.log(toDelete,"toDelete---->")
+    if('data' in data){
+      refetch().then((res)=> dispatch(pushCalllist(res.data))).catch((err)=>console.log(err,"err"))
+      setisCallDeleted(true)
+      
+    }else if ('error' in data) {
+      console.log(data, "res of calls")
+      // console.log(verifyOtpErr, "error of otp")
+    }
+    // setItems(items.filter((item) => item.id !== toDelete.id));
   };
 
   const onEdit = () => {
@@ -153,7 +201,22 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
     };
   });
 
+  const renderChatlistData = useCallback(() => {
 
+    if (!isSearchActive) {
+      if (selectedOption === "All") {
+        return Calls
+      } else {
+        return missedCalls
+      }
+    } else {
+      return searchQueryData
+    }
+
+  }, [isSearchActive, Calls, selectedOption, searchQueryData])
+
+
+console.log(missedCalls,"missedCalls----->")
   return (
     <View style={{ flex: 1 }}>
       {/* <HeaderComponent title='Calls' onPress={()=>console.log("back")}/> */}
@@ -173,75 +236,116 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
       </View>}
-      <PullToRefresh onRefresh={() => console.log("refreshed")} refreshing>
+      <PullToRefresh scrollRef={scrollRef} handleOnscroll={handleOnScroll} isScrollable={isScrollable} setIsScrollable={setIsScrollable} updatePanState={updatePanState} onRefresh={handlerefreshMessage} refreshing>
 
-        <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingBottom: 40, marginTop: actuatedNormalize(10) }}>
-          <Animated.View style={[defaultStyles.block, { borderTopColor: colors.lightGray, borderWidth: 2 }]} layout={transition}>
-            <Animated.FlatList
-            onScroll={scrollHandler}
-              skipEnteringExitingAnimations
-              data={isSearchActive ? searchQueryData : items}
-              scrollEnabled={false}
-              //             showsVerticalScrollIndicator={false}
-              // showsHorizontalScrollIndicator={false}
-              itemLayoutAnimation={transition}
-              keyExtractor={(item) => item.id.toString()}
-              // ItemSeparatorComponent={() => <View style={defaultStyles.separator} />}
-              renderItem={({ item, index }) => {
-                const { inputRange, opacityInputRange } = getInputRanges(index, ITEM_SIZE)
-                // const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)]
-                // const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)]       
-                  
-                // const scale = scrollY.interpolate({
-                //   inputRange,
-                //   outputRange: [1, 1, 1, 0]
-                // })
-                // const opacity = scrollY.interpolate({
-                //   inputRange: opacityInputRange,
-                //   outputRange: [1, 1, 1, 0]
-                // })
-                return (
-                  <SwipeableRow onDelete={() => removeCall(item)}>
-                    <Animated.View
-                      entering={FadeInUp.delay(index * 20)}
-                      exiting={FadeOutUp}
-                      style={[listanimatedStyle,{ flexDirection: 'row', alignItems: 'center' }]}
-                    >
-                      <AnimatedTouchableOpacity
-                        style={[animatedPosition, { paddingLeft: 8 }]}
-                        onPress={() => removeCall(item)}
-                      >
-                        <Ionicons name="remove-circle" size={24} color={colors.red} />
-                      </AnimatedTouchableOpacity>
-                      <Animated.View
-                        style={[defaultStyles.item, { paddingLeft: 10 }, animatedRowStyles]}
-                      >
-                        <Image source={{ uri: item.img }} style={styles.avatar} />
-                        <View style={{ flex: 1, gap: 2 }}>
-                          <Text style={{ fontFamily: fonts.NexaRegular, fontSize: actuatedNormalize(18), color: item.missed ? colors.lightRed2 : colors.white }}>
-                            {item.name}
-                          </Text>
-                          <View style={{ flexDirection: 'row', gap: actuatedNormalize(6), alignItems: "center" }}>
-                            <Ionicons name={item.video ? 'videocam' : 'call'} size={16} color={colors.gray} />
-                            <Text style={{ fontSize: actuatedNormalize(14), color: colors.gray, flex: 1, fontFamily: fonts.NexaItalic }}>
-                              {item.incoming ? 'Incoming' : 'Outgoing'}
-                            </Text>
-                          </View>
-                        </View>
-                        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                          <Text style={{ fontSize: actuatedNormalize(12), color: colors.gray, fontFamily: fonts.NexaRegular }}>{getFormattedDate(item.date)}</Text>
-                          {/* <Ionicons name="information-circle-outline" size={24} color={colors.primary} /> */}
-                        </View>
-                      </Animated.View>
-                    </Animated.View>
-                  </SwipeableRow>
-                )
-              }}
-            />
-          </Animated.View>
-        </ScrollView>
+        {/* <ScrollView  contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingBottom: 40, marginTop: actuatedNormalize(10) }}> */}
+        {/* <Animated.View style={[defaultStyles.block, { borderTopColor: colors.lightGray, borderWidth: 2 }]} layout={transition}> */}
+        <Animated.FlatList
+          onScroll={handleOnScroll}
+          ref={scrollRef}
+          skipEnteringExitingAnimations
+          data={renderChatlistData()}
+          scrollEnabled={true}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}
+          contentContainerStyle={{ minHeight: contentHeight }}
+          onContentSizeChange={(w, h) => setContentHeight(h)}
+
+          // style={[defaultStyles.block]}
+          // onViewableItemsChanged={({ viewableItems: vItems }) => {
+          //   viewableItems.value = vItems;
+          // }}
+          // viewabilityConfig={{
+          //   itemVisiblePercentThreshold: 50,
+          // }}
+          //             showsVerticalScrollIndicator={false}
+          // showsHorizontalScrollIndicator={false}
+          itemLayoutAnimation={transition}
+          onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
+          keyExtractor={(item) => item._id}
+          ItemSeparatorComponent={() => <View style={[defaultStyles.separator, { marginLeft: 90 }]} />}
+          renderItem={({ item, index }) => {
+            // const { inputRange, opacityInputRange } = getInputRanges(index, ITEM_SIZE)
+            // const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)]
+            // const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)]       
+
+            // const scale = scrollY.interpolate({
+            //   inputRange,
+            //   outputRange: [1, 1, 1, 0]
+            // })
+            // const opacity = scrollY.interpolate({
+            //   inputRange: opacityInputRange,
+            //   outputRange: [1, 1, 1, 0]
+            // })
+            return (
+              // <SwipeableRow onDelete={() => removeCall(item)}>
+              //   <Animated.View
+              //     entering={FadeInUp.delay(index * 20)}
+              //     exiting={FadeOutUp}
+              //     style={[listanimatedStyle,{ flexDirection: 'row', alignItems: 'center' }]}
+              //   >
+              //     <AnimatedTouchableOpacity
+              //       style={[animatedPosition, { paddingLeft: 8 }]}
+              //       onPress={() => removeCall(item)}
+              //     >
+              //       <Ionicons name="remove-circle" size={24} color={colors.red} />
+              //     </AnimatedTouchableOpacity>
+              //     <Animated.View
+              //       style={[defaultStyles.item, { paddingLeft: 10 }, animatedRowStyles]}
+              //     >
+              //       <Image source={{ uri: item.img }} style={styles.avatar} />
+              //       <View style={{ flex: 1, gap: 2 }}>
+              //         <Text style={{ fontFamily: fonts.NexaRegular, fontSize: actuatedNormalize(18), color: item.missed ? colors.lightRed2 : colors.white }}>
+              //           {item.name}
+              //         </Text>
+              //         <View style={{ flexDirection: 'row', gap: actuatedNormalize(6), alignItems: "center" }}>
+              //           <Ionicons name={item.video ? 'videocam' : 'call'} size={16} color={colors.gray} />
+              //           <Text style={{ fontSize: actuatedNormalize(14), color: colors.gray, flex: 1, fontFamily: fonts.NexaItalic }}>
+              //             {item.incoming ? 'Incoming' : 'Outgoing'}
+              //           </Text>
+              //         </View>
+              //       </View>
+              //       <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+              //         <Text style={{ fontSize: actuatedNormalize(12), color: colors.gray, fontFamily: fonts.NexaRegular }}>{getFormattedDate(item.date)}</Text>
+              //         {/* <Ionicons name="information-circle-outline" size={24} color={colors.primary} /> */}
+              //       </View>
+              //     </Animated.View>
+              //   </Animated.View>
+              // </SwipeableRow>
+              <CallinforRow viewableItems={viewableItems} animatedPosition={animatedPosition} animatedRowStyles={animatedRowStyles} index={index} item={item} removeCall={removeCall} scrollY={scrollY} key={item._id} />
+            )
+          }}
+        />
+        {/* </Animated.View> */}
+        {/* </ScrollView>  */}
       </PullToRefresh>
+      <Snackbar
+        duration={2000}
+        visible={isCallDeleted}
+        style={{ backgroundColor: colors.dark }}
+        onDismiss={() => setisCallDeleted(false)}
+        action={{
+          theme: {
+            fonts: {
+              regular: { fontFamily: fonts.NexaRegular },
+              medium: { fontFamily: fonts.NexaBold },
+              light: { fontFamily: fonts.NexaBold },
+              thin: { fontFamily: fonts.NexaRegular },
+            },
+            colors: { inversePrimary: colors.white, surface: colors.white, accent: colors.white }
+          },
 
+          label: 'Okay',
+          textColor: "red",
+          labelStyle: { fontFamily: fonts.NexaBold, color: colors.white },
+          onPress: () => {
+            // Do something
+            setisCallDeleted(false)
+          },
+        }}>
+        Call record is deleted
+      </Snackbar>
     </View>
   );
 };

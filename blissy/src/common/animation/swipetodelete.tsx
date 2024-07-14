@@ -43,6 +43,7 @@ export default class SwipeableRow extends Component<
       <Animated.View
         style={{
           flex: 1,
+          // marginBottom:10,
           transform: [{ translateX: trans }],
         }}>
         <RectButton style={[styles.rightAction, { backgroundColor: color }]} onPress={pressHandler}>

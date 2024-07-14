@@ -55,7 +55,7 @@ const CouponCard: React.FC<CouponCardProps> = ({ name, rewardPoints, onPressClai
         {/* <TouchableOpacity style={styles.claimButton} onPress={handlePressClaim}>
           <Text style={styles.buttonText}>Claim Now</Text>
         </TouchableOpacity> */}
-        <TalkNowButton label='Claim Now' onPress={handlePressClaim} />
+        <TalkNowButton label='Claim' onPress={handlePressClaim} />
 
         </View>
       </View>
@@ -66,6 +66,7 @@ const CouponCard: React.FC<CouponCardProps> = ({ name, rewardPoints, onPressClai
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.dark,
+    padding:actuatedNormalize(20),
     margin: actuatedNormalize(10),
     borderRadius: actuatedNormalize(10),
     overflow: 'hidden', // Ensures rounded corners are respected
@@ -82,14 +83,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   content: {
-    padding: actuatedNormalize(20),
+    // padding: actuatedNormalize(20),
     flexDirection:'row',
+    justifyContent:"space-between"
     // justifyContent:'space-around'
   },
   name: {
     fontSize: actuatedNormalize(18),
-    marginBottom: actuatedNormalize(10),
-    textAlign: 'center',
+    // marginBottom: actuatedNormalize(10),
+    // textAlign: 'center',
     fontFamily:fonts.NexaBold,
     color:colors.white
   },
@@ -102,13 +104,13 @@ const styles = StyleSheet.create({
   },
   claimButton: {
     backgroundColor: colors.darkRed,
-    paddingVertical: actuatedNormalize(10),
-    paddingHorizontal: actuatedNormalize(15),
+    // paddingVertical: actuatedNormalize(10),
+    // paddingHorizontal: actuatedNormalize(15),
     borderRadius: actuatedNormalize(5),
     alignSelf: 'center',
   },
   buttonContainer:{
-    padding:actuatedNormalize(10),
+    // padding:actuatedNormalize(10),
     alignItems:'center',
     justifyContent:'center'
   },
@@ -119,9 +121,11 @@ const styles = StyleSheet.create({
     color:colors.white
   },
   nameContainer:{
-    borderRightWidth:actuatedNormalize(2),
-    borderRightColor:colors.white,
-    width:'65%',
+    // borderRightWidth:actuatedNormalize(2),
+    // borderRightColor:colors.white,
+    // backgroundColor:"red",
+    rowGap:5,
+    // width:'65%',
     borderStyle:'dashed',
   }
 });

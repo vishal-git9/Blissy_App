@@ -28,7 +28,7 @@ const RewardCard: React.FC<Props> = ({shouldAnimate, coins, coinsAdded}) => {
             <View style={{width:'30%', alignItems:'center'}}>
               <View style={[styles.iconContainer]}>
                 <Ionicons
-                  style={{marginBottom: actuatedNormalize(15)}}
+                  // style={{marginBottom: actuatedNormalize(15)}}
                   name="gift"
                   size={35}
                   color={colors.white}

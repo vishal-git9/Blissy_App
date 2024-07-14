@@ -82,7 +82,7 @@ const MessageSlice = createSlice({
     getActiveUserList: (state, action: PayloadAction<ActiveUserList[]>) => {
       state.activeUserList = action.payload
     },
-  pushChatlist:(state,action:PayloadAction<ChatList[]>)=>{
+    pushChatlist:(state,action:PayloadAction<ChatList[]>)=>{
     console.log(action.payload,"chatlistpayload----->")
       state.chatList = action.payload
       state.ActiveUser=action.payload.filter((el:ChatList)=>el.isBlocked === false)

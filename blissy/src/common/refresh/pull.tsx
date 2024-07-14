@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, SetStateAction, Dispatch } from 'react';
 import {
   Text,
   SafeAreaView,
@@ -10,7 +10,9 @@ import { GestureHandlerRootView, Gesture, ScrollView, GestureDetector } from 're
 import Icon from 'react-native-vector-icons/Ionicons';
 import Lottie from 'lottie-react-native';
 import Animated, {
+  AnimatedRef,
   Extrapolate,
+  ScrollHandlerProcessed,
   interpolate,
   runOnJS,
   scrollTo,
@@ -22,34 +24,40 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { actuatedNormalize } from '../../constants/PixelScaling';
+type ScrollRef = AnimatedRef<Animated.FlatList<any>> | AnimatedRef<Animated.ScrollView>;
 
 interface PullToRefreshProps {
   children: React.ReactElement<ScrollViewProps>;
   onRefresh: () => void;
   refreshing: boolean;
+  handleOnscroll:ScrollHandlerProcessed<Record<string, unknown>>;
+  updatePanState:(offset: number)=>void;
+  setIsScrollable:Dispatch<SetStateAction<boolean>>;
+  isScrollable:boolean;
+  scrollRef:ScrollRef;
 }
 
 const REFRESH_AREA_HEIGHT = 130;
 
-const PullToRefresh: React.FC<PullToRefreshProps> = ({ children, refreshing, onRefresh }) => {
+const PullToRefresh: React.FC<PullToRefreshProps> = ({scrollRef,handleOnscroll,isScrollable,setIsScrollable,updatePanState, children, refreshing, onRefresh }) => {
   const [toggleLottie, setToggleLottie] = useState(false);
   const [gestureActive, setGestureActive] = useState(false);
-  const [isScrollable, setIsScrollable] = useState(false);
+  // const [isScrollable, setIsScrollable] = useState(false);
 
-  const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
   const translationY = useSharedValue(0);
   const startY = useSharedValue(0);
   const pullUpTranslate = useSharedValue(0);
+  console.log(startY,"startY---->")
 
-  const updatePanState = (offset: number) => {
-    'worklet';
-    if (offset > 0) {
-      runOnJS(setIsScrollable)(true);
-    } else {
-      runOnJS(setIsScrollable)(false);
-    }
-  };
+  // const updatePanState = (offset: number) => {
+  //   'worklet';
+  //   if (offset > 0) {
+  //     runOnJS(setIsScrollable)(true);
+  //   } else {
+  //     runOnJS(setIsScrollable)(false);
+  //   }
+  // };
 
   const fetchData = async () => {
     onRefresh();
@@ -162,15 +170,16 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({ children, refreshing, onR
           </Animated.View>
 
           <GestureDetector gesture={gestureHandler}>
-            <Animated.ScrollView
-              ref={scrollRef}
+            {/* <Animated.ScrollView
+              ref={scrollRef}              
               scrollEventThrottle={16}
               onScroll={handleOnScroll}
+              nestedScrollEnabled={true}
+              
               showsVerticalScrollIndicator={false}
-              onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
-            >
+            > */}
               {children}
-            </Animated.ScrollView>
+            {/* </Animated.ScrollView> */}
           </GestureDetector>
         </View>
       </SafeAreaView>

@@ -11,7 +11,7 @@ import LottieView from 'lottie-react-native';
 import RewardCard from '../../common/cards/rewardCard';
 import {Empty} from '../../common/Empty/Empty';
 import CouponCard from './CouponCard';
-import {FlashList} from '@shopify/flash-list';
+import {AnimatedFlashList, FlashList} from '@shopify/flash-list';
 import Swipable from './TestAnimation';
 import Typewriter from '../../common/animation/Typewritter';
 
@@ -91,10 +91,11 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
       </View>
       <View style={styles.badge}>
       {/* <Text style={styles.text}>Healers will soon be available for you.</Text> */}
-      <Typewriter loop={true} text='You can use POINTS once the Healers get Listed' speed={50} />
+      <Typewriter loop={false} text='You can use POINTS once the Healers get Listed' speed={50} />
     </View>
       <View style={{flex:1}}>
-        <FlashList
+        <AnimatedFlashList
+        
           data={coupons}
           ref={flashListRef}
           contentContainerStyle={styles.listContainer}
@@ -164,9 +165,11 @@ const styles = StyleSheet.create({
   },
   badge:{
     backgroundColor: colors.primary,
+    // padding:actuatedNormalize(5)
+    // marginHorizontal:actuatedNormalize(8),
+    // alignSelf:"center",
     borderRadius: actuatedNormalize(5), 
     paddingHorizontal: actuatedNormalize(16),
     paddingVertical: actuatedNormalize(8),
-    margin:actuatedNormalize(5)
   }
 });

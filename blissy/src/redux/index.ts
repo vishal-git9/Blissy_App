@@ -4,10 +4,12 @@ import {persistReducer, persistStore}  from "redux-persist"
 import IsUISlice, { AuthSlice } from './uiSlice';
 import {API} from '../api/Api';
 import MessageSlice from './messageSlice';
+import CallSlice from './callSlice';
 const rootReducer = combineReducers({
   [API.reducerPath]: API.reducer,
   Auth:AuthSlice.reducer,
-  Message:MessageSlice.reducer
+  Message:MessageSlice.reducer,
+  Calls:CallSlice.reducer
 });
 const persistConfig = {
   key: 'root',
