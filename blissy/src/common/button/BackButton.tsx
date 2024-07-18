@@ -12,9 +12,9 @@ interface RouteBackButtonProps {
 const RouteBackButton: React.FC<RouteBackButtonProps> = ({ onPress }) => {
   return (
     <TouchableOpacity onPressIn={onPress} style={styles.container}>
-      <View style={styles.button}>
-        <FontAwesome5 name="angle-left" size={15} color="white" />
-      </View>
+      {/* <View style={styles.button}> */}
+        <FontAwesome5 name="arrow-left" size={actuatedNormalize(18)} color="white" />
+      {/* </View> */}
     </TouchableOpacity>
   );
 };

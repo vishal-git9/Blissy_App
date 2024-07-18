@@ -110,7 +110,7 @@ const MobileInput: React.FC<LoginScreenProps> = ({
                   alignSelf: 'center',
                   lineHeight: actuatedNormalize(20),
                 }}>
-                {''}
+                {"let's keep it simple by email"}
               </Text>
             </View>
             <View style={styles.modalContent}>
