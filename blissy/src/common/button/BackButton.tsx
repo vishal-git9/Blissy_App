@@ -1,11 +1,12 @@
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet, Button } from 'react-native';
+import { TouchableOpacity, View, StyleSheet, Button, StyleProp, ViewStyle } from 'react-native';
 import FontAwesome5  from 'react-native-vector-icons/FontAwesome5';
 import colors from '../../constants/colors';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 
 interface RouteBackButtonProps {
   onPress: () => void;
+  containerstyle?:StyleProp<ViewStyle>
 }
 
 const RouteBackButton: React.FC<RouteBackButtonProps> = ({ onPress }) => {
@@ -17,9 +18,9 @@ const RouteBackButton: React.FC<RouteBackButtonProps> = ({ onPress }) => {
     </TouchableOpacity>
   );
 };
-const RouteBackButton2: React.FC<RouteBackButtonProps> = ({ onPress }) => {
+const RouteBackButton2: React.FC<RouteBackButtonProps> = ({ onPress,containerstyle }) => {
   return (
-    <TouchableOpacity onPressIn={onPress} style={styles.container2}>
+    <TouchableOpacity onPressIn={onPress} style={[styles.container2,containerstyle]}>
         <FontAwesome5 name="arrow-left" size={actuatedNormalize(18)} color="white" />
     </TouchableOpacity>
   );
@@ -45,7 +46,7 @@ const styles = StyleSheet.create({
     alignItems:"center"
   },
   container2:{
-
+    // backgroundColor:"red",
   }
 });
 

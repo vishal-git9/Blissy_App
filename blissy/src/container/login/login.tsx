@@ -97,10 +97,12 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       clearInterval(timerRef.current);
       setModalState(false)
       console.log(isNewuser, "---user isnewuser")
-      if (isNewuser?.data?.data?.user?.isNewUser) {
+      if (isNewuser?.data?.user?.isNewUser) {
+        console.log(isNewuser.data?.user, "---user here isnewuser")
         reduxDispatch(setSessionStatus(false))
         setwelcomeModal({ visible: true, isNew: true })
       } else {
+        console.log(isNewuser.data?.user, "---user here2 isnewuser")
         setwelcomeModal({ visible: true, isNew: false })
         reduxDispatch(setSessionStatus(false))
         reduxDispatch(setUserState(false))

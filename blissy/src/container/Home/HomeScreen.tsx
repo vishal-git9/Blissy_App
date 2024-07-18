@@ -39,6 +39,7 @@ import { useAddmyquotesMutation, useGetmyTodayquotesQuery } from '../../api/feed
 import { Animated } from 'react-native';
 import { useGetmyCallInfoQuery } from '../../api/callService';
 import { BlissyLoader } from '../../common/loader/blissy';
+import { Appbackground } from '../../common/animation/appbackground';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
@@ -488,12 +489,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   };
   const ITEM_SIZE = getCardHeight() + 40
   console.log(ITEM_SIZE,"ITEM_SIZE----->")
-  console.log(isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading,"isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading")
+  // console.log(isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading,"isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading")
   return (
     <>
-           {(isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading) && <View style={styles.loaderContainer}> <BlissyLoader/></View> }
+           {/* {(isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading) && <View style={styles.loaderContainer}> <BlissyLoader/></View> } */}
 
-   
+   <Appbackground>
     {/* // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}> */}
     <View style={styles.container}>
       <TopBar navigation={navigation} />
@@ -591,6 +592,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       )}
       <PermissionDenied visible={permission} permissionType={permissionType} close={() => { Linking.openSettings(); setpermission(false); }} />
     </View>
+    </Appbackground>
     </>
   );
 };

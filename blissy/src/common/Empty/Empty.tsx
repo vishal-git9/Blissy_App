@@ -51,12 +51,14 @@ const styles = StyleSheet.create({
     fontFamily: fonts.NexaRegular,
     fontSize: actuatedNormalize(14),
     alignSelf: "center",
+    textAlign:"center",
     color: colors.lightGray
   },
   upperTextStyle: {
     fontFamily: fonts.NexaXBold,
     fontSize: actuatedNormalize(16),
     alignSelf: "center",
+    textAlign:"center",
     color: colors.lightGray
   }
 });

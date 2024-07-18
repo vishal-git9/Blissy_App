@@ -17,6 +17,7 @@ import { useGetmyBugReportsQuery, usePostBugReportsMutation } from '../../api/fe
 import { useSelector } from 'react-redux';
 import { AuthSelector } from '../../redux/uiSlice';
 import { BlissyLoader } from '../../common/loader/blissy';
+import { Empty } from '../../common/Empty/Empty';
 
 interface BugreportProps {
     navigation: DrawerNavigationProp<RootStackParamList>;
@@ -119,11 +120,13 @@ const BugReportScreen: React.FC<BugreportProps> = (props) => {
                             placeholder="Write your report here..."
                         />
                         <PrimaryButton styles={{ width: "100%" }} label='Submit' handleFunc={handleCreateReport} />
-                        <LiveItUpComponent />
-                    </KeyboardAvoidingView>
+                        <View style={{ flex: 1, justifyContent: "flex-end", width: "100%" }}>
+                            <LiveItUpComponent />
+                        </View>              
+                  </KeyboardAvoidingView>
                 ) : (
                     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollView}>
-                        {reports.length === 0 && <Text style={{ width: "80%", textAlign: "center", color: colors.white, alignSelf: "center", fontFamily: fonts.NexaBold, fontSize: actuatedNormalize(23), marginTop: actuatedNormalize(20) }}>You have not raised any reports</Text>
+                        {reports.length === 0 &&   <Empty head='Bug reports' description='You have not raised any bug reports related to app' />
                         }
                         {reports.map((report, index) => (
                             <ReportCard

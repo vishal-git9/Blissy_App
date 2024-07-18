@@ -444,9 +444,10 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
             <Menu
               visible={menuVisible}
               onDismiss={handleMenuClose}
+              contentStyle={{backgroundColor:colors.dark}}
               anchor={<Ionicons name='ellipsis-vertical' onPress={handleMenuVisible} size={25} color={colors.white} />}>
 
-              <Menu.Item onPress={handleDeleteChatHistory} title="Delete Chat" />
+              <Menu.Item titleStyle={{color:colors.white,fontFamily:fonts.NexaRegular}} onPress={handleDeleteChatHistory} title="Delete Chat" />
               {/* <Menu.Item onPress={() => { }} title="Item 2" /> */}
               {/* <Menu.Item onPress={() => { }} title="Item 3" /> */}
             </Menu>
@@ -595,14 +596,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignSelf: "center",
     alignItems: 'center',
-    backgroundColor: colors.lightGray,
+    backgroundColor: colors.dark,
     paddingVertical: 5,
     zIndex: 1,
   },
   stickyHeaderText: {
     fontSize: 12,
     fontFamily: fonts.NexaRegular,
-    color: colors.gray,
+    color: colors.white,
   },
   headerContent: {
     flex: 1,

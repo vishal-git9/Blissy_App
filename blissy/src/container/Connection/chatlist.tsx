@@ -1,5 +1,5 @@
 // ChatListScreen.tsx
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, FlatList, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { NavigationStackProps } from '../Prelogin/onboarding';
 import colors from '../../constants/colors';
@@ -7,7 +7,7 @@ import { RouteBackButton } from '../../common/button/BackButton';
 import { Image } from 'react-native';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { fonts } from '../../constants/fonts';
-import { Badge, Searchbar, Snackbar } from 'react-native-paper';
+import { Badge, Searchbar, Snackbar, useTheme } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Animated, {
   CurvedTransition,
@@ -88,7 +88,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const scrollY = useSharedValue(0);
   const ITEM_HEIGHT = 40; // Example item height
   const dispatch = useDispatch();
-
+const theme = useTheme()
 
   const updatePanState = (offset: number) => {
     'worklet';
@@ -187,12 +187,31 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     }).createdAt;
   };
 
+//   const getnewChatlistData = useMemo(() => {
+//     const MessageData = chatlistdata?.filter((el) => {
+//       if (el.ChatHistorydeletedby && el.ChatHistorydeletedby?.length > 0) {
+//         el.ChatHistorydeletedby[0] !== user?._id || el.ChatHistorydeletedby[1] !== user._id
+//       } else {
+//         return el
+//       }
+//       // if(el.)
+//     })
+// },[chatlistdata])
+
   const dataWithTimestamps = chatlistdata?.map(item => ({
     ...item,
     latestMessageTimestamp: getLatestMessageTimestamp(item)
   }));
 
   const findNewMessage = useCallback(() => {
+      const MessageData = chatlistdata?.filter((el) => {
+        if (el.ChatHistorydeletedby && el.ChatHistorydeletedby?.length > 0) {
+          el.ChatHistorydeletedby[0] !== user?._id || el.ChatHistorydeletedby[1] !== user._id
+        } else {
+          return el
+        }
+        // if(el.)
+      })
     const sortedData = dataWithTimestamps.sort((a, b) => {
       if (a.latestMessageTimestamp === null) return 1;
       if (b.latestMessageTimestamp === null) return -1;
@@ -456,6 +475,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
               showsVerticalScrollIndicator={false}
               nestedScrollEnabled={true}
               onScroll={handleOnScroll}
+              scrollEnabled={true}
               data={renderChatlistData()}
               contentContainerStyle={{ minHeight: contentHeight }}
               onContentSizeChange={(w, h) => setContentHeight(h)}
@@ -466,14 +486,14 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
               ItemSeparatorComponent={() => (
                 <View style={[defaultStyles.separator, { marginLeft: 90 }]} />
               )}
+              ListEmptyComponent={ActiveUsers.length === 0 ? <Empty head='Active Users' description='You have no active users' /> : BlockedUsers.length === 0 ?  <Empty head='Blocked Users' description='You have no blocked users' /> : <Empty head='Search Users' description='User not found' />}
               // CellRendererComponent={renderCell}
-              scrollEnabled={true}
             />
             {/* </Animated.View>
             </ScrollView> */}
           </PullToRefresh>
         ) : (
-          <Empty head='Make Friends' description='You have no friends say hi to send message and make new friends' />
+          <Empty head='Make Friends' description='You have no friends make new friends after every call' />
         )
       }
 
@@ -483,24 +503,33 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
         style={{ backgroundColor: colors.dark }}
         onDismiss={() => setAlertMessage({ show: false, message: "" })}
         action={{
-          theme: {
-            fonts: {
-              regular: { fontFamily: fonts.NexaRegular },
-              medium: { fontFamily: fonts.NexaBold },
-              light: { fontFamily: fonts.NexaBold },
-              thin: { fontFamily: fonts.NexaRegular },
-            },
-            colors: { inversePrimary: colors.white, surface: colors.white, accent: colors.white }
-          },
+          // theme: {
+          //   fonts: {
+          //     regular: { fontFamily: fonts.NexaRegular },
+          //     medium: { fontFamily: fonts.NexaBold },
+          //     light: { fontFamily: fonts.NexaBold },
+          //     thin: { fontFamily: fonts.NexaRegular },
+          //   },
+          //   // colors: { inversePrimary: theme.colors.surface, surface: theme.colors.surface, accent: theme.colors.surface }
+          // },
+
+          
 
           label: 'Okay',
-          textColor: "red",
+          // textColor: theme.colors.surface,
           labelStyle: { fontFamily: fonts.NexaBold, color: colors.white },
           onPress: () => {
             // Do something
             setAlertMessage({ show: false, message: "" });
           },
-        }}>
+        }}
+        theme={{
+          colors: {
+            inverseOnSurface: colors.white,
+             surface: colors.white
+          },
+      }}
+         >
         {AlertMessage.message}
       </Snackbar>
     </View>

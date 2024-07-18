@@ -34,3 +34,20 @@ export const getFormattedDate = (dateString: string) => {
       return date.format('LL');
     }
   };
+
+
+  export function convertSeconds(seconds:number) {
+    if (seconds < 60) {
+        return `${seconds} s`;
+    } else if (seconds < 3600) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes} m ${remainingSeconds} s`;
+    } else {
+        const hours = Math.floor(seconds / 3600);
+        const remainingSeconds = seconds % 3600;
+        const minutes = Math.floor(remainingSeconds / 60);
+        const remainingFinalSeconds = remainingSeconds % 60;
+        return `${hours} h, ${minutes} m and ${remainingFinalSeconds} s`;
+    }
+}

@@ -7,12 +7,15 @@ import { Text } from "react-native"
 import { actuatedNormalize } from "../../constants/PixelScaling"
 import colors from "../../constants/colors"
 import { fonts } from "../../constants/fonts"
-import { getFormattedDate } from "../../utils/formatedateTime"
+import { convertSeconds, getFormattedDate } from "../../utils/formatedateTime"
 import { defaultStyles } from "../styles/defaultstyles"
 import { TouchableOpacity } from "react-native"
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { ViewToken } from "react-native"
 import { Calls } from "../../redux/callSlice"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { RootStackParamList } from "../../AppNavigation/navigatorType"
+import { UserInterface } from "../../redux/uiSlice"
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ITEM_SIZE =  75
@@ -37,16 +40,18 @@ interface CallInforowProps {
     animatedPosition:StyleProp<ViewStyle>;
     item:Calls;
     index:number;
-    removeCall:(value:Calls)=>void
+    removeCall:(value:Calls)=>void;
+    navigation: NativeStackNavigationProp<RootStackParamList>;
+    user:UserInterface
 }
 
- const CallinforRow: React.FC<CallInforowProps> = ({scrollY,viewableItems,animatedRowStyles,animatedPosition,item,index,removeCall}) => {
+ const CallinforRow: React.FC<CallInforowProps> = ({user,scrollY,viewableItems,animatedRowStyles,animatedPosition,item,index,removeCall,navigation}) => {
 
 // console.log(item,"itesm------>")
     const listanimatedStyle = useAnimatedStyle(() => {
         const scale = interpolate(scrollY.value, [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)], [1, 1, 1, 0], Extrapolate.CLAMP);
         const opacity = interpolate(scrollY.value, [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)], [1, 1, 1, 0], Extrapolate.CLAMP);
-        console.log("hey------>",scale,opacity)
+        // console.log("hey------>",scale,opacity)
     
         return {
           transform: [{ scale }],
@@ -69,7 +74,11 @@ interface CallInforowProps {
     // })
     return (
         <SwipeableRow onDelete={() => removeCall(item)}>
-            <Animated.View
+            <AnimatedTouchableOpacity
+            onPress={() => {
+                navigation.navigate('ChatWindow', {
+                    Chats:null,socketId:undefined,userDetails:item.UserCallsInfoList[0],senderUserId:user?._id || null                });
+              }}
                 entering={FadeInUp.delay(index * 20)}
                 exiting={FadeOutUp}
                 style={[listanimatedStyle, {flexDirection: 'row', alignItems: 'center' }]}
@@ -81,6 +90,7 @@ interface CallInforowProps {
                     <Ionicons name="remove-circle" size={24} color={colors.red} />
                 </AnimatedTouchableOpacity>
                 <Animated.View
+                
                     style={[defaultStyles.item, { paddingLeft: 10 }, animatedRowStyles]}
                 >
                     <Image source={{ uri: item?.UserCallsInfoList[0]?.profilePic }} style={styles.avatar} />
@@ -92,7 +102,7 @@ interface CallInforowProps {
                             <Ionicons name={'call'} size={16} color={colors.gray} />
                             <Text style={{ fontSize: actuatedNormalize(14), color: colors.gray, flex: 1, fontFamily: fonts.NexaItalic }}>
                                 {/* {item.incoming ? 'Incoming' : 'Outgoing'} */}
-                                {item.callType} {item.callDuration}
+                                {item.callType} {convertSeconds(item.callDuration)}
                             </Text>
                         </View>
                     </View>
@@ -101,7 +111,7 @@ interface CallInforowProps {
                         {/* <Ionicons name="information-circle-outline" size={24} color={colors.primary} /> */}
                     </View>
                 </Animated.View>
-            </Animated.View>
+            </AnimatedTouchableOpacity>
         </SwipeableRow>
     )
 }

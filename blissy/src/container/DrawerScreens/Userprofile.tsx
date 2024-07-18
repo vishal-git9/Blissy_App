@@ -106,7 +106,7 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
             />
           </View>
           <Text style={styles.detailText}>Age: {user?.age.toString()}</Text>
-          <Text style={[styles.detailText, { marginTop: actuatedNormalize(10), textAlign: "center" }]}>{`[${user?.mentalIssues?.join(",")}]`}</Text>
+          <Text style={[styles.detailText, { marginTop: actuatedNormalize(10), textAlign: "center" }]}>{`${user?.mentalIssues?.join(",")}`}</Text>
         </View>
 
         <View style={styles.userPerformaceContainer}>

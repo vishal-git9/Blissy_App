@@ -9,7 +9,7 @@ export interface Calls extends Document {
     callType:string;
     callerId: string;
     calleeId:string;
-    callDuration:string;
+    callDuration:number;
     isSuccessful: Boolean;
     isMissed:Boolean;
     isRejected:Boolean;

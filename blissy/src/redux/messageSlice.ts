@@ -19,6 +19,7 @@ export interface Message {
 }
 
 export interface ChatList {
+  _id:string;
   userId: string;
   chatPartner: UserInterface
   newMessages: Message[];
@@ -29,6 +30,7 @@ export interface ChatList {
   isBlocked:Boolean;
   isBlockedBy:string[];
   isDeleted:Boolean;
+  ChatHistorydeletedby:string[];
 }
 export interface ActiveUserList {
   _id: string,

@@ -82,14 +82,14 @@ const ChatRow: React.FC<ChatRowProps> = ({ scrollY,item, index, user, typingUser
               senderUserId: null
             });
           }}>
-            <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
+            <Image source={{ uri: item?.chatPartner?.profilePic }} style={styles.avatar} />
             <View style={styles.chatDetails}>
-              <Text style={styles.chatName}>{item.chatPartner.name}</Text>
+              <Text style={styles.chatName}>{item?.chatPartner?.name}</Text>
               {
-                (typingUser?.typingState && typingUser?.userData._id === item.chatPartner._id)
+                (typingUser?.typingState && typingUser?.userData?._id === item?.chatPartner?._id)
                   ? <Text style={[styles.chatName, { color: colors.darkprimary, fontSize: actuatedNormalize(12) }]}>Typing...</Text>
                   : <View style={{ flexDirection: 'row', columnGap: actuatedNormalize(10), alignItems: 'center', marginTop: actuatedNormalize(5) }}>
-                    <Text numberOfLines={1} style={styles.lastMessage}>{item.allMessages[item.allMessages?.length - 1]?.message || ""}</Text>
+                    <Text numberOfLines={1} style={styles.lastMessage}>{item?.ChatHistorydeletedby?.includes(user?._id as string) ? "" : item?.allMessages[item.allMessages?.length - 1]?.message || ""}</Text>
                     {newMessageIds?.length > 0 && (
                       <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>
                         {newMessageIds?.length}

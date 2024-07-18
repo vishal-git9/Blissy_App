@@ -42,6 +42,8 @@ import CallinforRow from '../../common/call/callinforow';
 import { useDispatch, useSelector } from 'react-redux';
 import { CallInfoSelector, Calls, pushCalllist } from '../../redux/callSlice';
 import { Snackbar } from 'react-native-paper';
+import { Empty } from '../../common/Empty/Empty';
+import { AuthSelector } from '../../redux/uiSlice';
 
 const transition = CurvedTransition.delay(100);
 
@@ -55,28 +57,26 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const editing = useSharedValue(-30);
   const { refetch, isLoading, isError, isSuccess } = useGetmyCallInfoQuery({})
-  const  [deleteCall,{isLoading:isdeleteloading,isError:isdeleteerror,isSuccess:isdeletesccuess}] = useDeleteSingleCallInfoMutation()
+  const [deleteCall, { isLoading: isdeleteloading, isError: isdeleteerror, isSuccess: isdeletesccuess }] = useDeleteSingleCallInfoMutation()
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
-  const [isCallDeleted,setisCallDeleted] = useState<boolean>(false)
+  const [isCallDeleted, setisCallDeleted] = useState<boolean>(false)
   const [heightIncreased, setHeightIncreased] = useState<boolean>(false)
   const height = useSharedValue(100);
   const scrollY = useSharedValue(0);
-  const ITEM_SIZE = 120
-  const inputRange = useRef([-1, 0, ITEM_SIZE * 1, ITEM_SIZE * (1 + 2)])
-  const opacityInputRange = useRef([-1, 0, ITEM_SIZE * 1, ITEM_SIZE * (1 + 1)])
   const viewableItems = useSharedValue<ViewToken[]>([]);
-  const [isScrollable, setIsScrollable] =  useState<boolean>(false);
+  const [isScrollable, setIsScrollable] = useState<boolean>(false);
   const scrollRef = useAnimatedRef<Animated.FlatList<any>>();
   const [contentHeight, setContentHeight] = useState<number>(0);
-  const {Calls,missedCalls} = useSelector(CallInfoSelector)
+  const { Calls, missedCalls } = useSelector(CallInfoSelector)
   const [searchQueryData, setsearchQueryData] = useState(Calls)
-const dispatch = useDispatch()
+  const dispatch = useDispatch()
+  const {user} = useSelector(AuthSelector)
   // const getInputRanges = (index:number, ITEM_SIZE:number) => {
   //   const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)];
   //   const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)];
   //   return { inputRange, opacityInputRange };
   // };
-// console.log(Calls,"UserCallinfo------>")
+  // console.log(Calls,"UserCallinfo------>")
   // const scrollHandler = useAnimatedScrollHandler({
   //   onScroll: (event) => {
   //     console.log("scrolling------>", event)
@@ -143,7 +143,7 @@ const dispatch = useDispatch()
     }
   };
 
-  const handlerefreshMessage = async()=>{
+  const handlerefreshMessage = async () => {
     await refetch()
   }
 
@@ -158,15 +158,15 @@ const dispatch = useDispatch()
 
   const removeCall = async (toDelete: Calls) => {
     Vibration.vibrate(500);
-    console.log(toDelete,"toDelete---->")
+    console.log(toDelete, "toDelete---->")
 
     const data = await deleteCall(toDelete._id)
-    console.log(toDelete,"toDelete---->")
-    if('data' in data){
-      refetch().then((res)=> dispatch(pushCalllist(res.data))).catch((err)=>console.log(err,"err"))
+    console.log(toDelete, "toDelete---->")
+    if ('data' in data) {
+      refetch().then((res) => dispatch(pushCalllist(res.data))).catch((err) => console.log(err, "err"))
       setisCallDeleted(true)
-      
-    }else if ('error' in data) {
+
+    } else if ('error' in data) {
       console.log(data, "res of calls")
       // console.log(verifyOtpErr, "error of otp")
     }
@@ -216,7 +216,7 @@ const dispatch = useDispatch()
   }, [isSearchActive, Calls, selectedOption, searchQueryData])
 
 
-console.log(missedCalls,"missedCalls----->")
+  console.log(missedCalls, "missedCalls----->")
   return (
     <View style={{ flex: 1 }}>
       {/* <HeaderComponent title='Calls' onPress={()=>console.log("back")}/> */}
@@ -236,90 +236,93 @@ console.log(missedCalls,"missedCalls----->")
           </Text>
         </TouchableOpacity>
       </View>}
-      <PullToRefresh scrollRef={scrollRef} handleOnscroll={handleOnScroll} isScrollable={isScrollable} setIsScrollable={setIsScrollable} updatePanState={updatePanState} onRefresh={handlerefreshMessage} refreshing>
+      {
+        Calls.length > 0 ? <PullToRefresh scrollRef={scrollRef} handleOnscroll={handleOnScroll} isScrollable={isScrollable} setIsScrollable={setIsScrollable} updatePanState={updatePanState} onRefresh={handlerefreshMessage} refreshing>
 
-        {/* <ScrollView  contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingBottom: 40, marginTop: actuatedNormalize(10) }}> */}
-        {/* <Animated.View style={[defaultStyles.block, { borderTopColor: colors.lightGray, borderWidth: 2 }]} layout={transition}> */}
-        <Animated.FlatList
-          onScroll={handleOnScroll}
-          ref={scrollRef}
-          skipEnteringExitingAnimations
-          data={renderChatlistData()}
-          scrollEnabled={true}
-          scrollEventThrottle={16}
-          showsVerticalScrollIndicator={false}
-          nestedScrollEnabled={true}
-          contentContainerStyle={{ minHeight: contentHeight }}
-          onContentSizeChange={(w, h) => setContentHeight(h)}
+          {/* <ScrollView  contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingBottom: 40, marginTop: actuatedNormalize(10) }}> */}
+          {/* <Animated.View style={[defaultStyles.block, { borderTopColor: colors.lightGray, borderWidth: 2 }]} layout={transition}> */}
+          <Animated.FlatList
+            onScroll={handleOnScroll}
+            ref={scrollRef}
+            skipEnteringExitingAnimations
+            data={renderChatlistData()}
+            scrollEnabled={true}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true}
+            contentContainerStyle={{ minHeight: contentHeight }}
+            onContentSizeChange={(w, h) => setContentHeight(h)}
+            ListEmptyComponent={calls.length === 0 ? <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' /> : (missedCalls.length === 0 && !isSearchActive) ? <Empty head='Missed Calls' description='You have no missed calls records' /> : <Empty head='Search Users' description='User not found' />}
+            // style={[defaultStyles.block]}
+            // onViewableItemsChanged={({ viewableItems: vItems }) => {
+            //   viewableItems.value = vItems;
+            // }}
+            // viewabilityConfig={{
+            //   itemVisiblePercentThreshold: 50,
+            // }}
+            //             showsVerticalScrollIndicator={false}
+            // showsHorizontalScrollIndicator={false}
+            itemLayoutAnimation={transition}
+            onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
+            keyExtractor={(item) => item._id}
+            ItemSeparatorComponent={() => <View style={[defaultStyles.separator, { marginLeft: 90 }]} />}
+            renderItem={({ item, index }) => {
+              // const { inputRange, opacityInputRange } = getInputRanges(index, ITEM_SIZE)
+              // const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)]
+              // const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)]       
 
-          // style={[defaultStyles.block]}
-          // onViewableItemsChanged={({ viewableItems: vItems }) => {
-          //   viewableItems.value = vItems;
-          // }}
-          // viewabilityConfig={{
-          //   itemVisiblePercentThreshold: 50,
-          // }}
-          //             showsVerticalScrollIndicator={false}
-          // showsHorizontalScrollIndicator={false}
-          itemLayoutAnimation={transition}
-          onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
-          keyExtractor={(item) => item._id}
-          ItemSeparatorComponent={() => <View style={[defaultStyles.separator, { marginLeft: 90 }]} />}
-          renderItem={({ item, index }) => {
-            // const { inputRange, opacityInputRange } = getInputRanges(index, ITEM_SIZE)
-            // const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)]
-            // const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)]       
+              // const scale = scrollY.interpolate({
+              //   inputRange,
+              //   outputRange: [1, 1, 1, 0]
+              // })
+              // const opacity = scrollY.interpolate({
+              //   inputRange: opacityInputRange,
+              //   outputRange: [1, 1, 1, 0]
+              // })
+              return (
+                // <SwipeableRow onDelete={() => removeCall(item)}>
+                //   <Animated.View
+                //     entering={FadeInUp.delay(index * 20)}
+                //     exiting={FadeOutUp}
+                //     style={[listanimatedStyle,{ flexDirection: 'row', alignItems: 'center' }]}
+                //   >
+                //     <AnimatedTouchableOpacity
+                //       style={[animatedPosition, { paddingLeft: 8 }]}
+                //       onPress={() => removeCall(item)}
+                //     >
+                //       <Ionicons name="remove-circle" size={24} color={colors.red} />
+                //     </AnimatedTouchableOpacity>
+                //     <Animated.View
+                //       style={[defaultStyles.item, { paddingLeft: 10 }, animatedRowStyles]}
+                //     >
+                //       <Image source={{ uri: item.img }} style={styles.avatar} />
+                //       <View style={{ flex: 1, gap: 2 }}>
+                //         <Text style={{ fontFamily: fonts.NexaRegular, fontSize: actuatedNormalize(18), color: item.missed ? colors.lightRed2 : colors.white }}>
+                //           {item.name}
+                //         </Text>
+                //         <View style={{ flexDirection: 'row', gap: actuatedNormalize(6), alignItems: "center" }}>
+                //           <Ionicons name={item.video ? 'videocam' : 'call'} size={16} color={colors.gray} />
+                //           <Text style={{ fontSize: actuatedNormalize(14), color: colors.gray, flex: 1, fontFamily: fonts.NexaItalic }}>
+                //             {item.incoming ? 'Incoming' : 'Outgoing'}
+                //           </Text>
+                //         </View>
+                //       </View>
+                //       <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                //         <Text style={{ fontSize: actuatedNormalize(12), color: colors.gray, fontFamily: fonts.NexaRegular }}>{getFormattedDate(item.date)}</Text>
+                //         {/* <Ionicons name="information-circle-outline" size={24} color={colors.primary} /> */}
+                //       </View>
+                //     </Animated.View>
+                //   </Animated.View>
+                // </SwipeableRow>
+                <CallinforRow user = {user} navigation={navigation} viewableItems={viewableItems} animatedPosition={animatedPosition} animatedRowStyles={animatedRowStyles} index={index} item={item} removeCall={removeCall} scrollY={scrollY} key={item._id} />
+              )
+            }}
+          />
+          {/* </Animated.View> */}
+          {/* </ScrollView>  */}
+        </PullToRefresh> : <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' />
+      }
 
-            // const scale = scrollY.interpolate({
-            //   inputRange,
-            //   outputRange: [1, 1, 1, 0]
-            // })
-            // const opacity = scrollY.interpolate({
-            //   inputRange: opacityInputRange,
-            //   outputRange: [1, 1, 1, 0]
-            // })
-            return (
-              // <SwipeableRow onDelete={() => removeCall(item)}>
-              //   <Animated.View
-              //     entering={FadeInUp.delay(index * 20)}
-              //     exiting={FadeOutUp}
-              //     style={[listanimatedStyle,{ flexDirection: 'row', alignItems: 'center' }]}
-              //   >
-              //     <AnimatedTouchableOpacity
-              //       style={[animatedPosition, { paddingLeft: 8 }]}
-              //       onPress={() => removeCall(item)}
-              //     >
-              //       <Ionicons name="remove-circle" size={24} color={colors.red} />
-              //     </AnimatedTouchableOpacity>
-              //     <Animated.View
-              //       style={[defaultStyles.item, { paddingLeft: 10 }, animatedRowStyles]}
-              //     >
-              //       <Image source={{ uri: item.img }} style={styles.avatar} />
-              //       <View style={{ flex: 1, gap: 2 }}>
-              //         <Text style={{ fontFamily: fonts.NexaRegular, fontSize: actuatedNormalize(18), color: item.missed ? colors.lightRed2 : colors.white }}>
-              //           {item.name}
-              //         </Text>
-              //         <View style={{ flexDirection: 'row', gap: actuatedNormalize(6), alignItems: "center" }}>
-              //           <Ionicons name={item.video ? 'videocam' : 'call'} size={16} color={colors.gray} />
-              //           <Text style={{ fontSize: actuatedNormalize(14), color: colors.gray, flex: 1, fontFamily: fonts.NexaItalic }}>
-              //             {item.incoming ? 'Incoming' : 'Outgoing'}
-              //           </Text>
-              //         </View>
-              //       </View>
-              //       <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-              //         <Text style={{ fontSize: actuatedNormalize(12), color: colors.gray, fontFamily: fonts.NexaRegular }}>{getFormattedDate(item.date)}</Text>
-              //         {/* <Ionicons name="information-circle-outline" size={24} color={colors.primary} /> */}
-              //       </View>
-              //     </Animated.View>
-              //   </Animated.View>
-              // </SwipeableRow>
-              <CallinforRow viewableItems={viewableItems} animatedPosition={animatedPosition} animatedRowStyles={animatedRowStyles} index={index} item={item} removeCall={removeCall} scrollY={scrollY} key={item._id} />
-            )
-          }}
-        />
-        {/* </Animated.View> */}
-        {/* </ScrollView>  */}
-      </PullToRefresh>
       <Snackbar
         duration={2000}
         visible={isCallDeleted}

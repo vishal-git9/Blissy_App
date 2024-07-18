@@ -2,7 +2,7 @@ import { RouteProp } from '@react-navigation/native';
 import { useEffect, useReducer, useState } from 'react';
 import { BackHandler, Dimensions, Text, View, useWindowDimensions } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { RouteBackButton } from '../../common/button/BackButton';
+import { RouteBackButton, RouteBackButton2 } from '../../common/button/BackButton';
 import StepperFormAnimation from '../../common/forms/StepperFormAnimation';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import React from 'react';
@@ -247,7 +247,10 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
       resetScrollToCoords={{ x: 0, y: 0 }}
       scrollEnabled={true}>
       {steps !== 1 && (
-        <RouteBackButton onPress={() => setSteps(steps => steps - 1)} />
+        <RouteBackButton2 containerstyle={{
+          alignSelf:"flex-start",
+          // backgroundColor:"red",
+        }} onPress={() => setSteps(steps => steps - 1)} />
       )}
       {(isLoading || userLoading) && <BlissyLoader />}
       <HelloModal
@@ -358,10 +361,16 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
             //     bodyMedium:{fontFamily:fonts.NexaItalic}
             //   },
             // }}
+            theme={{
+              colors: {
+                inverseOnSurface: colors.white,
+                 surface: colors.white
+              },
+          }}
             action={{
               label: 'Okay',
               
-              labelStyle: { fontFamily: fonts.NexaBold },
+              labelStyle: { fontFamily: fonts.NexaBold,color:colors.white },
               onPress: () => {
                 // Do something
                 setErrorSnackbar(false);

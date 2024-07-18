@@ -19,8 +19,38 @@ import { SplashScreenAnimated } from './src/common/splashscreen.tsx/splash';
 import setupNotificationListener from './src/utils/notificationService';
 import notifee, { EventType, AndroidImportance, AndroidVisibility } from '@notifee/react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PaperProvider } from 'react-native-paper';
 import { fonts } from './src/constants/fonts';
+import {
+  MD3LightTheme as DefaultTheme,
+  PaperProvider,
+} from 'react-native-paper';
+
+
+const theme = {
+  ...DefaultTheme,
+  
+  // Specify custom property
+  myOwnProperty: true,
+  // Specify custom property in nested object
+  colors: {
+    primary: colors.primary,
+      secondary: colors.secondary,
+      background: colors.dark,
+      surface: colors.white,
+      inverseSurface:colors.white,
+      elevation: {
+        level0: 'transparent',
+        // Note: Color values with transparency cause RN to transfer shadows to children nodes
+        // instead of View component in Surface. Providing solid background fixes the issue.
+        // Opaque color values generated with `palette.primary99` used as background
+        level1: 'rgb(247, 243, 249)', // palette.primary40, alpha 0.05
+        level2: 'rgb(243, 237, 246)', // palette.primary40, alpha 0.08
+        level3: 'rgb(238, 232, 244)', // palette.primary40, alpha 0.11
+        level4: 'rgb(236, 230, 243)', // palette.primary40, alpha 0.12
+        level5: 'rgb(233, 227, 241)', // palette.primary40, alpha 0.14
+      },
+  },
+};
 
 const App: React.FC = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -74,11 +104,7 @@ const App: React.FC = () => {
                 animated={true}
                 backgroundColor={colors.black}
               />
-              <PaperProvider theme={{
-                // colors: {
-                //   placeholder: colors.white
-                // }
-              }}>
+              <PaperProvider theme={theme}>
 
                 <Navigator />
               </PaperProvider>

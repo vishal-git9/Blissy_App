@@ -75,22 +75,22 @@ const ChatPartnerDetails: React.FC<ChatPartnerProps> = ({ navigation, route }) =
           />
         </View>
         <Text style={styles.detailText}>Age: {chatPartner?.age.toString()}</Text>
-        <Text style={[styles.detailText, { marginTop: actuatedNormalize(10) }]}>{`[${userData.mentalHealthIssues.join(",")}]`}</Text>
+        <Text style={[styles.detailText, { marginTop: actuatedNormalize(10) }]}>{`[${chatPartner?.mentalIssues.join(",")}]`}</Text>
       </Animated.View>
 
       <Animated.View entering={FadeInLeft.duration(700).easing(Easing.ease)} exiting={FadeOutDown.duration(1500).easing(Easing.ease)}  style={styles.userPerformaceContainer}>
         <View style={styles.userPerformaceContainer2}>
           <Text style={styles.title}>Total Calls</Text>
-          <Text style={styles.number}>{userData.callStatus.totalCalls}</Text>
+          <Text style={styles.number}>{chatPartner?.UserCallsInfoList.length}</Text>
         </View>
         <View style={styles.userPerformaceContainer2}>
           <Text style={styles.title}>Successful Calls</Text>
-          <Text style={styles.number}>{userData.callStatus.successfulCalls}</Text>
+          <Text style={styles.number}>{chatPartner?.UserCallsInfoList.filter((el) => el.isSuccessful === true).length}</Text>
         </View>
         <View style={styles.userPerformaceContainer2}>
           <Text style={styles.title}>Rating</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.number}>{userData.callStatus.rating}</Text>
+            <Text style={styles.number}>{chatPartner?.UserRating[0]?.rating || 0}</Text>
             <Icon name='star' size={actuatedNormalize(20)} color={colors.yellow} />
           </View>
         </View>

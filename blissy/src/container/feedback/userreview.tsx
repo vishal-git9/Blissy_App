@@ -112,8 +112,27 @@ const UserreviewScreen: React.FC<UserreviewProps> = ({ navigation }) => {
 
 
     return (
-      <View style={{alignSelf:"center",marginTop:50,rowGap:10 }}>
-        <Text style={{ color: colors.lightGray, fontFamily: fonts.NexaItalic }}>'{myappreview[0]?.review}'</Text>
+      <View style={{flex:1,alignSelf:"center",width:"100%",justifyContent:"center",alignItems:"center",marginTop:50,rowGap:10 }}>
+        <Text style={{ color: colors.lightGray, fontFamily: fonts.NexaItalic ,fontSize:actuatedNormalize(18)}}>'{myappreview[0]?.review}'</Text>
+        <StarRating
+                disabled={true}
+                rating={myappreview[0]?.rating}
+                halfStarEnabled={true}
+                animation="rotate"
+                emptyStarColor={colors.gray}
+                starSize={15}
+                fullStarColor={color}
+                activeOpacity={1}
+
+                selectedStar={rating => {
+                  if (ratingRef.current?.fadeIn) {
+                    ratingRef.current?.fadeIn(800);
+                  }
+
+                  setRating(rating)
+                }}
+                containerStyle={{ width: '40%',alignSelf:"center" }}
+              />
         <Text style={{ color: colors.white, fontFamily: fonts.NexaRegular }}>{user?.name}</Text>
       </View>
     )
@@ -129,7 +148,7 @@ const UserreviewScreen: React.FC<UserreviewProps> = ({ navigation }) => {
 
 
         {/* <RouteBackButton onPress={() => navigation.goBack()} /> */}
-        <Text style={{ color: colors.white, alignSelf: "center", fontFamily: fonts.NexaBold, fontSize: actuatedNormalize(23), marginTop: actuatedNormalize(5) }}>App Review</Text>
+        {/* <Text style={{ color: colors.white, alignSelf: "center", fontFamily: fonts.NexaBold, fontSize: actuatedNormalize(23), marginTop: actuatedNormalize(5) }}>App Review</Text> */}
         {
           myappreview.length > 0 ? <Rendermyreview /> : (<>
             <TextInput
@@ -180,7 +199,10 @@ const UserreviewScreen: React.FC<UserreviewProps> = ({ navigation }) => {
             <PrimaryButton styles={{ width: "100%", marginTop: actuatedNormalize(40) }} label='Send' handleFunc={handlePress} />
           </>
           )}
+          <View style={{flex:1,justifyContent:"flex-end",width:"100%"}}>
           <LiveItUpComponent />
+
+          </View>
       </KeyboardAvoidingView>
       <Snackbar
         duration={5000}
