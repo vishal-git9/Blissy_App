@@ -5,11 +5,13 @@ import IsUISlice, { AuthSlice } from './uiSlice';
 import {API} from '../api/Api';
 import MessageSlice from './messageSlice';
 import CallSlice from './callSlice';
+import RewardSlice from './rewardSlice';
 const rootReducer = combineReducers({
   [API.reducerPath]: API.reducer,
   Auth:AuthSlice.reducer,
   Message:MessageSlice.reducer,
-  Calls:CallSlice.reducer
+  Calls:CallSlice.reducer,
+  Rewards:RewardSlice.reducer,
 });
 const persistConfig = {
   key: 'root',

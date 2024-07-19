@@ -5,6 +5,7 @@ import colors from '../../constants/colors';
 import {fonts} from '../../constants/fonts';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import Feather from 'react-native-vector-icons/Feather';
+import { MICROPHONE_DENIED_MESSAGE, NOTIFICATIONS_DENIED_MESSAGE } from './permissionErrorMessages';
 interface PermissionModalProps {
   visible: boolean;
   permissionType: string;
@@ -38,7 +39,7 @@ const PermissionDenied: React.FC<PermissionModalProps> = ({
             </Text>
           </View>
           <Text style={styles.description}>
-              You can not use voice call service until you allow access to {permissionType}
+              You can not use {permissionType==="Microphone" ? MICROPHONE_DENIED_MESSAGE : permissionType==="Notifications" ? NOTIFICATIONS_DENIED_MESSAGE : "our"} until you allow access to {permissionType}
             </Text>
             <Text style={styles.description}>
               You can Allow it manually

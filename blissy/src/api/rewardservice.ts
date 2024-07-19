@@ -14,8 +14,11 @@ export const RewaredApi = API.injectEndpoints({
     }),
     claimUsercoins: builder.mutation<any, any>({
       query: (userId) => ({
-        url: `/user-app-coins/claim/${userId}`,
+        url: `/user-app-coins/claim`,
         method: 'POST',
+        body:{
+          id:userId
+        }
       }),
     }),
     getallUserCoins: builder.query<any, any>({
@@ -25,7 +28,15 @@ export const RewaredApi = API.injectEndpoints({
       }),
       keepUnusedDataFor: 0,
     }),
+    getallUserTotalCoins: builder.query<any, any>({
+      query: () => ({
+        url: `/user-app-coins/userCoins`,
+        method: 'GET',
+      }),
+      keepUnusedDataFor: 0,
+    }),
   })
 });
 
-export const {useClaimUsercoinsMutation,useGetallUserCoinsQuery,usePostUserRatingMutation} = RewaredApi;
+export const {useClaimUsercoinsMutation,useGetallUserCoinsQuery,usePostUserRatingMutation,
+useGetallUserTotalCoinsQuery} = RewaredApi;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {View, Text, StyleSheet, Image} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Card, Title, Paragraph} from 'react-native-paper';
@@ -7,13 +7,25 @@ import {actuatedNormalize} from '../../constants/PixelScaling';
 import * as Animatable from 'react-native-animatable';
 import {fonts} from '../../constants/fonts';
 import AnimatedNumber from '../../container/coupons/AnimatedNumber';
+import { useSelector } from 'react-redux';
+import { TotalCoinsSelector } from '../../redux/rewardSlice';
 interface Props {
   shouldAnimate?: boolean;
   coins: number;
-  coinsAdded:number
 }
 
-const RewardCard: React.FC<Props> = ({shouldAnimate, coins, coinsAdded}) => {
+const RewardCard: React.FC<Props> = ({shouldAnimate, coins}) => {
+  const TotalCoins = useSelector(TotalCoinsSelector)
+  const [previousCoins, setPreviousCoins] = useState<number>(TotalCoins);
+  useEffect(() => {
+    // if (TotalCoins !== previousCoins) {
+    //   console.log('Coins updated:', previousCoins, '->', TotalCoins);
+    // }
+    setPreviousCoins(TotalCoins);
+  }, [TotalCoins,coins]);
+
+  console.log("hey i am redering.....")
+
   return (
     <Animatable.View
       style={{}}
@@ -44,7 +56,7 @@ const RewardCard: React.FC<Props> = ({shouldAnimate, coins, coinsAdded}) => {
                 }}>
                 {coins}
               </Title> */}
-              <AnimatedNumber initialValue={coins} finalValue={coins+coinsAdded} />
+              <AnimatedNumber initialValue={previousCoins} finalValue={TotalCoins} />
                 <Text
                     style={{
                       color: colors.white,

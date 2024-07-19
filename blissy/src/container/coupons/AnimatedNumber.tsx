@@ -15,6 +15,7 @@ const AnimatedNumber: React.FC<Props> = ({ initialValue, finalValue, duration = 
   const [currentValue, setCurrentValue] = useState(initialValue);
   const animatedValue = useSharedValue(initialValue);
   const scale = useSharedValue(1.5);
+  console.log(initialValue, finalValue, "from animated number ")
 
   useEffect(() => {
     animatedValue.value = withTiming(finalValue, {
@@ -65,11 +66,7 @@ const AnimatedNumber: React.FC<Props> = ({ initialValue, finalValue, duration = 
 
   return (
     <View style={styles.container}>
-      {/* <Animated.View style={animatedStyle}> */}
       <Animated.Text style={[styles.number, animatedStyle]}>{currentValue}</Animated.Text>
-
-      {/* </Animated.View> */}
-      {/* <Text style={styles.text}> points</Text> */}
     </View>
   );
 };

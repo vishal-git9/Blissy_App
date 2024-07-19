@@ -1,72 +1,133 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {View, Text, StyleSheet, Animated as NativeAnimated, FlatList, UIManager, Platform, LayoutAnimation} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated as NativeAnimated,
+  UIManager,
+  Platform,
+} from 'react-native';
 import {NavigationStackProps} from '../Prelogin/onboarding';
 import {RouteBackButton} from '../../common/button/BackButton';
 import colors from '../../constants/colors';
 import {fonts} from '../../constants/fonts';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import {AuthSelector} from '../../redux/uiSlice';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import LottieView from 'lottie-react-native';
 import RewardCard from '../../common/cards/rewardCard';
 import {Empty} from '../../common/Empty/Empty';
 import CouponCard from './CouponCard';
-import {AnimatedFlashList, FlashList} from '@shopify/flash-list';
-import Swipable from './TestAnimation';
 import Typewriter from '../../common/animation/Typewritter';
+import Animated, {
+  CurvedTransition,
+  runOnJS,
+  useAnimatedRef,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
+import PullToRefresh from '../../common/refresh/pull';
+import { useGetallUserCoinsQuery,useClaimUsercoinsMutation, useGetallUserTotalCoinsQuery } from '../../api/rewardservice';
+import { CouponsSelector, TotalCoinsSelector, getAllCoupons, getTotalCoins, } from '../../redux/rewardSlice';
+import { Snackbar } from 'react-native-paper';
+
 
 const HEADER_MAX_HEIGHT = 240;
 const HEADER_MIN_HEIGHT = 84;
 const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-type animatedProps = {
-  value: any;
-  duration: any;
-};
+interface AlertMessage {
+  show: boolean;
+  message: string;
+}
 
 export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
   const {user} = useSelector(AuthSelector);
+  const dispatch = useDispatch();
+  const coupons = useSelector(CouponsSelector);
+  const TotalCoins = useSelector(TotalCoinsSelector)
   const [points, setPoints] = useState(0);
-  const flashListRef = useRef<FlashList<any>>(null);
-  const initialCoupons = [
-    {id: 1, name: 'Summer Sale', rewardPoints: 5},
-    {id: 2, name: 'Winter Sale', rewardPoints: 10},
-    {id: 3, name: 'Spring Sale', rewardPoints: 7},
-    {id: 4, name: 'Winter Sale', rewardPoints: 10},
-    {id: 5, name: 'Spring Sale', rewardPoints: 7},
-    // {id: 6, name: 'Winter Sale', rewardPoints: 10},
-    // {id: 7, name: 'Spring Sale', rewardPoints: 7},
-    // {id: 8, name: 'Winter Sale', rewardPoints: 10},
-    // {id: 9, name: 'Spring Sale', rewardPoints: 7},
-  ];
+  const [isScrollable, setIsScrollable] = useState(false);
+  const [contentHeight, setContentHeight] = useState(0);
+  const [AlertMessage, setAlertMessage] = useState<AlertMessage>({ show: false, message: "" })
+  const flashListRef = useAnimatedRef<Animated.FlatList<any>>();
+  const scrollY = useSharedValue(0);
+  const editing = useSharedValue(-30);
+  const { data, refetch, isSuccess } = useGetallUserCoinsQuery({});
+  const { data: totalCoinsData, refetch: refetchTotalCoins, isSuccess: isTotalCoinsSuccess } = useGetallUserTotalCoinsQuery({});
+  const [claimUsercoins] = useClaimUsercoinsMutation();
 
-  const [coupons, setCoupons] = useState(initialCoupons);
+  useEffect(() => {
+    if (isSuccess && data) {
+      // data.forEach((coupon: Coupon) => {
+        // });
+          dispatch(getAllCoupons(data));
+    }
+    console.log(coupons, "coupons--->")
+  }, [isSuccess, data, dispatch]);
+
+  useEffect(() => {
+    if (isTotalCoinsSuccess) {
+      dispatch(getTotalCoins(totalCoinsData.coins));
+    }else if(totalCoinsData===null){
+      dispatch(getTotalCoins(0));
+    }
+    // console.log(totalCoinsData, "total from api")
+    console.log(TotalCoins, "Total coins--->")
+  }, [isTotalCoinsSuccess, totalCoinsData, dispatch]);
+
+
+  const transition = CurvedTransition.delay(100);
 
   const addPoints = (rewardAmount: number) => {
     setPoints(points + rewardAmount); // Add 100 points for example
   };
 
-  const layoutAnimConfig = {
-    duration: 300,
-    update: {
-      type: LayoutAnimation.Types.easeInEaseOut, 
-    },
-    delete: {
-      duration: 100,
-      type: LayoutAnimation.Types.easeInEaseOut,
-      property: LayoutAnimation.Properties.opacity,
-    },
+  const handleClaimCoupon = async(id: string, rewardPoints: number) => {
+    // addPoints(rewardPoints);
+    await claimUsercoins(id);
+    setAlertMessage({show:true, message:`${rewardPoints} has been successfully added..`})
+    const {data} = await refetch();
+    const {data:coinsRes} = await refetchTotalCoins();
+
+    console.log(coinsRes, "after claim coins total")
+    dispatch(getTotalCoins(coinsRes.coins))
+  dispatch(getAllCoupons(data));
   };
-  const handleClaimCoupon = (id: number, rewardPoints: number) => {
-    addPoints(rewardPoints);
-    // setTimeout(() => {
-      setCoupons(prevCoupons => prevCoupons.filter(coupon => coupon.id !== id));
-      flashListRef.current?.prepareForLayoutAnimationRender();
-      LayoutAnimation.configureNext(layoutAnimConfig);
-    // }, 500);
+
+  const RefreshCoupons = async () => {
+    const {data} = await refetch();
+    const {data:coinsRes} = await refetchTotalCoins();
+
+    // console.log(coinsRes, "after claim coins total")
+    dispatch(getTotalCoins(coinsRes.coins))
+    dispatch(getAllCoupons(data));
+    console.log(coinsRes, 'coupons refreshed....');
+
   };
+
+  const updatePanState = (offset: number) => {
+    'worklet';
+    if (offset > 0) {
+      runOnJS(setIsScrollable)(true);
+    } else {
+      runOnJS(setIsScrollable)(false);
+    }
+  };
+
+  const handleOnScroll = useAnimatedScrollHandler({
+    onScroll({contentOffset}) {
+      console.log(contentOffset.y, 'contentOffset.y----->');
+      updatePanState(contentOffset.y);
+      scrollY.value = contentOffset.y;
+    },
+  });
 
   return (
     <View style={styles.container}>
@@ -87,39 +148,97 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
         />
       </View>
       <View style={styles.cardContainer}>
-        <RewardCard coins={5} shouldAnimate={false} coinsAdded={points} />
+        <RewardCard coins={TotalCoins} shouldAnimate={false} />
       </View>
       <View style={styles.badge}>
-      {/* <Text style={styles.text}>Healers will soon be available for you.</Text> */}
-      <Typewriter loop={false} text='You can use POINTS once the Healers get Listed' speed={50} />
-    </View>
-      <View style={{flex:1}}>
-        <AnimatedFlashList
-        
-          data={coupons}
-          ref={flashListRef}
-          contentContainerStyle={styles.listContainer}
-          keyExtractor={item => item.id.toString()}
-          renderItem={({item}) => {
-            return (
-              // <Swipable>
+        {/* <Text style={styles.text}>Healers will soon be available for you.</Text> */}
+        <Typewriter
+          loop={false}
+          text="You can use POINTS once the Healers get Listed"
+          speed={50}
+        />
+      </View>
+      <View style={{flex: 1}}>
+        <PullToRefresh
+          handleOnscroll={handleOnScroll}
+          isScrollable={isScrollable}
+          scrollRef={flashListRef}
+          setIsScrollable={setIsScrollable}
+          updatePanState={updatePanState}
+          refreshing={false}
+          onRefresh={RefreshCoupons}>
+          <Animated.FlatList
+            skipEnteringExitingAnimations
+            itemLayoutAnimation={transition}
+            ref={flashListRef}
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true}
+            onScroll={handleOnScroll}
+            data={coupons}
+            contentContainerStyle={[styles.listContainer,{minHeight:contentHeight}]}
+            onContentSizeChange={(w, h) => setContentHeight(h)}
+            onMomentumScrollEnd={e =>
+              updatePanState(e.nativeEvent.contentOffset.y)
+            }
+            keyExtractor={item => item._id.toString()}
+            // ItemSeparatorComponent={() => (
+            //   <View style={[defaultStyles.separator, { marginLeft: 90 }]} />
+            // )}
+            renderItem={({item, index}) => {
+              return (
+                // <Swipable>
                 <CouponCard
-                  key={item.id}
-                  id={item.id}
-                  name={item.name}
-                  rewardPoints={item.rewardPoints}
+                  key={item._id}
+                  id={item._id}
+                  name={item.coinName}
+                  index={index}
+                  scrollY={scrollY}
+                  rewardPoints={item.coins}
                   onPressClaim={() =>
-                    handleClaimCoupon(item.id, item.rewardPoints)
+                    handleClaimCoupon(item._id, item.coins)
                   }
                 />
-              // </Swipable>
-            );
-          }}
-          estimatedItemSize={100}
-          ListEmptyComponent={<Empty head="You Don't have enough Coupons" description="Get on calls to get more" />}
-        />
-
+                // </Swipable>
+              );
+            }}
+            // estimatedItemSize={100}
+            scrollEnabled={true}
+            ListEmptyComponent={
+              <Empty
+                head="You Don't have enough Coupons"
+                description="Get on calls to get more"
+              />
+            }
+          />
+        </PullToRefresh>
       </View>
+      <Snackbar
+        duration={2000}
+        visible={AlertMessage.show}
+        style={{ backgroundColor: colors.dark }}
+        onDismiss={() => setAlertMessage({ show: false, message: "" })}
+        action={{
+          theme: {
+            fonts: {
+              regular: { fontFamily: fonts.NexaRegular },
+              medium: { fontFamily: fonts.NexaBold },
+              light: { fontFamily: fonts.NexaBold },
+              thin: { fontFamily: fonts.NexaRegular },
+            },
+            colors: { inversePrimary: colors.white, surface: colors.white, accent: colors.white }
+          },
+
+          label: 'Okay',
+          textColor: "red",
+          labelStyle: { fontFamily: fonts.NexaBold, color: colors.white },
+          onPress: () => {
+            // Do something
+            setAlertMessage({ show: false, message: "" });
+          },
+        }}>
+        {AlertMessage.message}
+      </Snackbar>
     </View>
   );
 };
@@ -160,16 +279,17 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: actuatedNormalize(40),
     borderBottomLeftRadius: actuatedNormalize(40),
   },
-  listContainer:{
-    padding:actuatedNormalize(5)
+  listContainer: {
+    padding: actuatedNormalize(5),
+    marginTop:5
   },
-  badge:{
+  badge: {
     backgroundColor: colors.primary,
     // padding:actuatedNormalize(5)
     // marginHorizontal:actuatedNormalize(8),
     // alignSelf:"center",
-    borderRadius: actuatedNormalize(5), 
+    borderRadius: actuatedNormalize(5),
     paddingHorizontal: actuatedNormalize(16),
     paddingVertical: actuatedNormalize(8),
-  }
+  },
 });

@@ -1,55 +1,55 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, GestureResponderEvent, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, GestureResponderEvent, StyleProp, ViewStyle } from 'react-native';
 import colors from '../../constants/colors';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { fonts } from '../../constants/fonts';
 import TalkNowButton from '../../common/button/Talknow';
+import Animated, { Extrapolate, FadeInUp, FadeOutLeft, FadeOutUp, SharedValue, SlideInLeft, interpolate, useAnimatedStyle } from 'react-native-reanimated';
+import { defaultStyles } from '../../common/styles/defaultstyles';
+import { Image } from 'react-native';
 
+const ITEM_SIZE =  120
 interface CouponCardProps {
   name: string;
   rewardPoints: number;
-  id:number;
-  onPressClaim: (id:number,rewardAmount:number) => void;
+  id:string;
+  scrollY:SharedValue<number>;
+  index:number;
+  onPressClaim: (id:string,rewardAmount:number) => void;
 }
 
-const CouponCard: React.FC<CouponCardProps> = ({ name, rewardPoints, onPressClaim , id}) => {
-    const [swipeAnimation] = useState(new Animated.Value(0));
-    const [opacityAnimation] = useState(new Animated.Value(1));
+const CouponCard: React.FC<CouponCardProps> = ({ name, rewardPoints, onPressClaim , id,index, scrollY}) => {
+    // const [swipeAnimation] = useState(new Animated.Value(0));
+    // const [opacityAnimation] = useState(new Animated.Value(1));
+
+    const listanimatedStyle = useAnimatedStyle(() => {
+      const scale = interpolate(scrollY.value, [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)], [1, 1, 1, 0], Extrapolate.CLAMP);
+      const opacity = interpolate(scrollY.value, [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)], [1, 1, 1, 0], Extrapolate.CLAMP);
+      console.log("hey------>",scale,opacity)
+  
+      return {
+        transform: [{ scale }],
+        opacity,
+      };
+    });
 
     const handlePressClaim = () => {
-      // Trigger swipe animation to the left
-      Animated.parallel([
-      Animated.timing(swipeAnimation, {
-        toValue: -500, // Slide off screen
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnimation, {
-        toValue: 0, // Fade out
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-        // Callback function after animation completes (optional)
-        onPressClaim(id, rewardPoints); // Execute the claim logic
-      });
+        onPressClaim(id, rewardPoints); // Execute the claim 
     };
 
   return (
-    <Animated.View style={[styles.card,{
-        transform: [
-          {
-            translateX: swipeAnimation,
-          },
-        ],
-      }]}>
-      {/* <View style={styles.header}>
-        <Text style={styles.headerText}>Coupon</Text>
-      </View> */}
-      <View style={styles.content}>
+    <Animated.View
+      entering={FadeInUp.delay(index * 20)}
+      exiting={FadeOutUp.delay(index * 20 )}
+      style={[listanimatedStyle,styles.card]}
+      >
+      <Animated.View style={[styles.content]}>
+        <View style={styles.leftContainer}>
+      <Image source={ require('./wallet.png') } style={styles.avatar} />
         <View style={styles.nameContainer}>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.rewardPoints}>Reward Points: {rewardPoints}</Text>
+        </View>
         </View>
         <View style={styles.buttonContainer}>
         {/* <TouchableOpacity style={styles.claimButton} onPress={handlePressClaim}>
@@ -58,18 +58,23 @@ const CouponCard: React.FC<CouponCardProps> = ({ name, rewardPoints, onPressClai
         <TalkNowButton label='Claim' onPress={handlePressClaim} />
 
         </View>
-      </View>
+      </Animated.View>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
+    // borderWidth:2,
+    // borderColor:colors.red,
     backgroundColor: colors.dark,
     padding:actuatedNormalize(20),
     margin: actuatedNormalize(10),
     borderRadius: actuatedNormalize(10),
-    overflow: 'hidden', // Ensures rounded corners are respected
+    // margin
+    // justifyContent:'center'
+    // width:'100%'
+    // overflow: 'hidden', // Ensures rounded corners are respected
 
   },
   header: {
@@ -85,8 +90,7 @@ const styles = StyleSheet.create({
   content: {
     // padding: actuatedNormalize(20),
     flexDirection:'row',
-    justifyContent:"space-between"
-    // justifyContent:'space-around'
+    justifyContent:"space-between",
   },
   name: {
     fontSize: actuatedNormalize(18),
@@ -110,9 +114,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   buttonContainer:{
-    // padding:actuatedNormalize(10),
+    paddingLeft:actuatedNormalize(15),
     alignItems:'center',
-    justifyContent:'center'
+    justifyContent:'center',
+    // borderWidth:1,
+    borderLeftWidth:actuatedNormalize(2),
+    borderLeftColor:colors.white,
+    borderStyle:'dashed',
   },
   buttonText: {
     fontSize: actuatedNormalize(16),
@@ -124,10 +132,23 @@ const styles = StyleSheet.create({
     // borderRightWidth:actuatedNormalize(2),
     // borderRightColor:colors.white,
     // backgroundColor:"red",
-    rowGap:5,
+    rowGap:actuatedNormalize(5),
     // width:'65%',
-    borderStyle:'dashed',
+    // borderStyle:'dashed',
+  },
+  avatar:{
+    height:actuatedNormalize(40),
+    width:actuatedNormalize(40)
+  },
+  leftContainer:{
+    flexDirection:'row',
+    gap:actuatedNormalize(15),
+    justifyContent:'center',
+    // borderWidth:1
+    // paddingRight:actuatedNormalize(10)
+
   }
+
 });
 
 export default CouponCard;
