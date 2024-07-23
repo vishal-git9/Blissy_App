@@ -54,7 +54,8 @@ export interface IsUIState {
     socket: Socket | null
     fcmToken: string;
     isConnected: boolean;
-    todayquotes:IQoutes
+    todayquotes:IQoutes;
+    isNewlyInstalled:boolean;
 }
 
 const initialState: IsUIState = {
@@ -67,6 +68,7 @@ const initialState: IsUIState = {
     socket: null,
     fcmToken: '',
     isConnected: true,
+    isNewlyInstalled:true,
     todayquotes:{text:'',author:''}
 }
 
@@ -80,6 +82,9 @@ export const AuthSlice = createSlice({
         },
         setUserState: (state, action) => {
             state.isNewUser = action.payload
+        },
+        setNewlyInstalled: (state, action) => {
+            state.isNewlyInstalled = action.payload
         },
         setSocket: (state, action) => {
             state.socket = action.payload
@@ -119,6 +124,6 @@ export const AuthSlice = createSlice({
     }
 })
 
-export const { setUsertoken, logoutUser, setUserState, setSocket, setFcmToken, setConnectionStatus, setSessionStatus } = AuthSlice.actions
+export const { setUsertoken, logoutUser, setUserState, setSocket, setFcmToken, setConnectionStatus, setSessionStatus,setNewlyInstalled } = AuthSlice.actions
 export const AuthSelector = (state: IRootState) => state.Auth
 export default AuthSlice.reducer

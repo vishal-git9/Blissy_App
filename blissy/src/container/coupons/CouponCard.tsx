@@ -118,9 +118,9 @@ const styles = StyleSheet.create({
     alignItems:'center',
     justifyContent:'center',
     // borderWidth:1,
-    borderLeftWidth:actuatedNormalize(2),
-    borderLeftColor:colors.white,
-    borderStyle:'dashed',
+    // borderLeftWidth:actuatedNormalize(2),
+    // borderLeftColor:colors.white,
+    // borderStyle:'dashed',
   },
   buttonText: {
     fontSize: actuatedNormalize(16),

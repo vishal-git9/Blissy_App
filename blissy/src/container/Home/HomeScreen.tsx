@@ -23,7 +23,7 @@ import { AuthSelector, UserInterface, setFcmToken, setSocket } from '../../redux
 import { requestMultplePermissions } from '../../utils/permission';
 import checkMicrophonePermission from '../../common/permissions/checkMicroPermission';
 import checkLocationPermission from '../../common/permissions/checkLocationPermission';
-import { ActiveUserList, ActiveUserListSelector, addMessage, chatListSelector, getActiveUserList, pushChatlist, resetMessageCount, resetMessages } from '../../redux/messageSlice';
+import { ActiveUserList, ActiveUserListSelector, ChatList, addMessage, chatListSelector, getActiveUserList, pushChatlist, resetMessageCount, resetMessages } from '../../redux/messageSlice';
 import { SwipeButtonComponent } from '../../common/button/swipebutton';
 import { fonts } from '../../constants/fonts';
 import PermissionDenied from '../../common/permissions/permissiondenied';
@@ -40,6 +40,8 @@ import { Animated } from 'react-native';
 import { useGetmyCallInfoQuery } from '../../api/callService';
 import { BlissyLoader } from '../../common/loader/blissy';
 import { Appbackground } from '../../common/animation/appbackground';
+import moment from 'moment';
+import { findNewMessage } from '../../utils/sortmessagebyData';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
@@ -105,7 +107,11 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
         transports: ['websocket'],
         query: {
           userId: user?._id
-        }
+        },
+        reconnectionAttempts: 5,    // Number of reconnection attempts
+        reconnectionDelay: 1000,    // Delay between reconnection attempts in milliseconds
+        reconnectionDelayMax: 5000, // Maximum delay between reconnection attempts
+        timeout: 2000,              // Connection timeout in milliseconds
       }),
     [user?._id],
   ); // Empty dependency array means this runs once on mount
@@ -160,7 +166,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   }
 
   const handleNotificationReceived = useCallback((Chatdata: any) => {
-    console.log("I am here Yarr------>", chatlistdata, Chatdata, activeUserList, isAuthenticated);
+    // console.log("I am here Yarr------>", chatlistdata, Chatdata, activeUserList, isAuthenticated);
     if (Chatdata?.senderData) {
       // Dispatch actions to refetch the latest data when a new notification is received
 
@@ -168,17 +174,20 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       const ChatPartnerData = chatlistdata?.find((el) => el?.chatPartner?._id === Chatdata?.senderData?._id);
       const socketId = activeUserList?.find((el) => el?.userId?._id === Chatdata?.senderData?._id)?.socketId;
 
+      console.log(ChatPartnerData,"ChatPartnerData------>")
       if (!ChatPartnerData) {
 
-        navigation.navigate("ChatWindow", {
-          userDetails: Chatdata?.senderData,
-          Chats: null,
-          socketId: socketId,
-          senderUserId: Chatdata?.senderData._id
-        });
+        // navigation.navigate("ChatWindow", {
+        //   userDetails: ChatPartnerData?.chatPartner || Chatdata?.senderData,
+        //   Chats: null,
+        //   socketId: socketId,
+        //   senderUserId: Chatdata?.senderData._id
+        // });
+        navigation.navigate("Chatlist");
+
       } else {
         navigation.navigate("ChatWindow", {
-          userDetails: Chatdata?.senderData,
+          userDetails: ChatPartnerData?.chatPartner,
           Chats: ChatPartnerData,
           socketId: socketId,
           senderUserId: Chatdata?.senderData?._id
@@ -186,7 +195,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       }
     }
 
-  }, [chatlistdata?.length, activeUserList?.length])
+  }, [chatlistdata, activeUserList])
 
   useEffect(() => {
 
@@ -390,10 +399,10 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     socket?.on("privateMessageSuccessfulAdd", async (data) => {
       console.log("newMessage----->", data);
       // findMyMessage(newMessages, chatlistdata);
-      dispatch(pushChatlist(data.chatList));
+      const sortedMsg = findNewMessage(data.chatList)
+      dispatch(pushChatlist(sortedMsg));
       console.log("newMessage2----->", data);
       // playNotificationSound();
-      setnewChatMessages((prev) => prev + 1)
       // await markRead({messageIds:[data.messageId],updateType:"isDelivered"}) // this needs to be called when message is delivered via notification
       // socket.emit("messageReceived", { userId: data.senderId, socketId: data.otherEndsocketId })
     });
@@ -420,12 +429,15 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   }, [chatlistdata, socket]);
 
   useEffect(() => {
-   refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err))
+   refetch().then((res) =>{
+    const sortedMsg = findNewMessage(res.data.chatList)
+    dispatch(pushChatlist(sortedMsg))
+   } ).catch((err) => console.log(err))
     refetchQuote()
     getCallinfo()
     // dispatch(resetMessages())
     socket.on("connect", () => {
-      console.log("user connected", socket.id)
+      console.log("user connected------>", socket.id)
       console.log(socket, "sockeet state")
       socket.emit("getActiveUserList")
       dispatch(setSocket(socket))
@@ -446,10 +458,30 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       dispatch(getActiveUserList(user))
       console.log(user, "activeUserList new-------->")
     })
+    socket.on('reconnect', function() {
+      console.log('reconnect fired!');
+      socket.emit("reconnected",{userId:user?._id})
+  });
+
+  socket.on('reconnect_attempt', () => {
+    console.log('Reconnecting...');
+  });
+  
+  socket.on('reconnect_error', (error) => {
+    console.log('Reconnection error:', error);
+  });
+  
+  socket.on('reconnect_failed', () => {
+    console.log('Reconnection failed');
+  })
     return () => {
       socket.off("initiateCall")
       socket.off('activeUserList')
       socket.off("newActiveUser")
+      socket.off('connect');
+      socket.off('reconnect_attempt');
+      socket.off('reconnect_error');
+      socket.off('reconnect_failed');
       socket.on('disconnect', () => {
         dispatch(resetMessageCount())
         dispatch(resetMessages())

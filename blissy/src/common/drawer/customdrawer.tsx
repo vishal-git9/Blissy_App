@@ -14,6 +14,7 @@ import {
   DrawerItemList,
 } from '@react-navigation/drawer';
 import messaging from '@react-native-firebase/messaging';
+import notifee, {EventType } from '@notifee/react-native';
 
 import Entypo from 'react-native-vector-icons/Entypo';
 import colors from '../../constants/colors';
@@ -30,6 +31,9 @@ import { AuthApi, useLogoutUserSessionMutation } from '../../api/authService';
 import { UserApi, useDeleteFcmTokenMutation } from '../../api/userService';
 import { ChatApi } from '../../api/chatService';
 import { BlissyLoader } from '../loader/blissy';
+import { resetCallState } from '../../redux/callSlice';
+import { resetMsgState } from '../../redux/messageSlice';
+import { resetrewardsState } from '../../redux/rewardSlice';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
@@ -92,6 +96,10 @@ const CustomDrawer: React.FC<any> = props => {
                 dispatch(UserApi.util.resetApiState())
                 dispatch(ChatApi.util.resetApiState())
                 dispatch(logoutUser());
+                dispatch(resetCallState())
+                dispatch(resetMsgState())
+                dispatch(resetrewardsState())
+                notifee.cancelDisplayedNotifications()
                 props.navigation.closeDrawer()
                 // props.navigation.popToTop()
                 // deleting fcm token from the backend for this user so that notification are disabled for this user

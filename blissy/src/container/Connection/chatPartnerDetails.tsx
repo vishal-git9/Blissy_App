@@ -1,5 +1,5 @@
 // UserProfileScreen.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, SafeAreaView } from 'react-native';
 import { RouteBackButton } from '../../common/button/BackButton';
 import { actuatedNormalize } from '../../constants/PixelScaling';
@@ -22,6 +22,11 @@ interface ChatPartnerProps {
 const ChatPartnerDetails: React.FC<ChatPartnerProps> = ({ navigation, route }) => {
   // Sample user data - replace with real data as needed
    const {chatPartner} = route.params
+
+
+  //  useEffect(()=>{
+
+  //  })
 
 //   const { user } = useSelector(AuthSelector)
 

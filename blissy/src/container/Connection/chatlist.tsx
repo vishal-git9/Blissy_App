@@ -50,6 +50,7 @@ import { ScrollView } from 'react-native';
 import { defaultStyles } from '../../common/styles/defaultstyles';
 import SearchBar from '../../common/header/searchbar';
 import Chatrow from '../../common/chats/chatrow';
+import { findNewMessage } from '../../utils/sortmessagebyData';
 interface AlertMessage {
   show: boolean;
   message: string;
@@ -76,9 +77,9 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [contentHeight, setContentHeight] = useState(0);
 
   const [AlertMessage, setAlertMessage] = useState<AlertMessage>({ show: false, message: "" })
-  const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery(user?._id)
+  const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery({})
   const [deleteUser, { isLoading: isdeleteloading, isError: isdeleteerror, isSuccess: isdeletesccuess }] = useDeleteUserMutation()
-  const [typingUser, setTypingUser] = useState<{ userData: UserInterface, typingState: boolean }>()
+  const [typingUser, setTypingUser] = useState<{ userData: UserInterface, typingState: boolean }[]>([])
   const [blockUser, { isLoading: isblockloading, isError: isblockerror, isSuccess: isblocksccuess }] = useBlockUserMutation()
   const [UnblockUser, { isLoading: isunblockloading, isError: isunblockerror, isSuccess: isunblocksccuess }] = useUnblockUserMutation()
   const { activeUserList } = useSelector(ActiveUserListSelector);
@@ -88,7 +89,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const scrollY = useSharedValue(0);
   const ITEM_HEIGHT = 40; // Example item height
   const dispatch = useDispatch();
-const theme = useTheme()
+  const theme = useTheme()
 
   const updatePanState = (offset: number) => {
     'worklet';
@@ -177,48 +178,28 @@ const theme = useTheme()
   });
 
   const RefreshNewMessages = async () => {
-    await refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err)) // after getting refreshed chatlist
-    findNewMessage() // sort by new messages
+    await refetch().then((res) => {
+      const sortedMsg = findNewMessage(res.data.chatList)
+      dispatch(pushChatlist(sortedMsg))
+    }).catch((err) => console.log(err)) // after getting refreshed chatlist
+    // findNewMessage() // sort by new messages
   }
-  const getLatestMessageTimestamp = (item: ChatList) => {
-    if (item?.allMessages?.length === 0) return null;
-    return item.allMessages.reduce((latest, message) => {
-      return moment(latest.createdAt).isAfter(moment(message.createdAt)) ? latest : message;
-    }).createdAt;
-  };
 
-//   const getnewChatlistData = useMemo(() => {
-//     const MessageData = chatlistdata?.filter((el) => {
-//       if (el.ChatHistorydeletedby && el.ChatHistorydeletedby?.length > 0) {
-//         el.ChatHistorydeletedby[0] !== user?._id || el.ChatHistorydeletedby[1] !== user._id
-//       } else {
-//         return el
-//       }
-//       // if(el.)
-//     })
-// },[chatlistdata])
 
-  const dataWithTimestamps = chatlistdata?.map(item => ({
-    ...item,
-    latestMessageTimestamp: getLatestMessageTimestamp(item)
-  }));
+  //   const getnewChatlistData = useMemo(() => {
+  //     const MessageData = chatlistdata?.filter((el) => {
+  //       if (el.ChatHistorydeletedby && el.ChatHistorydeletedby?.length > 0) {
+  //         el.ChatHistorydeletedby[0] !== user?._id || el.ChatHistorydeletedby[1] !== user._id
+  //       } else {
+  //         return el
+  //       }
+  //       // if(el.)
+  //     })
+  // },[chatlistdata])
 
-  const findNewMessage = useCallback(() => {
-      const MessageData = chatlistdata?.filter((el) => {
-        if (el.ChatHistorydeletedby && el.ChatHistorydeletedby?.length > 0) {
-          el.ChatHistorydeletedby[0] !== user?._id || el.ChatHistorydeletedby[1] !== user._id
-        } else {
-          return el
-        }
-        // if(el.)
-      })
-    const sortedData = dataWithTimestamps.sort((a, b) => {
-      if (a.latestMessageTimestamp === null) return 1;
-      if (b.latestMessageTimestamp === null) return -1;
-      return moment(b.latestMessageTimestamp).diff(moment(a.latestMessageTimestamp));
-    });
-    dispatch(pushChatlist(sortedData));
-  }, [dispatch, chatlistdata]);
+
+
+
 
 
   // handling swipe right actions on chatlist
@@ -229,7 +210,10 @@ const theme = useTheme()
       try {
         await deleteUser(item.chatPartner._id);
         await refetch()
-          .then((res) => dispatch(pushChatlist(res.data.chatList)))
+          .then((res) => {
+            const sortedMsg = findNewMessage(res.data.chatList)
+            dispatch(pushChatlist(sortedMsg))
+          })
           .catch((err) => console.log(err)); // after getting refreshed chatlist
         setAlertMessage({ show: true, message: "User Deleted" });
       } catch (error) {
@@ -241,7 +225,8 @@ const theme = useTheme()
         await blockUser(item.chatPartner._id);
         await refetch()
           .then((res) => {
-            dispatch(pushChatlist(res.data.chatList))
+            const sortedMsg = findNewMessage(res.data.chatList)
+            dispatch(pushChatlist(sortedMsg))
             // const filteredData = res.data.chatList.filter((el: ChatList) => el.isBlocked === false)
             // setChatData(filteredData)
           })
@@ -256,8 +241,8 @@ const theme = useTheme()
         await UnblockUser(item.chatPartner._id);
         await refetch()
           .then((res) => {
-            dispatch(pushChatlist(res.data.chatList))
-            // const filteredData = res.data.chatList.filter((el: ChatList) => el.isBlocked === true)
+            const sortedMsg = findNewMessage(res.data.chatList)
+            dispatch(pushChatlist(sortedMsg))            // const filteredData = res.data.chatList.filter((el: ChatList) => el.isBlocked === true)
             // setChatData(filteredData)
           })
           .catch((err) => console.log(err)); // after getting refreshed chatlist
@@ -285,51 +270,76 @@ const theme = useTheme()
 
   }, [isSearchActive, chatlistdata, selectedOption, searchQueryData])
 
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', async () => {
-      findNewMessage();
+  const handleTypingUserStates = useCallback((data: { userData: UserInterface, typingState: boolean }) => {
+    setTypingUser(prevTypingUser => {
+      const userIndex = prevTypingUser.findIndex(el => el.userData._id === data.userData._id);
+      if (userIndex !== -1) {
+        // If the user is already in the list
+        if (prevTypingUser[userIndex].typingState !== data.typingState) {
+          // If typing state has changed, update the user's typing state
+          const updatedTypingUser = [...prevTypingUser];
+          updatedTypingUser[userIndex] = data;
+          return updatedTypingUser;
+        } else {
+          // If typing state hasn't changed, return the original array
+          return prevTypingUser;
+        }
+      } else {
+        // If the user is not in the list, add the new data
+        return [...prevTypingUser, data];
+      }
     });
-    return unsubscribe;
-  }, [navigation, chatlistdata]);
+  }, [activeUserList, typingUser]);
+
+
+
+  // useEffect(() => {
+  //   const unsubscribe = navigation.addListener('focus', async () => {
+  //     findNewMessage();
+  //   });
+  //   return unsubscribe;
+  // }, [navigation, chatlistdata]);
 
   useEffect(() => {
     socket?.on('notify_typing_state', data => {
-      setTypingUser(data);
+      console.log(data, "Dataof typing user")
+      handleTypingUserStates(data)
     });
 
 
     return () => {
       socket?.off('notify_typing_state');
     };
-  }, [])
+  }, [typingUser])
+
+  console.log(typingUser, "typinguser------->")
 
 
-  const AvatarWithBanIcon = ({ item }: { item: ChatList }) => (
-    <View style={styles.avatarContainer}>
-      <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
-      {item.isBlocked && (
-        <Ionicons
-          name={'ban'}
-          size={50}
-          color={colors.darkRed}
-          style={styles.banIcon}
-        />
-      )}
-    </View>
-  );
+  // const AvatarWithBanIcon = ({ item }: { item: ChatList }) => (
+  //   <View style={styles.avatarContainer}>
+  //     <Image source={{ uri: item.chatPartner.profilePic }} style={styles.avatar} />
+  //     {item.isBlocked && (
+  //       <Ionicons
+  //         name={'ban'}
+  //         size={50}
+  //         color={colors.darkRed}
+  //         style={styles.banIcon}
+  //       />
+  //     )}
+  //   </View>
+  // );
 
 
-  const renderCell = React.useCallback(
-    (props: any) => (
-      <Animated.View
-        {...props}
-        layout={transition}
-        entering={FadeInUp}
-        exiting={FadeOutUp} />
-    ),
-    [],
-  );
+  // const renderCell = React.useCallback(
+  //   (props: any) => (
+  //     <Animated.View
+  //       {...props}
+  //       layout={transition}
+  //       entering={FadeInUp}
+  //       exiting={FadeOutUp} />
+  //   ),
+  //   [],
+  // );
 
   // const renderChatItem = ({ item, index }: { item: ChatList, index: number }) => {
   //   const newMessageIds: any[] = [];
@@ -461,7 +471,8 @@ const theme = useTheme()
       {/* <SearchBar onSearch={handleSearchFriendsQuery} /> */}
       {
         chatlistdata?.length > 0 ? (
-          <PullToRefresh handleOnscroll={handleOnScroll} isScrollable={isScrollable} scrollRef={scrollRef} setIsScrollable={setIsScrollable} updatePanState={updatePanState} refreshing={false} onRefresh={RefreshNewMessages}>
+
+          !isSearchActive ? <PullToRefresh handleOnscroll={handleOnScroll} isScrollable={isScrollable} scrollRef={scrollRef} setIsScrollable={setIsScrollable} updatePanState={updatePanState} refreshing={false} onRefresh={RefreshNewMessages}>
             {/* <ScrollView
               contentInsetAdjustmentBehavior="automatic"
               contentContainerStyle={{marginTop:isSearchActive ? actuatedNormalize(20) : actuatedNormalize(5)}} nestedScrollEnabled={true}>
@@ -477,7 +488,7 @@ const theme = useTheme()
               onScroll={handleOnScroll}
               scrollEnabled={true}
               data={renderChatlistData()}
-              contentContainerStyle={{ minHeight: contentHeight }}
+              contentContainerStyle={{ minHeight: contentHeight, marginTop: isSearchActive ? actuatedNormalize(35) : actuatedNormalize(0) }}
               onContentSizeChange={(w, h) => setContentHeight(h)}
               onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
               // onContentSizeChange={checkIfScrollable}
@@ -486,12 +497,33 @@ const theme = useTheme()
               ItemSeparatorComponent={() => (
                 <View style={[defaultStyles.separator, { marginLeft: 90 }]} />
               )}
-              ListEmptyComponent={ActiveUsers.length === 0 ? <Empty head='Active Users' description='You have no active users' /> : BlockedUsers.length === 0 ?  <Empty head='Blocked Users' description='You have no blocked users' /> : <Empty head='Search Users' description='User not found' />}
-              // CellRendererComponent={renderCell}
+              ListEmptyComponent={ActiveUsers.length === 0 ? <Empty head='Active Users' description='You have no active users' /> : BlockedUsers.length === 0 ? <Empty head='Blocked Users' description='You have no blocked users' /> : <Empty head='Search Users' description='User not found' />}
+            // CellRendererComponent={renderCell}
             />
             {/* </Animated.View>
             </ScrollView> */}
-          </PullToRefresh>
+          </PullToRefresh> :
+            < Animated.FlatList
+              skipEnteringExitingAnimations
+              itemLayoutAnimation={transition}
+              ref={scrollRef}
+              scrollEventThrottle={16}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+              onScroll={handleOnScroll}
+              scrollEnabled={true}
+              data={renderChatlistData()}
+              contentContainerStyle={{ minHeight: contentHeight, marginTop: isSearchActive ? actuatedNormalize(35) : actuatedNormalize(0) }}
+              onContentSizeChange={(w, h) => setContentHeight(h)}
+              onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
+              // onContentSizeChange={checkIfScrollable}
+              renderItem={({ item, index }) => <Chatrow activeUserList={activeUserList} animatedRowStyles={animatedRowStyles} handleRightActions={handleRightActions} index={index} item={item} navigation={navigation} scrollY={scrollY} typingUser={typingUser} user={user} />}
+              keyExtractor={(item, index) => item?._id}
+              ItemSeparatorComponent={() => (
+                <View style={[defaultStyles.separator, { marginLeft: 90 }]} />
+              )}
+              ListEmptyComponent={ActiveUsers.length === 0 ? <Empty head='Active Users' description='You have no active users' /> : BlockedUsers.length === 0 ? <Empty head='Blocked Users' description='You have no blocked users' /> : <Empty head='Search Users' description='User not found' />}
+            />
         ) : (
           <Empty head='Make Friends' description='You have no friends make new friends after every call' />
         )
@@ -513,7 +545,7 @@ const theme = useTheme()
           //   // colors: { inversePrimary: theme.colors.surface, surface: theme.colors.surface, accent: theme.colors.surface }
           // },
 
-          
+
 
           label: 'Okay',
           // textColor: theme.colors.surface,
@@ -526,10 +558,10 @@ const theme = useTheme()
         theme={{
           colors: {
             inverseOnSurface: colors.white,
-             surface: colors.white
+            surface: colors.white
           },
-      }}
-         >
+        }}
+      >
         {AlertMessage.message}
       </Snackbar>
     </View>

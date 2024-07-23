@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'r
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import colors from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
+import { actuatedNormalize } from '../../constants/PixelScaling';
 const Palette = {
   baseGray05: colors.dark,
   baseGray80: colors.black,
@@ -73,7 +74,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = React.memo(
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    height: 34,
+    height: actuatedNormalize(35),
     backgroundColor: Palette.baseGray05,
   },
   activeBox: {
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
   },
   labelContainer: { justifyContent: 'center', alignItems: 'center' },
   label: {
-    fontSize: 14,
+    fontSize: actuatedNormalize(14),
     color:colors.white,
     fontFamily:fonts.NexaRegular
   },

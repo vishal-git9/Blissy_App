@@ -40,25 +40,25 @@ const styles = StyleSheet.create({
     justifyContent:'center',
     alignItems:'center',
     // height:500
-    padding:20
+    padding:actuatedNormalize(20)
   },
   textCont:{
     justifyContent:'center',
     alignItems:'center',
-    gap:10
+    gap:actuatedNormalize(10)
   },
   textStyle: {
     fontFamily: fonts.NexaRegular,
     fontSize: actuatedNormalize(14),
     alignSelf: "center",
     textAlign:"center",
-    color: colors.lightGray
+    color: colors.gray
   },
   upperTextStyle: {
     fontFamily: fonts.NexaXBold,
     fontSize: actuatedNormalize(16),
     alignSelf: "center",
     textAlign:"center",
-    color: colors.lightGray
+    color: colors.white
   }
 });

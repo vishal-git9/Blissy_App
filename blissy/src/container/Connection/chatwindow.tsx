@@ -39,6 +39,7 @@ import ChatIntialInfo from '../../common/chats/Intialscreen';
 import { Button, Divider, Menu } from 'react-native-paper';
 import { displayCallNotificationAndroid } from '../../common/call/incoming';
 import { BlissyLoader } from '../../common/loader/blissy';
+import { findNewMessage } from '../../utils/sortmessagebyData';
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ChatWindow'>;
 interface ProfileScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -107,7 +108,12 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     }
 
     socket?.on('notify_typing_state', data => {
-      setIsTyping(data.typingState);
+
+      if(data.userData._id === Chats?.chatPartner._id && data.typingState){
+        setIsTyping(true);
+      }else{
+        setIsTyping(false);
+      }
     });
 
     return () => {
@@ -135,7 +141,8 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           return chatItem;
         });
         const newMessage = { ...message, sender: 'them' };
-        dispatch(pushChatlist(newChatlist));
+        const sortedMsg = findNewMessage(newChatlist)
+        dispatch(pushChatlist(sortedMsg));
       } catch (error) {
         console.error('An error occurred---->', error);
       }
@@ -167,6 +174,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           socket?.emit('privateMessageSendSuccessful', { messageId: newMessage.messageId, senderId: user?._id, receiverId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId, mysocketId: socket.id });
           socket?.emit('private_typing_state', {
             socketId: UserSocketId,
+            receiverId:Chats?.chatPartner._id,
             userData: user,
             typingState: false
           });
@@ -194,6 +202,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       console.log(text, "text", istyping,UserSocketId)
       const TypingUserData = {
         socketId: UserSocketId,
+        receiverId:Chats?.chatPartner._id,
         userData: user,
         typingState: true
       }
@@ -211,6 +220,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       // setIsTyping(false);
       const TypingUserData = {
         socketId: UserSocketId,
+        receiverId:Chats?.chatPartner._id,
         userData: user,
         typingState: false
       }
@@ -232,7 +242,10 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       await markRead({ messageIds: newMessageIds, updateType: 'isRead' });
       // UserSocketId && socket?.emit('messageSeen', { userId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId });
       refetch()
-        .then(res => dispatch(pushChatlist(res?.data?.chatList)))
+        .then(res => {
+          const sortedMsg = findNewMessage(res.data.chatList)
+          dispatch(pushChatlist(sortedMsg))      
+        })
         .catch(err => console.log(err));
     }
   }, [dispatch, chatlistdata, UserSocketId]);
@@ -245,11 +258,14 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     setMenuVisible(false)
   }
 
-  const handleDeleteChatHistory = () => {
+  const handleDeleteChatHistory = async () => {
     console.log("chat history deleted-------->")
     setMenuVisible(false)
-    deleteChathistory(Chats?.newMessagesId)
-    refetch().then((res) => dispatch(pushChatlist(res.data.chatList))).catch((err) => console.log(err)) // after getting refreshed chatlist
+   await deleteChathistory(Chats?.newMessagesId)
+   await refetch().then((res) => {
+    const sortedMsg = findNewMessage(res.data.chatList)
+    dispatch(pushChatlist(sortedMsg))
+   }).catch((err) => console.log(err)) // after getting refreshed chatlist
   }
 
 
@@ -376,7 +392,6 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const renderInputToolbar = (props: any) => (
     <InputToolbar
       {...props}
-
       // renderComposer={() => <Composer
       //   multiline={true}
       //   composerHeight={actuatedNormalize(50)}
@@ -410,6 +425,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           onPress={() => {
             socket?.emit('private_typing_state', {
               socketId: UserSocketId,
+              receiverId:Chats?.chatPartner._id,
               userData: user,
               typingState: false
             });
@@ -433,11 +449,11 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
         </View>
 
         <View style={styles.callMoreIconCotainer}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={startCall}
           >
             <Ionicons name='call' size={25} color={colors.white} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity
           // onPress={() => navigation.navigate('ChatPartnerDetails', { chatPartner: userDetails })}
           >
@@ -476,23 +492,25 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           _id: user?._id || 1,
           avatar: user?.profilePic
         }}
-
-
+        keyboardShouldPersistTaps="never"
         isTyping={istyping}
         showUserAvatar={false}
         alwaysShowSend={true}
+        
         shouldUpdateMessage={() => true}
         renderSystemMessage={props => <SystemMessage {...props} textStyle={{ color: colors.gray }} />}
         bottomOffset={insets.bottom}
         renderAvatarOnTop={true}
-        keyboardShouldPersistTaps={"never"}
         listViewProps={{
+          renderToHardwareTextureAndroid:true,
+          keyboardDismissMode: 'on-drag',
           contentContainerStyle: { paddingTop: stickyHeaderDate ? 10 : 0 },
           showsVerticalScrollIndicator: false, viewabilityConfigCallbackPairs: viewabilityConfigCallbackPairs.current
         }}
         textInputProps={styles.input}
 
         renderBubble={props => (
+          <View shouldRasterizeIOS renderToHardwareTextureAndroid> 
           <Bubble
             {...props}
             textStyle={{
@@ -530,6 +548,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
               </View>
             )} */}
           </Bubble>
+          </View>  
         )}
 
         // renderDay={props => (
@@ -559,6 +578,8 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
             </Send>
           </View>
         )}
+        // minComposerHeight={30}
+        // forceGetKeyboardHeight={true}
         disableComposer={Chats?.isBlocked as boolean}
         renderInputToolbar={renderInputToolbar}
         renderChatFooter={() => <ReplyMessageBar clearReply={() => setReplyMessage(null)} message={replyMessage} />}

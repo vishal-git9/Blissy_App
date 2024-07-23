@@ -16,11 +16,13 @@ export interface TotalCoins{
 
 interface rewardState{
     coupons:Coupon[];
+    prevCoins:number;
     totalCoins:number;
 }
 
 const initialState:rewardState = {
     coupons:[],
+    prevCoins:0,
     totalCoins:0
 }
 
@@ -28,18 +30,21 @@ const RewardSlice = createSlice({
     name:'rewards',
     initialState,
     reducers:{
-        getAllCoupons: (state, action: PayloadAction<Coupon[]>) => {
+        setAllCoupons: (state, action: PayloadAction<Coupon[]>) => {
             state.coupons = action.payload;
         },
-        getTotalCoins:(state, action:PayloadAction<number>)=>{
+        setTotalCoins:(state, action:PayloadAction<number>)=>{
             state.totalCoins = action.payload;
-        }
+        },
+        setPrevCoins:(state, action:PayloadAction<number>)=>{
+            state.prevCoins = action.payload;
+        },
+        resetrewardsState : ()=>initialState
     }
 })
 
-export const {getAllCoupons,getTotalCoins} = RewardSlice.actions;
+export const {setAllCoupons,setTotalCoins,setPrevCoins,resetrewardsState} = RewardSlice.actions;
 
-export const CouponsSelector = (state: IRootState)=> state.Rewards.coupons
-export const TotalCoinsSelector = (state: IRootState)=> state.Rewards.totalCoins
+export const CouponsSelector = (state: IRootState)=> state.Rewards
 
 export default RewardSlice;

@@ -9,7 +9,7 @@ import { NavigationStackProps } from '../Prelogin/onboarding';
 import { useGetOtpMutation, useVerifyOtpMutation } from '../../api/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
-import { AuthSelector, setSessionStatus, setUserState } from '../../redux/uiSlice';
+import { AuthSelector, setNewlyInstalled, setSessionStatus, setUserState } from '../../redux/uiSlice';
 import { useGetUserQuery } from '../../api/userService';
 import { TextInput } from 'react-native-paper';
 import { Loader } from '../../common/loader/loader';
@@ -60,12 +60,12 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [welcomeModal, setwelcomeModal] = useState<{ visible: boolean, isNew: boolean }>({ visible: false, isNew: false });
   const timerRef = useRef<NodeJS.Timeout>();
   const [getOtp, { error, data, isLoading, reset: resetMobile }] = useGetOtpMutation();
-  const { token, isAuthenticated, user, isNewUser, isRegisterd } = useSelector(AuthSelector)
+  const { token, isAuthenticated, user, isRegisterd,isNewlyInstalled } = useSelector(AuthSelector)
   const { data: userData, isLoading: userLoading, refetch } = useGetUserQuery()
   const [OtpVerify, { error: verifyOtpErr, data: verifyOtpData, isLoading: verifyOtpLoading, reset }] = useVerifyOtpMutation()
 
   const reduxDispatch = useDispatch()
-  console.log(user, isNewUser, isRegisterd, "------user--------")
+  // console.log(user, isNewUser, isRegisterd, "------user--------")
   const handleSubmitMobileNumber = async () => {
     if (validateEmail(state.email)) {
       const res = await getOtp({ email: `${state.email}` });
@@ -78,7 +78,9 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
           setIsOtpSent(true);
           SetotpAlreadySentCase(true)
         } else if (res.error?.data?.code === "GEN_800") {
-          setAlreadyloggedinCase(true)
+          if(!isNewlyInstalled){
+            setAlreadyloggedinCase(true)
+          }
         }
         console.log(error)
       }
@@ -93,16 +95,17 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       console.log(res, "data of OTP")
       const isNewuser =  (await refetch()).data
       // fetch user details
-      console.log(isNewUser, "newUser from login---")
+      // console.log(isNewUser, "newUser from login---")
       clearInterval(timerRef.current);
       setModalState(false)
       console.log(isNewuser, "---user isnewuser")
       if (isNewuser?.data?.user?.isNewUser) {
-        console.log(isNewuser.data?.user, "---user here isnewuser")
+        console.log(isNewuser?.data?.user, "---user here isnewuser")
         reduxDispatch(setSessionStatus(false))
+        reduxDispatch(setNewlyInstalled(false))
         setwelcomeModal({ visible: true, isNew: true })
       } else {
-        console.log(isNewuser.data?.user, "---user here2 isnewuser")
+        console.log(isNewuser?.data?.user, "---user here2 isnewuser")
         setwelcomeModal({ visible: true, isNew: false })
         reduxDispatch(setSessionStatus(false))
         reduxDispatch(setUserState(false))

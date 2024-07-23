@@ -5,6 +5,7 @@ import {
   StyleSheet,
   StatusBarStyle,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
@@ -41,7 +42,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   });
 
   const openSearch = () => {
-    translateY.value = withTiming(-windowHeight * 0.085, { duration: 600 });
+    translateY.value = withTiming(-windowHeight * 0.050, { duration: 600 });
     runOnJS(setIsSearchActive)(true);
   };
 
@@ -60,7 +61,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
       <Animated.View style={[styles.searchBarContainer, animatedStyle]}>
         {isSearchActive ? (
           <View style={styles.searchInputContainer}>
-            <Ionicons name="arrow-back" size={24} color={colors.white} onPress={closeSearch} />
+            <TouchableOpacity onPress={closeSearch} hitSlop={{top:50,bottom:50,left:50,right:50}}>
+            <Ionicons  name="arrow-back" size={24} color={colors.white}  />
+            </TouchableOpacity>
             <Searchbar
               value={querytext}
               iconColor={colors.white}

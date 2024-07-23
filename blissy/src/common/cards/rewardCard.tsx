@@ -8,23 +8,17 @@ import * as Animatable from 'react-native-animatable';
 import {fonts} from '../../constants/fonts';
 import AnimatedNumber from '../../container/coupons/AnimatedNumber';
 import { useSelector } from 'react-redux';
-import { TotalCoinsSelector } from '../../redux/rewardSlice';
+import { CouponsSelector } from '../../redux/rewardSlice';
 interface Props {
   shouldAnimate?: boolean;
   coins: number;
+  prevCoins:number;
 }
 
-const RewardCard: React.FC<Props> = ({shouldAnimate, coins}) => {
-  const TotalCoins = useSelector(TotalCoinsSelector)
-  const [previousCoins, setPreviousCoins] = useState<number>(TotalCoins);
-  useEffect(() => {
-    // if (TotalCoins !== previousCoins) {
-    //   console.log('Coins updated:', previousCoins, '->', TotalCoins);
-    // }
-    setPreviousCoins(TotalCoins);
-  }, [TotalCoins,coins]);
+const RewardCard: React.FC<Props> = ({shouldAnimate, coins,prevCoins}) => {
+  const {totalCoins} = useSelector(CouponsSelector)
 
-  console.log("hey i am redering.....")
+  console.log("coins.....",prevCoins)
 
   return (
     <Animatable.View
@@ -56,7 +50,7 @@ const RewardCard: React.FC<Props> = ({shouldAnimate, coins}) => {
                 }}>
                 {coins}
               </Title> */}
-              <AnimatedNumber initialValue={previousCoins} finalValue={TotalCoins} />
+              <AnimatedNumber initialValue={prevCoins} finalValue={coins} />
                 <Text
                     style={{
                       color: colors.white,
@@ -77,7 +71,7 @@ const styles = StyleSheet.create({
   card: {
     // position: 'absolute',
     marginBottom: 20,
-    backgroundColor: colors.green2,
+    backgroundColor: colors.dark,
     padding: actuatedNormalize(10),
     // width:'90%',
     borderRadius: actuatedNormalize(20), 
@@ -96,7 +90,7 @@ const styles = StyleSheet.create({
     width: actuatedNormalize(60),
     height: actuatedNormalize(60),
     borderRadius: actuatedNormalize(50),
-    backgroundColor: colors.accent,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -113,7 +113,7 @@ const UserreviewScreen: React.FC<UserreviewProps> = ({ navigation }) => {
 
     return (
       <View style={{flex:1,alignSelf:"center",width:"100%",justifyContent:"center",alignItems:"center",marginTop:50,rowGap:10 }}>
-        <Text style={{ color: colors.lightGray, fontFamily: fonts.NexaItalic ,fontSize:actuatedNormalize(18)}}>'{myappreview[0]?.review}'</Text>
+        <Text style={{ color: colors.lightGray, fontFamily: fonts.NexaItalic ,fontSize:actuatedNormalize(18),textAlign:"center"}}>'{myappreview[0]?.review}'</Text>
         <StarRating
                 disabled={true}
                 rating={myappreview[0]?.rating}

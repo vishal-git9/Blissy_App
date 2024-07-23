@@ -23,7 +23,7 @@ interface ChatRowProps {
   index: number;
   user: UserInterface | null;
   animatedRowStyles:StyleProp<ViewStyle>;
-  typingUser: { userData: UserInterface, typingState: boolean } | undefined;
+  typingUser: { userData: UserInterface, typingState: boolean }[] | undefined;
   activeUserList: ActiveUserList[];
   navigation: NativeStackNavigationProp<RootStackParamList>;
   scrollY:SharedValue<number>;
@@ -53,6 +53,8 @@ const ChatRow: React.FC<ChatRowProps> = ({ scrollY,item, index, user, typingUser
   };
 
   FindSender();
+
+  const meTypingornot = typingUser?.find((el)=>el.userData._id === item.chatPartner._id)?.typingState || false
 
   const userActions = item.isBlockedBy.includes(user?._id as string) && item.isBlocked
     ? [{ name: "Delete", text: "Delete", color: colors.red, width: 192 }, { name: item.isBlocked ? "Unblock" : "Block", text: item.isBlocked ? "Unblock" : "Block", color: colors.bag9Bg, width: 128 }]
@@ -86,10 +88,10 @@ const ChatRow: React.FC<ChatRowProps> = ({ scrollY,item, index, user, typingUser
             <View style={styles.chatDetails}>
               <Text style={styles.chatName}>{item?.chatPartner?.name}</Text>
               {
-                (typingUser?.typingState && typingUser?.userData?._id === item?.chatPartner?._id)
+                meTypingornot
                   ? <Text style={[styles.chatName, { color: colors.darkprimary, fontSize: actuatedNormalize(12) }]}>Typing...</Text>
                   : <View style={{ flexDirection: 'row', columnGap: actuatedNormalize(10), alignItems: 'center', marginTop: actuatedNormalize(5) }}>
-                    <Text numberOfLines={1} style={styles.lastMessage}>{item?.ChatHistorydeletedby?.includes(user?._id as string) ? "" : item?.allMessages[item.allMessages?.length - 1]?.message || ""}</Text>
+                    <Text numberOfLines={1} style={[styles.lastMessage,{fontFamily:item?.ChatHistorydeletedby?.includes(user?._id as string) ? fonts.NexaItalic:fonts.NexaRegular}]}>{item?.ChatHistorydeletedby?.includes(user?._id as string) ? "Messages deleted" : item?.allMessages[item.allMessages?.length - 1]?.message || ""}</Text>
                     {newMessageIds?.length > 0 && (
                       <Badge size={20} style={{ backgroundColor: colors.primary, color: colors.white, fontFamily: fonts.NexaXBold }}>
                         {newMessageIds?.length}
@@ -99,7 +101,7 @@ const ChatRow: React.FC<ChatRowProps> = ({ scrollY,item, index, user, typingUser
               }
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.timestamp}>{item?.allMessages[item?.allMessages?.length - 1]?.createdAt ? formatDateTime(item?.allMessages[item?.allMessages?.length - 1]?.createdAt, 'Date_time') : ""}</Text>
+              <Text style={styles.timestamp}>{item?.ChatHistorydeletedby?.includes(user?._id as string) ? "" : item?.allMessages[item?.allMessages?.length - 1]?.createdAt ? formatDateTime(item?.allMessages[item?.allMessages?.length - 1]?.createdAt, 'Date_time') : "" }</Text>
             </View>
           </TouchableOpacity>
         </Animated.View>
@@ -150,7 +152,7 @@ const styles = StyleSheet.create({
   lastMessage: {
     color: colors.gray,
     fontSize: actuatedNormalize(14),
-    // width: "75%"
+     maxWidth: "75%"
   },
   timestamp: {
     color: colors.gray,

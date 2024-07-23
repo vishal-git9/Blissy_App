@@ -70,7 +70,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   const { Calls, missedCalls } = useSelector(CallInfoSelector)
   const [searchQueryData, setsearchQueryData] = useState(Calls)
   const dispatch = useDispatch()
-  const {user} = useSelector(AuthSelector)
+  const { user } = useSelector(AuthSelector)
   // const getInputRanges = (index:number, ITEM_SIZE:number) => {
   //   const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)];
   //   const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)];
@@ -237,7 +237,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
         </TouchableOpacity>
       </View>}
       {
-        Calls.length > 0 ? <PullToRefresh scrollRef={scrollRef} handleOnscroll={handleOnScroll} isScrollable={isScrollable} setIsScrollable={setIsScrollable} updatePanState={updatePanState} onRefresh={handlerefreshMessage} refreshing>
+        Calls.length > 0 ? !isSearchActive ? <PullToRefresh scrollRef={scrollRef} handleOnscroll={handleOnScroll} isScrollable={isScrollable} setIsScrollable={setIsScrollable} updatePanState={updatePanState} onRefresh={handlerefreshMessage} refreshing>
 
           {/* <ScrollView  contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ paddingBottom: 40, marginTop: actuatedNormalize(10) }}> */}
           {/* <Animated.View style={[defaultStyles.block, { borderTopColor: colors.lightGray, borderWidth: 2 }]} layout={transition}> */}
@@ -250,7 +250,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}
             nestedScrollEnabled={true}
-            contentContainerStyle={{ minHeight: contentHeight }}
+            contentContainerStyle={{ minHeight: contentHeight, marginTop: isSearchActive ? actuatedNormalize(60) : actuatedNormalize(0) }}
             onContentSizeChange={(w, h) => setContentHeight(h)}
             ListEmptyComponent={calls.length === 0 ? <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' /> : (missedCalls.length === 0 && !isSearchActive) ? <Empty head='Missed Calls' description='You have no missed calls records' /> : <Empty head='Search Users' description='User not found' />}
             // style={[defaultStyles.block]}
@@ -314,13 +314,33 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
                 //     </Animated.View>
                 //   </Animated.View>
                 // </SwipeableRow>
-                <CallinforRow user = {user} navigation={navigation} viewableItems={viewableItems} animatedPosition={animatedPosition} animatedRowStyles={animatedRowStyles} index={index} item={item} removeCall={removeCall} scrollY={scrollY} key={item._id} />
+                <CallinforRow user={user} navigation={navigation} viewableItems={viewableItems} animatedPosition={animatedPosition} animatedRowStyles={animatedRowStyles} index={index} item={item} removeCall={removeCall} scrollY={scrollY} key={item._id} />
               )
             }}
           />
-          {/* </Animated.View> */}
-          {/* </ScrollView>  */}
-        </PullToRefresh> : <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' />
+
+        </PullToRefresh> : <Animated.FlatList
+          onScroll={handleOnScroll}
+          ref={scrollRef}
+          skipEnteringExitingAnimations
+          data={renderChatlistData()}
+          scrollEnabled={true}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}
+          contentContainerStyle={{ minHeight: contentHeight, marginTop: isSearchActive ? actuatedNormalize(35) : actuatedNormalize(0) }}
+          onContentSizeChange={(w, h) => setContentHeight(h)}
+          ListEmptyComponent={calls.length === 0 ? <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' /> : (missedCalls.length === 0 && !isSearchActive) ? <Empty head='Missed Calls' description='You have no missed calls records' /> : <Empty head='Search Users' description='User not found' />}
+          itemLayoutAnimation={transition}
+          onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
+          keyExtractor={(item) => item._id}
+          ItemSeparatorComponent={() => <View style={[defaultStyles.separator, { marginLeft: 90 }]} />}
+          renderItem={({ item, index }) => {
+            return (
+              <CallinforRow user={user} navigation={navigation} viewableItems={viewableItems} animatedPosition={animatedPosition} animatedRowStyles={animatedRowStyles} index={index} item={item} removeCall={removeCall} scrollY={scrollY} key={item._id} />
+            )
+          }}
+        /> : <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' />
       }
 
       <Snackbar

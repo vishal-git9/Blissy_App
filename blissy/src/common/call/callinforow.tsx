@@ -7,7 +7,7 @@ import { Text } from "react-native"
 import { actuatedNormalize } from "../../constants/PixelScaling"
 import colors from "../../constants/colors"
 import { fonts } from "../../constants/fonts"
-import { convertSeconds, getFormattedDate } from "../../utils/formatedateTime"
+import { convertSeconds, formatDateTime, getFormattedDate } from "../../utils/formatedateTime"
 import { defaultStyles } from "../styles/defaultstyles"
 import { TouchableOpacity } from "react-native"
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -18,7 +18,7 @@ import { RootStackParamList } from "../../AppNavigation/navigatorType"
 import { UserInterface } from "../../redux/uiSlice"
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const ITEM_SIZE =  75
+const ITEM_SIZE = SCREEN_HEIGHT * 0.085
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -42,12 +42,13 @@ interface CallInforowProps {
     index:number;
     removeCall:(value:Calls)=>void;
     navigation: NativeStackNavigationProp<RootStackParamList>;
-    user:UserInterface
+    user:UserInterface | null
 }
 
  const CallinforRow: React.FC<CallInforowProps> = ({user,scrollY,viewableItems,animatedRowStyles,animatedPosition,item,index,removeCall,navigation}) => {
 
 // console.log(item,"itesm------>")
+console.log(ITEM_SIZE,"ITEM_SIZE----->")
     const listanimatedStyle = useAnimatedStyle(() => {
         const scale = interpolate(scrollY.value, [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)], [1, 1, 1, 0], Extrapolate.CLAMP);
         const opacity = interpolate(scrollY.value, [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)], [1, 1, 1, 0], Extrapolate.CLAMP);
@@ -77,7 +78,7 @@ interface CallInforowProps {
             <AnimatedTouchableOpacity
             onPress={() => {
                 navigation.navigate('ChatWindow', {
-                    Chats:null,socketId:undefined,userDetails:item.UserCallsInfoList[0],senderUserId:user?._id || null                });
+                    Chats:null,socketId:undefined,userDetails:item.UserCallsInfoList[0],senderUserId:item.UserCallsInfoList[0]?._id || null                });
               }}
                 entering={FadeInUp.delay(index * 20)}
                 exiting={FadeOutUp}
@@ -102,12 +103,15 @@ interface CallInforowProps {
                             <Ionicons name={'call'} size={16} color={colors.gray} />
                             <Text style={{ fontSize: actuatedNormalize(14), color: colors.gray, flex: 1, fontFamily: fonts.NexaItalic }}>
                                 {/* {item.incoming ? 'Incoming' : 'Outgoing'} */}
-                                {item.callType} {convertSeconds(item.callDuration)}
+                                {/* {item.callType}  */}
+                                {convertSeconds(item.callDuration)}
                             </Text>
                         </View>
                     </View>
-                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'column', gap: 6, alignItems: 'flex-end',justifyContent:"flex-end", }}>
                         <Text style={{ fontSize: actuatedNormalize(12), color: colors.gray, fontFamily: fonts.NexaRegular }}>{getFormattedDate(item.createdAt)}</Text>
+                        <Text style={{ fontSize: actuatedNormalize(10), color: colors.gray, fontFamily: fonts.NexaRegular }}>{formatDateTime(item.createdAt,"")}</Text>
+
                         {/* <Ionicons name="information-circle-outline" size={24} color={colors.primary} /> */}
                     </View>
                 </Animated.View>

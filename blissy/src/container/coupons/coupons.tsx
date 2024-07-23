@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -29,7 +29,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import PullToRefresh from '../../common/refresh/pull';
 import { useGetallUserCoinsQuery,useClaimUsercoinsMutation, useGetallUserTotalCoinsQuery } from '../../api/rewardservice';
-import { CouponsSelector, TotalCoinsSelector, getAllCoupons, getTotalCoins, } from '../../redux/rewardSlice';
+import { CouponsSelector, setAllCoupons, setPrevCoins, setTotalCoins, } from '../../redux/rewardSlice';
 import { Snackbar } from 'react-native-paper';
 
 
@@ -42,6 +42,9 @@ if (
 ) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
+const transition = CurvedTransition.delay(100);
+
 interface AlertMessage {
   show: boolean;
   message: string;
@@ -50,8 +53,7 @@ interface AlertMessage {
 export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
   const {user} = useSelector(AuthSelector);
   const dispatch = useDispatch();
-  const coupons = useSelector(CouponsSelector);
-  const TotalCoins = useSelector(TotalCoinsSelector)
+  const {coupons,prevCoins,totalCoins} = useSelector(CouponsSelector);
   const [points, setPoints] = useState(0);
   const [isScrollable, setIsScrollable] = useState(false);
   const [contentHeight, setContentHeight] = useState(0);
@@ -59,46 +61,50 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
   const flashListRef = useAnimatedRef<Animated.FlatList<any>>();
   const scrollY = useSharedValue(0);
   const editing = useSharedValue(-30);
+  const prevCoinsref = useRef<number>(totalCoins)
   const { data, refetch, isSuccess } = useGetallUserCoinsQuery({});
   const { data: totalCoinsData, refetch: refetchTotalCoins, isSuccess: isTotalCoinsSuccess } = useGetallUserTotalCoinsQuery({});
   const [claimUsercoins] = useClaimUsercoinsMutation();
+  console.log(coupons, "coupons--->")
+  console.log(totalCoinsData, "coupons--->")
 
   useEffect(() => {
     if (isSuccess && data) {
       // data.forEach((coupon: Coupon) => {
         // });
-          dispatch(getAllCoupons(data));
+          dispatch(setAllCoupons(data));
     }
-    console.log(coupons, "coupons--->")
   }, [isSuccess, data, dispatch]);
+  console.log(prevCoinsref,"totalCoinsref--->")
 
   useEffect(() => {
-    if (isTotalCoinsSuccess) {
-      dispatch(getTotalCoins(totalCoinsData.coins));
-    }else if(totalCoinsData===null){
-      dispatch(getTotalCoins(0));
+    if (totalCoinsData===null) {
+      dispatch(setTotalCoins(0));
+    }else{
+      dispatch(setTotalCoins(totalCoinsData?.coins));
     }
     // console.log(totalCoinsData, "total from api")
-    console.log(TotalCoins, "Total coins--->")
-  }, [isTotalCoinsSuccess, totalCoinsData, dispatch]);
+    console.log(totalCoinsData, "Total coins--->")
+  }, [isTotalCoinsSuccess, totalCoinsData]);
 
 
-  const transition = CurvedTransition.delay(100);
 
-  const addPoints = (rewardAmount: number) => {
-    setPoints(points + rewardAmount); // Add 100 points for example
-  };
+  // const addPoints = (rewardAmount: number) => {
+  //   setPoints(points + rewardAmount); // Add 100 points for example
+  // };
 
   const handleClaimCoupon = async(id: string, rewardPoints: number) => {
     // addPoints(rewardPoints);
+    // dispatch(getPrevCoins(totalCoins))
+    prevCoinsref.current = totalCoins
     await claimUsercoins(id);
     setAlertMessage({show:true, message:`${rewardPoints} has been successfully added..`})
     const {data} = await refetch();
     const {data:coinsRes} = await refetchTotalCoins();
-
     console.log(coinsRes, "after claim coins total")
-    dispatch(getTotalCoins(coinsRes.coins))
-  dispatch(getAllCoupons(data));
+    dispatch(setTotalCoins(coinsRes.coins))
+    //dispatch(setPrevCoins(coinsRes.coins))
+    dispatch(setAllCoupons(data));
   };
 
   const RefreshCoupons = async () => {
@@ -106,8 +112,8 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
     const {data:coinsRes} = await refetchTotalCoins();
 
     // console.log(coinsRes, "after claim coins total")
-    dispatch(getTotalCoins(coinsRes.coins))
-    dispatch(getAllCoupons(data));
+    dispatch(setTotalCoins(coinsRes?.coins))
+    dispatch(setAllCoupons(data));
     console.log(coinsRes, 'coupons refreshed....');
 
   };
@@ -148,13 +154,14 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
         />
       </View>
       <View style={styles.cardContainer}>
-        <RewardCard coins={TotalCoins} shouldAnimate={false} />
+        <RewardCard prevCoins={prevCoinsref.current} coins={totalCoins || prevCoinsref.current} shouldAnimate={false} />
       </View>
       <View style={styles.badge}>
         {/* <Text style={styles.text}>Healers will soon be available for you.</Text> */}
         <Typewriter
           loop={false}
-          text="You can use POINTS once the Healers get Listed"
+          customtextstyle={{textAlign:"center",color:colors.white}}
+          text="You can use reward points once the healers get listed"
           speed={50}
         />
       </View>
@@ -236,7 +243,14 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
             // Do something
             setAlertMessage({ show: false, message: "" });
           },
-        }}>
+        }}
+        theme={{
+          colors: {
+            inverseOnSurface: colors.white,
+             surface: colors.white
+          },
+      }}
+        >
         {AlertMessage.message}
       </Snackbar>
     </View>
@@ -284,10 +298,12 @@ const styles = StyleSheet.create({
     marginTop:5
   },
   badge: {
-    backgroundColor: colors.primary,
+    // backgroundColor: colors.primary,
     // padding:actuatedNormalize(5)
     // marginHorizontal:actuatedNormalize(8),
     // alignSelf:"center",
+  width:"90%",
+  alignSelf:"center",
     borderRadius: actuatedNormalize(5),
     paddingHorizontal: actuatedNormalize(16),
     paddingVertical: actuatedNormalize(8),

@@ -108,8 +108,8 @@ const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navi
   const [profileModal, setProfileModal] = useState<boolean>(false)
   const [errorSnackbar, setErrorSnackbar] = useState<boolean>(false)
   const isChatStateActive = useSelector(chatScreenActiveSelector)
-  const messageCount = useSelector(MessageCountSelector)
-  const dispatch = useDispatch()
+  // const messageCount = useSelector(MessageCountSelector)
+  // const dispatch = useDispatch()
   const handleToggleMic = () => {
     toggleMic()
     setMute(!mute)

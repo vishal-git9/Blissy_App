@@ -9,6 +9,7 @@ import { LabelWithIcon } from '../drawer/iconlabel';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from "react-native-vector-icons/Ionicons"
 import * as Animatable from "react-native-animatable"
+import { FlatList } from 'react-native';
 interface Props {
     visible: boolean;
     onClose: () => void;
@@ -72,53 +73,60 @@ const ProfileScreenModal: React.FC<Props> = ({ visible, onClose, userdata }) => 
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     columnGap: actuatedNormalize(10),
+                                    alignSelf: "center"
                                 }}>
                                 <Text style={styles.nameText}>{`${userdata?.name}`}</Text>
                                 <Icon
-                                    name={userData.gender === 'male' ? 'gender-male' : 'gender-female'}
+                                    name={userdata?.gender === 'male' ? 'gender-male' : 'gender-female'}
                                     size={22}
-                                    color={userData.gender === 'male' ? colors.skyBlue : colors.pink}
+                                    color={userdata?.gender === 'male' ? colors.skyBlue : colors.pink}
                                 />
                             </View>
                             <Text style={[styles.detailText, { marginTop: actuatedNormalize(10) }]}>Age: {userdata?.age.toString()}</Text>
-                            <Text style={[styles.detailText, { marginTop: actuatedNormalize(10) }]}>{`[${userData.mentalHealthIssues.join(",")}]`}</Text>
+                            <Text style={[styles.detailText, { marginTop: actuatedNormalize(10) }]}>{`${userdata?.mentalIssues.join(",")}`}</Text>
                         </View>
                     </View>
                     <View style={styles.userPerformaceContainer}>
                         <View style={styles.userPerformaceContainer2}>
                             <Text style={styles.title}>Total Calls</Text>
-                            <Text style={styles.number}>{userData.callStatus.totalCalls}</Text>
+                            <Text style={styles.number}>{userdata?.UserCallsInfoList.length}</Text>
                         </View>
                         <View style={styles.userPerformaceContainer2}>
                             <Text style={styles.title}>Successful Calls</Text>
-                            <Text style={styles.number}>{userData.callStatus.successfulCalls}</Text>
+                            <Text style={styles.number}>{userdata?.UserCallsInfoList.filter((el) => el.isSuccessful === true).length}</Text>
                         </View>
                         <View style={styles.userPerformaceContainer2}>
                             <Text style={styles.title}>Rating</Text>
                             <View style={{ flexDirection: "row", alignItems: "center" }}>
-                                <Text style={styles.number}>{userData.callStatus.rating}</Text>
+                                <Text style={styles.number}>{userdata?.UserRating[0]?.rating || 0}</Text>
                                 <Icon name='star' size={actuatedNormalize(20)} color={colors.yellow} />
                             </View>
                         </View>
                     </View>
                     <View style={styles.descContainer}>
                         <LabelWithIcon iconName="person" label={`${userdata?.name.split(" ")[0]} story`} />
-                        <Text style={styles.bioText}>{userData.bio}</Text>
+                        <Text style={styles.bioText}>{userdata?.bio || userData.bio}</Text>
                     </View>
                     <View style={styles.descContainer}>
                         <LabelWithIcon iconName="tennisball" label="Interest" />
                         <View style={styles.interestsContainer}>
-                            {userdata?.interest.map((el, _) => (
-                                <RenderInterestItem item={el} key={_} />
-                            ))}
+                        <FlatList data={userdata?.interest}
+                                renderItem={({ item }) => <RenderInterestItem item={item} />}
+                                keyExtractor={(item, index) => index.toString()}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                            />
                         </View>
                     </View>
                     <View style={styles.descContainer}>
                         <LabelWithIcon iconName="text" label={`Languages ${userdata?.name.split(" ")[0]} speak`} />
                         <View style={styles.interestsContainer}>
-                            {userdata?.language.map((el, _) => (
-                                <RenderInterestItem item={el} key={_} />
-                            ))}
+                        <FlatList data={userdata?.language}
+                                renderItem={({ item }) => <RenderInterestItem item={item} />}
+                                keyExtractor={(item, index) => index.toString()}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                            />
                         </View>
                     </View>
                 </View>

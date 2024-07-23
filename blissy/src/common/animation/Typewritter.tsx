@@ -1,6 +1,6 @@
 // Typewriter.tsx
 import React, { useEffect, useState } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, StyleProp, TextStyle } from 'react-native';
 import Animated, { Easing, useSharedValue, withTiming, withRepeat } from 'react-native-reanimated';
 import colors from '../../constants/colors';
 import { actuatedNormalize } from '../../constants/PixelScaling';
@@ -10,9 +10,10 @@ interface TypewriterProps {
   text: string;
   speed?: number;
   loop?: boolean;
+  customtextstyle?:StyleProp<TextStyle>;
 }
 
-const Typewriter: React.FC<TypewriterProps> = ({ text, speed = 100, loop = false }) => {
+const Typewriter: React.FC<TypewriterProps> = ({customtextstyle, text, speed = 100, loop = false }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [textIndex, setTextIndex] = useState(0);
   const opacity = useSharedValue(0);
@@ -34,7 +35,12 @@ const Typewriter: React.FC<TypewriterProps> = ({ text, speed = 100, loop = false
           setDisplayedText('');
         }, 1000);
       } else {
-        opacity.value = withTiming(1, { duration: 500, easing: Easing.ease });
+        opacity.value = withTiming(1, { duration: 500, easing: Easing.ease },(finished)=>{
+          // if(finished){
+          //   opacity.value = withTiming(0,{duration:500})
+          //   console.log("finished animating")
+          // }
+        });
       }
     }
 
@@ -43,7 +49,7 @@ const Typewriter: React.FC<TypewriterProps> = ({ text, speed = 100, loop = false
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>{displayedText}</Text>
+      <Text style={[styles.text,customtextstyle]}>{displayedText}</Text>
       {/* <Animated.View style={[styles.cursor, { opacity }]} /> */}
     </View>
   );
@@ -62,7 +68,7 @@ const styles = StyleSheet.create({
   cursor: {
     width: 10,
     height: 24,
-    backgroundColor: 'black',
+    backgroundColor: colors.white,
     marginLeft: 2,
   },
 });

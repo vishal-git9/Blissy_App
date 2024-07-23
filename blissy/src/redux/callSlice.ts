@@ -41,7 +41,8 @@ const CallSlice = createSlice({
         pushCalllist:(state, action: PayloadAction<Calls[]>)=>{
             state.Calls = action.payload
             state.missedCalls = action.payload.filter((el:Calls)=> el.isMissed)
-        }
+        },
+        resetCallState : ()=>initialState
         
     },
     extraReducers: (builder) => {
@@ -58,7 +59,7 @@ const CallSlice = createSlice({
     }
 });
 
-export const { pushCalllist} = CallSlice.actions;
+export const { pushCalllist,resetCallState} = CallSlice.actions;
 export const CallInfoSelector = (state: IRootState) => state.Calls
 // export const MissedCallInfoSelector = (state: IRootState) => state.Calls.missedCalls
 

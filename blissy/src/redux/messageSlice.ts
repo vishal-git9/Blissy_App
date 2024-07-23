@@ -100,7 +100,8 @@ const MessageSlice = createSlice({
     // },
     pushCurrentMessage:(state, action: PayloadAction<Message[]>)=>{
       state.newMessages = action.payload
-    }
+    },
+    resetMsgState : () => initialState
   },
   extraReducers: (builder) => {
     builder.addMatcher(ChatApi.endpoints.getNewMessage.matchFulfilled, (state, { payload }) => {
@@ -119,7 +120,7 @@ const MessageSlice = createSlice({
   }
 });
 
-export const { addMessage,resetMessages, setChatScreenActive, resetMessageCount, getActiveUserList,pushCurrentMessage,pushChatlist } = MessageSlice.actions;
+export const { addMessage,resetMessages, setChatScreenActive, resetMessageCount, getActiveUserList,pushCurrentMessage,pushChatlist,resetMsgState } = MessageSlice.actions;
 export const MessageSelector = (state: IRootState) => state.Message.messages
 export const chatListSelector = (state: IRootState) => state.Message.chatList
 export const ActiveUserSelector = (state: IRootState) => state.Message.ActiveUser
