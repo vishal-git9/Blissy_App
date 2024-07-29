@@ -31,6 +31,7 @@ import PullToRefresh from '../../common/refresh/pull';
 import { useGetallUserCoinsQuery,useClaimUsercoinsMutation, useGetallUserTotalCoinsQuery } from '../../api/rewardservice';
 import { CouponsSelector, setAllCoupons, setPrevCoins, setTotalCoins, } from '../../redux/rewardSlice';
 import { Snackbar } from 'react-native-paper';
+import { BlissyLoader } from '../../common/loader/blissy';
 
 
 const HEADER_MAX_HEIGHT = 240;
@@ -62,8 +63,8 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
   const scrollY = useSharedValue(0);
   const editing = useSharedValue(-30);
   const prevCoinsref = useRef<number>(totalCoins)
-  const { data, refetch, isSuccess } = useGetallUserCoinsQuery({});
-  const { data: totalCoinsData, refetch: refetchTotalCoins, isSuccess: isTotalCoinsSuccess } = useGetallUserTotalCoinsQuery({});
+  const { data, refetch, isSuccess, isFetching } = useGetallUserCoinsQuery({});
+  const { data: totalCoinsData, refetch: refetchTotalCoins, isSuccess: isTotalCoinsSuccess, isFetching:isFetchingTotalCoins } = useGetallUserTotalCoinsQuery({});
   const [claimUsercoins] = useClaimUsercoinsMutation();
   console.log(coupons, "coupons--->")
   console.log(totalCoinsData, "coupons--->")
@@ -165,6 +166,7 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
           speed={50}
         />
       </View>
+      {(isFetching || isFetchingTotalCoins) && <BlissyLoader/> }
       <View style={{flex: 1}}>
         <PullToRefresh
           handleOnscroll={handleOnScroll}

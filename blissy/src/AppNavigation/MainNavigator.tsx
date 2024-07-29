@@ -32,6 +32,7 @@ import Ionicons from "react-native-vector-icons/Ionicons"
 import CalllistData from '../container/Connection/callinfo';
 import { fonts } from '../constants/fonts';
 import { actuatedNormalize } from '../constants/PixelScaling';
+import withPermissions from '../hooks/permissionsHoc';
 // import { navigationRef } from '../utils/notificationService';
 
 const deepLinksConf = {
@@ -151,7 +152,7 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
           headerStyle: {
             backgroundColor: colors.transparent,
           },
-        }} component={ChatListScreen} />
+        }} component={withPermissions('chatList')(ChatListScreen)} />
         <Stack.Screen options={{
           headerShown: true,
           headerTitle: 'Calls',

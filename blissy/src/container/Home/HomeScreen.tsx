@@ -215,9 +215,10 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     try {
       const locationRes = await checkLocationPermission();
       const microphoneRes = await checkMicrophonePermission();
-      if (locationRes === 'granted' && microphoneRes === 'granted') {
+      const notifyRes = await checkNotificationPermission();
+      if (microphoneRes === 'granted' && notifyRes==='granted') {
         // Permission is granted
-        console.log(locationRes, microphoneRes, "permissions from home check if ")
+        console.log( microphoneRes, "permissions from home check if ")
         console.log("location permission granted");
       } else {
         // Handle other permission states accordingly
@@ -225,7 +226,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
         const response = await requestMultplePermissions();
         handlePermissions(response);
         console.log(response, "location permission not granted ");
-        console.log(locationRes, microphoneRes, "permissions from home check else")
+        console.log(microphoneRes, "permissions from home check else")
       }
     } catch (error) {
       console.error(error);
@@ -341,7 +342,8 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       if (res === "granted") {
         getFCMToken()
       } else {
-        console.log("permission denied")
+
+        console.log(res, "notification permission denied")
       }
     } else {
       const authStatus = await messaging().requestPermission();
@@ -622,7 +624,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
           </View>
         </View>
       )}
-      <PermissionDenied visible={permission} permissionType={permissionType} close={() => { Linking.openSettings(); setpermission(false); }} />
+      <PermissionDenied visible={permission} permissionType={permissionType} close={()=>setpermission(false)} onGo={() => { Linking.openSettings(); setpermission(false); }} />
     </View>
     </Appbackground>
     </>

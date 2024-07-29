@@ -6,23 +6,29 @@ import {fonts} from '../../constants/fonts';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import Feather from 'react-native-vector-icons/Feather';
 import { MICROPHONE_DENIED_MESSAGE, NOTIFICATIONS_DENIED_MESSAGE } from './permissionErrorMessages';
+import { PrimaryButton } from '../button/PrimaryButton';
+import { Vibration } from 'react-native';
 interface PermissionModalProps {
   visible: boolean;
   permissionType: string;
   close:()=>void;
+  onGo:()=>void;
 }
 
 const PermissionDenied: React.FC<PermissionModalProps> = ({
   visible,
   permissionType,
-  close
+  close,
+  onGo
 }) => {
   return (
     <Modal
       isVisible={visible}
       hasBackdrop={false}
+      // onBackdropPress={()=>{console.log("backdrop called")}}
       backdropColor="transparent"
       animationInTiming={500}
+      // style={{backgroundColor:colors.accent}}
       animationIn="slideInUp"
       animationOut="slideOutDown">
       <View style={styles.centeredView}>
@@ -44,9 +50,11 @@ const PermissionDenied: React.FC<PermissionModalProps> = ({
             <Text style={styles.description}>
               You can Allow it manually
             </Text>
+            <View style={{marginTop:actuatedNormalize(25), gap:actuatedNormalize(5)}}>
+
             <TouchableOpacity
-              style={[styles.button, styles.buttonDeny]}
-              onPress={close}>
+              style={[styles.button, styles.buttonAllow]}
+              onPress={onGo}>
               <Text style={styles.textStyle}>Go to Settings</Text>
               <Feather
               name={"settings"}
@@ -54,6 +62,17 @@ const PermissionDenied: React.FC<PermissionModalProps> = ({
               size={actuatedNormalize(20)}
             />
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonDeny]}
+              onPress={close}>
+              <Text style={styles.textStyle}>Dismiss</Text>
+              {/* <Feather
+              name={"settings"}
+              color={colors.white}
+              size={actuatedNormalize(20)}
+            /> */}
+            </TouchableOpacity>
+            </View>
         </View>
       </View>
     </Modal>
@@ -94,13 +113,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: actuatedNormalize(20),
     width: actuatedNormalize(250),
     borderWidth: actuatedNormalize(1.3),
-    borderColor: colors.lightGray,
+    borderColor: colors.white,
     gap:actuatedNormalize(10),
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonAllow: {
     backgroundColor: colors.primary, // This is a green color similar to the one in the image
+    borderWidth: actuatedNormalize(1.3),
+    borderColor: colors.white,
   },
   buttonDeny: {
     backgroundColor: colors.transparent, // This is a red color for the denial button
