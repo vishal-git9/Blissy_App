@@ -11,6 +11,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
 import colors from '../../constants/colors';
 import { Searchbar } from 'react-native-paper';
+import { fonts } from '../../constants/fonts';
 const { height: windowHeight } = Dimensions.get('window');
 
 interface SearchBarProps {
@@ -68,6 +69,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               value={querytext}
               iconColor={colors.white}
               placeholder={placeholder}
+              inputStyle={{fontFamily:fonts.NexaRegular}}
              selectionColor={colors.white}
             //   placeholderTextColor={colors.white}
               autoFocus={true}
@@ -79,6 +81,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <Searchbar
             value={querytext}
             iconColor={colors.white}
+            inputStyle={{fontFamily:fonts.NexaRegular}}
             selectionColor={colors.white}
             // placeholderTextColor={colors.white}
           onPressIn={openSearch}

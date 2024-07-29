@@ -200,6 +200,7 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
                 <CouponCard
                   key={item._id}
                   id={item._id}
+                  earnedAt = {item.createdAt}
                   name={item.coinName}
                   index={index}
                   scrollY={scrollY}

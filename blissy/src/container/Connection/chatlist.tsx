@@ -164,7 +164,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   // },[containerHeight]);
 
   useEffect(() => {
-    height.value = withTiming(isSearchActive ? 10 : 100, { duration: 500 }, (finished) => {
+    height.value = withTiming(isSearchActive ? 50 : 100, { duration: 500 }, (finished) => {
       if (finished) {
         // runOnJS(setHeightIncreased)(true);
       }
@@ -308,7 +308,8 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
 
     return () => {
-      socket?.off('notify_typing_state');
+      // socket?.off('notify_typing_state');
+      console.log("chatlist0ut-->")
     };
   }, [typingUser])
 
@@ -470,9 +471,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       {/* Icons can be added here */}
       {/* <SearchBar onSearch={handleSearchFriendsQuery} /> */}
       {
-        chatlistdata?.length > 0 ? (
-
-          !isSearchActive ? <PullToRefresh handleOnscroll={handleOnScroll} isScrollable={isScrollable} scrollRef={scrollRef} setIsScrollable={setIsScrollable} updatePanState={updatePanState} refreshing={false} onRefresh={RefreshNewMessages}>
+        <PullToRefresh handleOnscroll={handleOnScroll} isScrollable={isScrollable} scrollRef={scrollRef} setIsScrollable={setIsScrollable} updatePanState={updatePanState} refreshing={false} onRefresh={RefreshNewMessages}>
             {/* <ScrollView
               contentInsetAdjustmentBehavior="automatic"
               contentContainerStyle={{marginTop:isSearchActive ? actuatedNormalize(20) : actuatedNormalize(5)}} nestedScrollEnabled={true}>
@@ -488,7 +487,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
               onScroll={handleOnScroll}
               scrollEnabled={true}
               data={renderChatlistData()}
-              contentContainerStyle={{ minHeight: contentHeight, marginTop: isSearchActive ? actuatedNormalize(35) : actuatedNormalize(0) }}
+              contentContainerStyle={{ minHeight: contentHeight, marginTop: isSearchActive ? actuatedNormalize(10) : actuatedNormalize(0) }}
               onContentSizeChange={(w, h) => setContentHeight(h)}
               onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
               // onContentSizeChange={checkIfScrollable}
@@ -502,31 +501,10 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
             />
             {/* </Animated.View>
             </ScrollView> */}
-          </PullToRefresh> :
-            < Animated.FlatList
-              skipEnteringExitingAnimations
-              itemLayoutAnimation={transition}
-              ref={scrollRef}
-              scrollEventThrottle={16}
-              showsVerticalScrollIndicator={false}
-              nestedScrollEnabled={true}
-              onScroll={handleOnScroll}
-              scrollEnabled={true}
-              data={renderChatlistData()}
-              contentContainerStyle={{ minHeight: contentHeight, marginTop: isSearchActive ? actuatedNormalize(35) : actuatedNormalize(0) }}
-              onContentSizeChange={(w, h) => setContentHeight(h)}
-              onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
-              // onContentSizeChange={checkIfScrollable}
-              renderItem={({ item, index }) => <Chatrow activeUserList={activeUserList} animatedRowStyles={animatedRowStyles} handleRightActions={handleRightActions} index={index} item={item} navigation={navigation} scrollY={scrollY} typingUser={typingUser} user={user} />}
-              keyExtractor={(item, index) => item?._id}
-              ItemSeparatorComponent={() => (
-                <View style={[defaultStyles.separator, { marginLeft: 90 }]} />
-              )}
-              ListEmptyComponent={ActiveUsers.length === 0 ? <Empty head='Active Users' description='You have no active users' /> : BlockedUsers.length === 0 ? <Empty head='Blocked Users' description='You have no blocked users' /> : <Empty head='Search Users' description='User not found' />}
-            />
-        ) : (
-          <Empty head='Make Friends' description='You have no friends make new friends after every call' />
-        )
+          </PullToRefresh>  
+        //   : (
+        //   <Empty head='Make Friends' description='You have no friends make new friends after every call' />
+        // )
       }
 
       <Snackbar

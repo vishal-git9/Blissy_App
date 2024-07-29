@@ -13,10 +13,10 @@ import {
 import Animated, { SharedTransition, withSpring } from 'react-native-reanimated';
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"
 import { useDispatch, useSelector } from 'react-redux';
-import { GiftedChat, Bubble, InputToolbar, Send, SystemMessage, IMessage, Composer, Day } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble, InputToolbar, Send, SystemMessage, IMessage, Composer, Day, Time } from 'react-native-gifted-chat';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ActiveUserListSelector, chatListSelector, addMessage, pushChatlist, resetMessageCount, Message, ChatList, MessageSelector } from '../../redux/messageSlice';
+import { ActiveUserListSelector, chatListSelector, addMessage, pushChatlist, resetMessageCount, Message, ChatList, MessageSelector, UsertypingSelector, resettypingState } from '../../redux/messageSlice';
 import { AuthSelector } from '../../redux/uiSlice';
 import { useGetChatlistQuery, useSendMessageMutation, useMarkReadMessageMutation, useDeleteChatHistoryMutation } from '../../api/chatService';
 import generateRandomId from '../../utils/randomIdGenerator';
@@ -81,7 +81,6 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const [text, setText] = useState('');
   const [UserSocketId, SetUserSocketId] = useState<string | undefined>();
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   const TYPING_DELAY = 2000; // 2 seconds delay
 
 
@@ -109,7 +108,8 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
 
     socket?.on('notify_typing_state', data => {
 
-      if(data.userData._id === Chats?.chatPartner._id && data.typingState){
+      console.log(data,"typingstatedatainsidewindow------>")
+      if(data?.userData?._id === Chats?.chatPartner?._id && data?.typingState){
         setIsTyping(true);
       }else{
         setIsTyping(false);
@@ -134,13 +134,13 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     (message: Message, newChatlistdata: ChatList[]) => {
       try {
         const newChatlist: ChatList[] = newChatlistdata.map((chatItem) => {
-          const myMessage = message.receiverId === chatItem.chatPartner._id;
+          const myMessage = message?.receiverId === chatItem?.chatPartner?._id;
           if (myMessage) {
             return { ...chatItem, allMessages: [...chatItem.allMessages, message] };
           }
           return chatItem;
         });
-        const newMessage = { ...message, sender: 'them' };
+        // const newMessage = { ...message, sender: 'them' };
         const sortedMsg = findNewMessage(newChatlist)
         dispatch(pushChatlist(sortedMsg));
       } catch (error) {
@@ -171,11 +171,11 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           setInputText('');
           playSendMsgSound();
           await sendMsg(newMessage);
-          socket?.emit('privateMessageSendSuccessful', { messageId: newMessage.messageId, senderId: user?._id, receiverId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId, mysocketId: socket.id });
+          // socket?.emit('privateMessageSendSuccessful', { messageId: newMessage.messageId, senderId: user?._id, receiverId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId, mysocketId: socket.id });
           socket?.emit('private_typing_state', {
             socketId: UserSocketId,
             receiverId:Chats?.chatPartner._id,
-            userData: user,
+            userData: {_id:user?._id},
             typingState: false
           });
         } catch (error) {
@@ -194,8 +194,6 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     }
   };
 
-
-
   const handleTyping = useCallback((text: string) => {
     console.log(text, "text", istyping)
     if (!istyping) {
@@ -203,7 +201,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       const TypingUserData = {
         socketId: UserSocketId,
         receiverId:Chats?.chatPartner._id,
-        userData: user,
+        userData: {_id:user?._id},
         typingState: true
       }
 
@@ -221,7 +219,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       const TypingUserData = {
         socketId: UserSocketId,
         receiverId:Chats?.chatPartner._id,
-        userData: user,
+        userData: {_id:user?._id},
         typingState: false
       }
 
@@ -386,6 +384,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
 
   console.log(inputText, "inputText------>")
   console.log(UserSocketId, "UserSocketId------>")
+  console.log(istyping, "istyping------>")
 
 
 
@@ -426,7 +425,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
             socket?.emit('private_typing_state', {
               socketId: UserSocketId,
               receiverId:Chats?.chatPartner._id,
-              userData: user,
+              userData: {_id:user?._id},
               typingState: false
             });
             // socket?.emit('private_typing_state', { socketId: UserSocketId, typingState: false });
@@ -463,7 +462,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
               contentStyle={{backgroundColor:colors.dark}}
               anchor={<Ionicons name='ellipsis-vertical' onPress={handleMenuVisible} size={25} color={colors.white} />}>
 
-              <Menu.Item titleStyle={{color:colors.white,fontFamily:fonts.NexaRegular}} onPress={handleDeleteChatHistory} title="Delete Chat" />
+              <Menu.Item titleStyle={{color:colors.white,fontFamily:fonts.NexaRegular}} onPress={handleDeleteChatHistory} title="Delete Chat History" />
               {/* <Menu.Item onPress={() => { }} title="Item 2" /> */}
               {/* <Menu.Item onPress={() => { }} title="Item 3" /> */}
             </Menu>
@@ -487,7 +486,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
         messages={formattedMessages}
         onSend={sendMessage}
         text={inputText}
-        onInputTextChanged={handleTyping}
+        onInputTextChanged={(text)=>handleTyping(text)}
         user={{
           _id: user?._id || 1,
           avatar: user?.profilePic
@@ -509,14 +508,26 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
         }}
         textInputProps={styles.input}
 
+        renderDay={props=>(
+          <Day             {...props}
+          textStyle={{fontFamily:fonts.NexaRegular}}/>
+        )}
+
+        renderTime={props=>(
+          <Time              {...props}
+           timeTextStyle={{left:{fontFamily:fonts.NexaRegular},right:{fontFamily:fonts.NexaRegular}}}/>
+        )}
+
         renderBubble={props => (
           <View shouldRasterizeIOS renderToHardwareTextureAndroid> 
           <Bubble
             {...props}
             textStyle={{
-              left: { color: colors.white },
-              right: { color: colors.white },
+              left: { color: colors.white,fontFamily:fonts.NexaRegular },
+              right: { color: colors.white,fontFamily:fonts.NexaRegular },
+              
             }}
+            
             tickStyle={{ color: !props.currentMessage?.seen ? colors.white : colors.skyBlue }}
             wrapperStyle={{
               left: { backgroundColor: colors.dark, borderTopLeftRadius: 15 },
@@ -583,7 +594,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
         disableComposer={Chats?.isBlocked as boolean}
         renderInputToolbar={renderInputToolbar}
         renderChatFooter={() => <ReplyMessageBar clearReply={() => setReplyMessage(null)} message={replyMessage} />}
-        onLongPress={(context, message) => setReplyMessage(message)}
+        // onLongPress={(context, message) => setReplyMessage(message)}
         renderMessage={props => <ChatMessageBox {...props} setReplyOnSwipeOpen={setReplyMessage} updateRowRef={updateRowRef} />}
       />
 

@@ -7,18 +7,20 @@ import TalkNowButton from '../../common/button/Talknow';
 import Animated, { Extrapolate, FadeInUp, FadeOutLeft, FadeOutUp, SharedValue, SlideInLeft, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { defaultStyles } from '../../common/styles/defaultstyles';
 import { Image } from 'react-native';
+import { formatDateTime } from '../../utils/formatedateTime';
 
 const ITEM_SIZE =  120
 interface CouponCardProps {
   name: string;
   rewardPoints: number;
   id:string;
+  earnedAt:string;
   scrollY:SharedValue<number>;
   index:number;
   onPressClaim: (id:string,rewardAmount:number) => void;
 }
 
-const CouponCard: React.FC<CouponCardProps> = ({ name, rewardPoints, onPressClaim , id,index, scrollY}) => {
+const CouponCard: React.FC<CouponCardProps> = ({earnedAt, name, rewardPoints, onPressClaim , id,index, scrollY}) => {
     // const [swipeAnimation] = useState(new Animated.Value(0));
     // const [opacityAnimation] = useState(new Animated.Value(1));
 
@@ -48,7 +50,8 @@ const CouponCard: React.FC<CouponCardProps> = ({ name, rewardPoints, onPressClai
       <Image source={ require('./wallet.png') } style={styles.avatar} />
         <View style={styles.nameContainer}>
         <Text style={styles.name}>{name}</Text>
-        <Text style={styles.rewardPoints}>Reward Points: {rewardPoints}</Text>
+        <Text style={styles.rewardPoints}>{rewardPoints} points</Text>
+        <Text style={[{fontSize:10,color:colors.gray}]}>{formatDateTime(earnedAt,"Date_time")}</Text>
         </View>
         </View>
         <View style={styles.buttonContainer}>
@@ -101,7 +104,7 @@ const styles = StyleSheet.create({
   },
   rewardPoints: {
     fontSize: actuatedNormalize(16),
-    marginBottom: actuatedNormalize(15),
+    // marginBottom: actuatedNormalize(15),
     textAlign: 'center',
     fontFamily:fonts.NexaBold,
     color:colors.white
@@ -132,6 +135,7 @@ const styles = StyleSheet.create({
     // borderRightWidth:actuatedNormalize(2),
     // borderRightColor:colors.white,
     // backgroundColor:"red",
+    alignItems:"flex-start",
     rowGap:actuatedNormalize(5),
     // width:'65%',
     // borderStyle:'dashed',

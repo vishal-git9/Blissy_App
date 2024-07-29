@@ -5,23 +5,19 @@ import StarRating from 'react-native-star-rating'; // Assume this is the library
 import colors from '../../constants/colors';
 import { fonts } from '../../constants/fonts';
 import { actuatedNormalize } from '../../constants/PixelScaling';
+import { Review } from './review';
 
-export interface ReviewCardProps {
-  id: number;
-  userName: string;
-  userDesc: string;
-  rating: number; // Assuming rating is out of 5
-}
 
-const ReviewCard: React.FC<ReviewCardProps> = ({
-  userName,
-  userDesc,
+const ReviewCard: React.FC<Review> = ({
+  _id,
+  username,
+  review,
   rating,
 }) => {
   return (
     <View style={styles.cardContainer}>
-      <Text style={styles.userName}>{userName}</Text>
-      <Text style={styles.userDesc}>{userDesc}</Text>
+      <Text style={styles.userName}>{username}</Text>
+      <Text numberOfLines={2} style={styles.userDesc}>{review}</Text>
       <StarRating
         disabled={false}
         maxStars={5}

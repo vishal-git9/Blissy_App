@@ -15,7 +15,7 @@ import messaging from '@react-native-firebase/messaging';
 import OfferBadge from '../../common/badge';
 import * as Animatable from 'react-native-animatable';
 import { RoundedIconContainer } from '../../common/button/rounded';
-import AutoLoopCarousel, { reviewsArray } from '../../common/cards/review';
+import AutoLoopCarousel from '../../common/cards/review';
 import io from 'socket.io-client';
 import { ApiEndPoint } from '../../config';
 import { useDispatch, useSelector } from 'react-redux';
@@ -35,7 +35,7 @@ import { useAddFcmTokenMutation, useGetUserQuery, usePostUserDevieInfoMutation }
 import DeviceInfo from 'react-native-device-info';
 import { getDeviceUniqueId } from '../../utils/getDeviceUniqueId';
 import { playNotificationSound } from '../../common/sound/notification';
-import { useAddmyquotesMutation, useGetmyTodayquotesQuery } from '../../api/feedbackservice';
+import { useAddmyquotesMutation, useGetTenAppreviewQuery, useGetmyTodayquotesQuery } from '../../api/feedbackservice';
 import { Animated } from 'react-native';
 import { useGetmyCallInfoQuery } from '../../api/callService';
 import { BlissyLoader } from '../../common/loader/blissy';
@@ -80,15 +80,15 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const dispatch = useDispatch()
   const chatlistdata = useSelector(chatListSelector);
   const { todayquotes } = useSelector(AuthSelector)
-  const { refetch: refetchQuote, isLoading: isquotesLoading, isSuccess: isquotesSuccess, isError: isquotesError } = useGetmyTodayquotesQuery({})
-  const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery({})
-  const { refetch: refetchUser, isError: isErrorUser, isLoading: isLoadingUser, isSuccess: isSuccessUser } = useGetUserQuery()
+  const { refetch: refetchQuote, isFetching: isquotesLoading, isSuccess: isquotesSuccess, isError: isquotesError } = useGetmyTodayquotesQuery({})
+  const { refetch, isError, isFetching: isChatlistloading, isSuccess: ischatlistSuccess } = useGetChatlistQuery({})
+  const { refetch: refetchUser, isError: isErrorUser, isFetching: isLoadingUser, isSuccess: isSuccessUser } = useGetUserQuery()
   const [postDeviceinfo, { isError: isPostDeviceinfoError, isLoading: isPostDeviceinfoLoading, data: postDeviceinfoData }] = usePostUserDevieInfoMutation()
-  const { refetch:getCallinfo, isLoading:isCallinfoloading, isError:isCallinfoerror, isSuccess:isCallinfosuccess } = useGetmyCallInfoQuery({})
-
+  const { refetch: getCallinfo, isFetching: isCallinfoloading, isError: isCallinfoerror, isSuccess: isCallinfoloadingisCallinfosuccess } = useGetmyCallInfoQuery({})
+  const { refetch: refetchNewReviews, data: appreviewdata, isError: isAppreviewerror, isLoading: isAppreviewLoading } = useGetTenAppreviewQuery({})
   // const [postrandomequote, { }] = useAddmyquotesMutation()
 
-  const [postFcmToken, {isLoading:isPostfcmtokenLoading,isError:isPostfcmtokeError,isSuccess:isPostfcmtokeSuccess }] = useAddFcmTokenMutation()
+  const [postFcmToken, { isLoading: isPostfcmtokenLoading, isError: isPostfcmtokeError, isSuccess: isPostfcmtokeSuccess }] = useAddFcmTokenMutation()
   const [newChatMessages, setnewChatMessages] = useState<number>(0)
   // const {refetch:fetchNewMsg,isError:newMsgerr,isLoading:newMsgLoading,isSuccess:newMsgsuccess} = useGetNewMessageQuery({userId:user?._id})
   const [healerAnimate, sethealerAnimate] = useState(true);
@@ -174,7 +174,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       const ChatPartnerData = chatlistdata?.find((el) => el?.chatPartner?._id === Chatdata?.senderData?._id);
       const socketId = activeUserList?.find((el) => el?.userId?._id === Chatdata?.senderData?._id)?.socketId;
 
-      console.log(ChatPartnerData,"ChatPartnerData------>")
+      console.log(ChatPartnerData, "ChatPartnerData------>")
       if (!ChatPartnerData) {
 
         // navigation.navigate("ChatWindow", {
@@ -382,7 +382,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     return () => {
       eventEmitter.off('notificationReceived');
     };
-  }, [activeUserList?.length]);
+  }, [activeUserList]);
 
   useEffect(() => {
 
@@ -415,28 +415,32 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
     socket?.on("messageDelivered", (data) => {
       console.log(data, "Deliveredupdateddata------>")
-      dispatch(pushChatlist(data.chatList));
+      const sortedMsg = findNewMessage(data.chatList)
+      dispatch(pushChatlist(sortedMsg));
     })
 
     socket?.on("messageSeen", (data) => {
       console.log(data, "Seenupdateddata------>")
-      dispatch(pushChatlist(data.chatList));
+      const sortedMsg = findNewMessage(data.chatList)
+      dispatch(pushChatlist(sortedMsg));
     })
     return () => {
       socket?.off("privateMessageSuccessfulAdd")
       socket?.off("messageDelivered")
       socket?.off("messageSeen")
+      socket?.off('notify_typing_state');
     }
 
   }, [chatlistdata, socket]);
 
   useEffect(() => {
-   refetch().then((res) =>{
-    const sortedMsg = findNewMessage(res.data.chatList)
-    dispatch(pushChatlist(sortedMsg))
-   } ).catch((err) => console.log(err))
+    refetch().then((res) => {
+      const sortedMsg = findNewMessage(res.data.chatList)
+      dispatch(pushChatlist(sortedMsg))
+    }).catch((err) => console.log(err))
     refetchQuote()
     getCallinfo()
+    refetchNewReviews()
     // dispatch(resetMessages())
     socket.on("connect", () => {
       console.log("user connected------>", socket.id)
@@ -460,22 +464,22 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       dispatch(getActiveUserList(user))
       console.log(user, "activeUserList new-------->")
     })
-    socket.on('reconnect', function() {
+    socket.on('reconnect', function () {
       console.log('reconnect fired!');
-      socket.emit("reconnected",{userId:user?._id})
-  });
+      socket.emit("reconnected", { userId: user?._id })
+    });
 
-  socket.on('reconnect_attempt', () => {
-    console.log('Reconnecting...');
-  });
-  
-  socket.on('reconnect_error', (error) => {
-    console.log('Reconnection error:', error);
-  });
-  
-  socket.on('reconnect_failed', () => {
-    console.log('Reconnection failed');
-  })
+    socket.on('reconnect_attempt', () => {
+      console.log('Reconnecting...');
+    });
+
+    socket.on('reconnect_error', (error) => {
+      console.log('Reconnection error:', error);
+    });
+
+    socket.on('reconnect_failed', () => {
+      console.log('Reconnection failed');
+    })
     return () => {
       socket.off("initiateCall")
       socket.off('activeUserList')
@@ -495,7 +499,8 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     }
   }, []);
 
-  console.log(chatlistdata, "chatlistdata")
+  // console.log(chatlistdata, "chatlistdata")
+  console.log(appreviewdata, "appreviewdata------->")
   const getCardHeight = () => {
     const cardMarginBottom = actuatedNormalize(20);
     const cardPaddingHorizontal = actuatedNormalize(5);
@@ -506,126 +511,129 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     const textSizeMedium = actuatedNormalize(14);
     const textSizeSmall = actuatedNormalize(14);
     const additionalSpacing = 15; // Additional spacing for margin and padding between elements
-  
+
     // Calculate total height
-    const cardHeight = 
+    const cardHeight =
       cardMarginBottom +
-      cardPaddingHorizontal * 2 + 
-      avatarSize + 
-      detailsMarginLeft + 
-      rowSpacing * 3 + 
-      textSizeLarge + 
-      textSizeMedium + 
-      textSizeSmall * 2 + 
+      cardPaddingHorizontal * 2 +
+      avatarSize +
+      detailsMarginLeft +
+      rowSpacing * 3 +
+      textSizeLarge +
+      textSizeMedium +
+      textSizeSmall * 2 +
       additionalSpacing;
-  
+
     return cardHeight;
   };
   const ITEM_SIZE = getCardHeight() + 40
-  console.log(ITEM_SIZE,"ITEM_SIZE----->")
-  // console.log(isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading,"isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading")
+  console.log(ITEM_SIZE, "ITEM_SIZE----->")
+  console.log(isError, isCallinfoerror, isPostDeviceinfoError, isPostfcmtokeError, isErrorUser, "isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading")
   return (
     <>
-           {/* {(isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading) && <View style={styles.loaderContainer}> <BlissyLoader/></View> } */}
+      {(isCallinfoloading || isLoadingUser || isquotesLoading || isChatlistloading || isPostDeviceinfoLoading || isPostfcmtokenLoading) && <BlissyLoader />}
+      <Appbackground>
+        {/* // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}> */}
+        <View style={styles.container}>
+          <TopBar navigation={navigation} />
+          <ToggleButton value={value} setValue={setValue} />
+          {value === 'healers' ? (
+            <View style={styles.healerContainer}>
+              <OfferBadge />
+              <Animated.FlatList
+                onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+                data={data}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item, index }) => {
 
-   <Appbackground>
-    {/* // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}> */}
-    <View style={styles.container}>
-      <TopBar navigation={navigation} />
-      <ToggleButton value={value} setValue={setValue} />
-      {value === 'healers' ? (
-        <View style={styles.healerContainer}>
-          <OfferBadge />
-          <Animated.FlatList
-            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
-            data={data}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item, index }) => {
+                  const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)]
+                  const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)]
+                  const scale = scrollY.interpolate({
+                    inputRange,
+                    outputRange: [1, 1, 1, 0]
+                  })
+                  const opacity = scrollY.interpolate({
+                    inputRange: opacityInputRange,
+                    outputRange: [1, 1, 1, 0]
+                  })
+                  console.log("hey------>", scale, opacity)
 
-              const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)]
-              const opacityInputRange = [-1,0,ITEM_SIZE * index, ITEM_SIZE * (index + 1)]
-              const scale = scrollY.interpolate({
-                inputRange,
-                outputRange: [1, 1, 1, 0]
-              })
-              const opacity = scrollY.interpolate({
-                inputRange:opacityInputRange,
-                outputRange: [1, 1, 1, 0]
-              })
-              console.log("hey------>",scale,opacity)
+                  return (<Animated.View style={{ transform: [{ scale }], opacity: opacity }}>
+                    <ProfileCard shouldAnimate={healerAnimate} {...item} />
+                  </Animated.View>)
 
-              return (<Animated.View style={{transform:[{scale}],opacity:opacity}}>
-                <ProfileCard shouldAnimate={healerAnimate} {...item} />
-              </Animated.View>)
-
-            }}
-            keyExtractor={(item, index) => index.toString()}
-            onEndReached={loadMoreData} // Load more data when user reaches the end
-            onEndReachedThreshold={0.1} // Load more when 90% of the list is scrolled
-          />
-        </View>
-      ) : (
-        <View style={styles.peopleContainer}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-            {iconsLabel.map((item, id) => (
-              <Animatable.View
-                onAnimationEnd={() =>
-                  setTimeout(() => {
-                    setPeopleAnimate(false);
-                  }, 2000)
-                }
-                animation={PeopleAnimate ? 'bounceIn' : undefined}
-                key={item.id}
-                delay={id * 500}>
-                <RoundedIconContainer
-                  isBadge={true}
-                  badgeText={item.label === "chats" ? newChatMessages : item.label === "calls" ? 0 : 0}
-                  size={25}
-                  onpress={() => {
-                    navigation.navigate(item.navigate, { screenName: item.label })
-                    setnewChatMessages(0)
-                  }}
-                  label={item.label}
-                  iconName={item.iconName}
-                />
-              </Animatable.View>
-            ))}
-          </View>
-          <View
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              width: '90%',
-              alignSelf: 'center',
-              rowGap: actuatedNormalize(5)
-            }}>
-            <Text style={{ color: colors.white, textAlign: "center", fontFamily: fonts.NexaItalic }}>
-              {`'${todayquotes?.text}'`}
-            </Text>
-            <Text style={{ color: colors.white, textAlign: "center", fontFamily: fonts.NexaBold }}>
-              {todayquotes?.author}.
-            </Text>
-            {/* <TalkNowButton
+                }}
+                keyExtractor={(item, index) => index.toString()}
+                onEndReached={loadMoreData} // Load more data when user reaches the end
+                onEndReachedThreshold={0.1} // Load more when 90% of the list is scrolled
+              />
+            </View>
+          ) : (
+            <View style={styles.peopleContainer}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                {iconsLabel.map((item, id) => (
+                  <Animatable.View
+                    onAnimationEnd={() =>
+                      setTimeout(() => {
+                        setPeopleAnimate(false);
+                      }, 2000)
+                    }
+                    animation={PeopleAnimate ? 'bounceIn' : undefined}
+                    key={item.id}
+                    delay={id * 500}>
+                    <RoundedIconContainer
+                      isBadge={true}
+                      badgeText={item.label === "chats" ? newChatMessages : item.label === "calls" ? 0 : 0}
+                      size={25}
+                      onpress={() => {
+                        navigation.navigate(item.navigate, { screenName: item.label })
+                        setnewChatMessages(0)
+                      }}
+                      label={item.label}
+                      iconName={item.iconName}
+                    />
+                  </Animatable.View>
+                ))}
+              </View>
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  width: '90%',
+                  alignSelf: 'center',
+                  rowGap: actuatedNormalize(5)
+                }}>
+                <Text style={{ color: colors.white, textAlign: "center", fontFamily: fonts.NexaItalic }}>
+                  {`'${todayquotes?.text}'`}
+                </Text>
+                <Text style={{ color: colors.white, textAlign: "center", fontFamily: fonts.NexaBold }}>
+                  {todayquotes?.author}.
+                </Text>
+                {/* <TalkNowButton
               label="Connect Now"
               onPress={intiateRandomConnection}
             /> */}
-          </View>
-          <SwipeButtonComponent updateSwipeStatus={intiateRandomConnection} />
-          <Text style={styles.infoText}>Swipe to connect to random listener</Text>
-          <View
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              width: '90%',
-            }}>
-            <AutoLoopCarousel reviews={reviewsArray} />
-          </View>
+              </View>
+              <SwipeButtonComponent updateSwipeStatus={intiateRandomConnection} />
+              <Text style={styles.infoText}>Swipe to connect to random listener</Text>
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  width: '90%',
+                }}>
+                {appreviewdata?.length > 0 && <AutoLoopCarousel reviews={appreviewdata} />
+                }
+              </View>
+            </View>
+          )}
+          {/* <PermissionDenied visible={permission} permissionType={permissionType} close={() => { Linking.openSettings(); setpermission(false); }} /> */}
         </View>
-      )}
+    
       <PermissionDenied visible={permission} permissionType={permissionType} close={()=>setpermission(false)} onGo={() => { Linking.openSettings(); setpermission(false); }} />
-    </View>
+    {/* </View> */}
     </Appbackground>
     </>
   );

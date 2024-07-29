@@ -74,7 +74,7 @@ useEffect(()=>{
               fontSize: actuatedNormalize(20),
               fontFamily: fonts.NexaBold,
             }}>
-            {rating >= 1 && rating <=2.5
+            {rating >= 0 && rating <=2.5
               ? 'Bad'
               : rating >=3 && rating < 4
               ? 'Good'
@@ -130,7 +130,7 @@ useEffect(()=>{
           <IconButton
             IconProvider={MaterialIcons}
             iconame="chat"
-            label="Say Hi!"
+            label="Chat"
             iconcolor={colors.white}
             onpress={() => navigation.navigate('ChatWindow',{Chats:null,socketId:socketId || undefined,userDetails:user,senderUserId:user?._id || null})}
             size={18}
@@ -151,7 +151,7 @@ useEffect(()=>{
           />
                 
         </View>
-        <IconButton
+        {/* <IconButton
             IconProvider={MaterialIcons}
             iconame="report"
             label="Report"
@@ -161,7 +161,7 @@ useEffect(()=>{
             styles={styles.SecondaryButton}
             textSize={actuatedNormalize(18)}
             textcolor={colors.white}
-          />
+          /> */}
       </View>
     </>
   );

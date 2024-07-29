@@ -87,9 +87,6 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       handleCallEnded()
       // dispatch(resetMessages())
     })
-    return () => {
-      socket?.off("callEnded")
-    }
   }, [seconds])
 
   useEffect(() => {
@@ -213,9 +210,23 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     };
   }, []);
 
+  
+
   useEffect(() => {
     InCallManager.start({ media: 'audio' });
     InCallManager.setKeepScreenOn(true);
+    InCallManager.setForceSpeakerphoneOn(false)
+
+    // const checkisWired = async()=>{
+    //   const isWired = await InCallManager.getIsWiredHeadsetPluggedIn()
+
+    //   console.log(isWired.isWiredHeadsetPluggedIn,"checkisWiredHeadeset---------->")
+    //   if(isWired.isWiredHeadsetPluggedIn){
+    //    InCallManager.chooseAudioRoute('BLUETOOTH')
+    //   }else{
+    //   }
+    // }
+    // checkisWired()
     return () => {
       InCallManager.stop();
     };

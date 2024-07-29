@@ -208,8 +208,8 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
     if (state?.mentalIssues?.length < 1) {
       errors3.mentalIssues = 'please select at least one mental issues';
     }
-    if (state?.mentalIssues?.length > 4) {
-      errors3.mentalIssues = 'sorry! you can select up to 4 mental issues';
+    if (state?.mentalIssues?.length > 6) {
+      errors3.mentalIssues = 'you can select up to 6 mental issues';
     }
     return [errors, errors2, errors3, errors4,errors5,errors6];
   };
@@ -273,7 +273,7 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
           navigation.navigate('Drawer')
         }}
         title={`You're all set`}
-        description={userData ? "Your account has been updated now let's start healing" : "Your account set up is completed now let's start healing"}
+        description={UserData ? "Your account has been updated now let's start healing" : "Your account set up is completed now let's start healing"}
         visible={completeModal}
         lottieAnimationPath={require('../../../assets/animation/verified.json')}
         showLottie={true}

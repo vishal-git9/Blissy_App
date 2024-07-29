@@ -6,9 +6,15 @@
 <!-- If targeting Android 10 (API level 29) or above -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-<!-- For Android 12 (API level 31) and above -->
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH_SCAN" /> -->
-    <!-- <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> -->
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+
+    <!-- Needed only if your app makes the device discoverable to Bluetooth
+         devices. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+
+    <!-- Needed only if your app communicates with already-paired Bluetooth
+         devices. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE"/>

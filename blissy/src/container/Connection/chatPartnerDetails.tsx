@@ -80,7 +80,7 @@ const ChatPartnerDetails: React.FC<ChatPartnerProps> = ({ navigation, route }) =
           />
         </View>
         <Text style={styles.detailText}>Age: {chatPartner?.age.toString()}</Text>
-        <Text style={[styles.detailText, { marginTop: actuatedNormalize(10) }]}>{`[${chatPartner?.mentalIssues.join(",")}]`}</Text>
+        <Text style={[styles.detailText, { marginTop: actuatedNormalize(10) }]}>{`${chatPartner?.mentalIssues.join(",")}`}</Text>
       </Animated.View>
 
       <Animated.View entering={FadeInLeft.duration(700).easing(Easing.ease)} exiting={FadeOutDown.duration(1500).easing(Easing.ease)}  style={styles.userPerformaceContainer}>

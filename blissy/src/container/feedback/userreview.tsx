@@ -81,6 +81,7 @@ const UserreviewScreen: React.FC<UserreviewProps> = ({ navigation }) => {
     if (text.trim()) {
       const res = await postappreview({
         userId: user?._id,
+        username:user?.name,
         review: text,
         appId: user?._id,
         rating: rating,

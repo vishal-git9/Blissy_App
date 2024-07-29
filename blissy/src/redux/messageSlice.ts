@@ -48,18 +48,22 @@ interface MessageState {
   chatList: ChatList[];
   newMessages: Message[];
   BlockedUser:ChatList[];
+  count:number;
   ActiveUser:ChatList[];
+  Usertypingstate:{ userData: {_id:string}, typingState: boolean }[]
 }
 
 const initialState: MessageState = {
   messages: [],
   chatScreenActive: false,
   messageCount: 0,
+  count:0,
   activeUserList: [],
   chatList: [],
   newMessages: [],
   BlockedUser:[],
-  ActiveUser:[]
+  ActiveUser:[],
+  Usertypingstate:[]
 
 };
 
@@ -101,6 +105,12 @@ const MessageSlice = createSlice({
     pushCurrentMessage:(state, action: PayloadAction<Message[]>)=>{
       state.newMessages = action.payload
     },
+    addnewUsertyping:(state,action)=>{
+      state.Usertypingstate = action.payload
+    },
+    resettypingState:(state)=>{
+      state.Usertypingstate = []
+    },
     resetMsgState : () => initialState
   },
   extraReducers: (builder) => {
@@ -120,7 +130,7 @@ const MessageSlice = createSlice({
   }
 });
 
-export const { addMessage,resetMessages, setChatScreenActive, resetMessageCount, getActiveUserList,pushCurrentMessage,pushChatlist,resetMsgState } = MessageSlice.actions;
+export const { addMessage,resetMessages, setChatScreenActive, resetMessageCount, getActiveUserList,pushCurrentMessage,pushChatlist,resetMsgState,addnewUsertyping,resettypingState } = MessageSlice.actions;
 export const MessageSelector = (state: IRootState) => state.Message.messages
 export const chatListSelector = (state: IRootState) => state.Message.chatList
 export const ActiveUserSelector = (state: IRootState) => state.Message.ActiveUser
@@ -129,5 +139,6 @@ export const newMessagesSelector = (state: IRootState) => state.Message.newMessa
 export const chatScreenActiveSelector = (state: IRootState) => state.Message.chatScreenActive
 export const MessageCountSelector = (state: IRootState) => state.Message.messageCount
 export const ActiveUserListSelector = (state: IRootState) => state.Message
+export const UsertypingSelector = (state:IRootState)=>state.Message.Usertypingstate
 
 export default MessageSlice;

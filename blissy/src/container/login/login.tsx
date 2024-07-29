@@ -1,18 +1,14 @@
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useReducer, useRef, useState } from 'react';
-import { Keyboard, StyleSheet, View } from 'react-native';
+import { AppState, AppStateStatus, Keyboard, StyleSheet, View } from 'react-native';
 import { Action } from '../Registration/Registration';
 import MobileInput from '../../common/login/LoginInput';
 import OTPInput from '../../common/login/otpInput';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { NavigationStackProps } from '../Prelogin/onboarding';
 import { useGetOtpMutation, useVerifyOtpMutation } from '../../api/authService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthSelector, setNewlyInstalled, setSessionStatus, setUserState } from '../../redux/uiSlice';
 import { useGetUserQuery } from '../../api/userService';
-import { TextInput } from 'react-native-paper';
-import { Loader } from '../../common/loader/loader';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import HelloModal from '../../common/modals/middleScreen';
 
@@ -59,6 +55,8 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [invalidEmail, setEnvalidEmail] = useState<boolean>(false);
   const [welcomeModal, setwelcomeModal] = useState<{ visible: boolean, isNew: boolean }>({ visible: false, isNew: false });
   const timerRef = useRef<NodeJS.Timeout>();
+  const appState = useRef(AppState.currentState);
+  const backgroundTimeRef = useRef<number | null>(null);
   const [getOtp, { error, data, isLoading, reset: resetMobile }] = useGetOtpMutation();
   const { token, isAuthenticated, user, isRegisterd,isNewlyInstalled } = useSelector(AuthSelector)
   const { data: userData, isLoading: userLoading, refetch } = useGetUserQuery()
@@ -78,9 +76,7 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
           setIsOtpSent(true);
           SetotpAlreadySentCase(true)
         } else if (res.error?.data?.code === "GEN_800") {
-          if(!isNewlyInstalled){
             setAlreadyloggedinCase(true)
-          }
         }
         console.log(error)
       }
@@ -95,6 +91,7 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       console.log(res, "data of OTP")
       const isNewuser =  (await refetch()).data
       // fetch user details
+      // use   .unwrap()
       // console.log(isNewUser, "newUser from login---")
       clearInterval(timerRef.current);
       setModalState(false)
@@ -115,14 +112,11 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       console.log(verifyOtpErr, "error of otp")
     }
   };
-
   useEffect(() => {
-    // Start the timer when isOtpSent is true
     if (isOtpSent || resendOtp) {
       timerRef.current = setInterval(() => {
         setProgressDuration(prevDuration => {
           if (prevDuration === 0) {
-            // Stop the timer when duration reaches 0
             clearInterval(timerRef.current);
           }
           return prevDuration > 0 ? prevDuration - 1 : 0;
@@ -131,8 +125,32 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     } else {
       clearInterval(timerRef.current);
     }
-    return () => clearInterval(timerRef.current);
+    return () =>{
+      clearInterval(timerRef.current);
+      backgroundTimeRef.current = null
+    } 
   }, [isOtpSent, resendOtp]);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        if (backgroundTimeRef.current) {
+          const backgroundDuration = Date.now() - backgroundTimeRef.current;
+          setProgressDuration(prevDuration => prevDuration - Math.floor(backgroundDuration / 1000));
+          backgroundTimeRef.current = null;
+        }
+      } else if (nextAppState.match(/inactive|background/)) {
+        backgroundTimeRef.current = Date.now();
+      }
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (state.OTP.length === 4) {

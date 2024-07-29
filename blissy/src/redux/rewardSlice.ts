@@ -5,7 +5,7 @@ export interface Coupon{
     _id: string;
     coinName:string;
     coins:number;
-    earnedAt:string;
+    createdAt:string;
     userId:string;
 }
 

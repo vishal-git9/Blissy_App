@@ -80,10 +80,11 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
   );
 
   return (
-    <PullToRefresh handleOnscroll={handleOnScroll} isScrollable={isScrollable} scrollRef={scrollRef} setIsScrollable={setIsScrollable} updatePanState={updatePanState} refreshing={refreshing} onRefresh={handleRefresh}>
       <Animated.ScrollView           onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
  ref={scrollRef} onScroll={handleOnScroll} nestedScrollEnabled={true} showsVerticalScrollIndicator={false} style={styles.container}>
         {/* <RouteBackButton onPress={() => navigation.goBack()} /> */}
+        <PullToRefresh handleOnscroll={handleOnScroll} isScrollable={isScrollable} scrollRef={scrollRef} setIsScrollable={setIsScrollable} updatePanState={updatePanState} refreshing={refreshing} onRefresh={handleRefresh}>
+        <View style={{width:"100%"}}>
         <View style={styles.avatarContainer}>
           {/* <ShockwavePulseButton>
           <Image source={{uri: userData.profilePic}} width={actuatedNormalize(100)} style={styles.avatarStyles} height={actuatedNormalize(100)}/>
@@ -106,9 +107,8 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
             />
           </View>
           <Text style={styles.detailText}>Age: {user?.age.toString()}</Text>
-          <Text style={[styles.detailText, { marginTop: actuatedNormalize(10), textAlign: "center" }]}>{`${user?.mentalIssues?.join(",")}`}</Text>
+          <Text style={[styles.detailText, { marginTop: actuatedNormalize(10), textAlign: "center" }]}>{`${user?.mentalIssues?.join(", ")}`}</Text>
         </View>
-
         <View style={styles.userPerformaceContainer}>
           <View style={styles.userPerformaceContainer2}>
             <Text style={styles.title}>Total Calls</Text>
@@ -126,6 +126,11 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
             </View>
           </View>
         </View>
+        </View>
+        </PullToRefresh>
+
+
+        
         <View style={styles.infoContainer}>
 
           {/* details Container */}
@@ -188,7 +193,6 @@ const UserProfile: React.FC<NavigationStackProps> = ({ navigation }) => {
         </View>
         {/* Additional user info like language, coins, etc. can be added here */}
       </Animated.ScrollView>
-    </PullToRefresh>
   );
 };
 
@@ -275,6 +279,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     paddingBottom: 70,
+    // backgroundColor:"red",
+    paddingHorizontal:actuatedNormalize(20),
     width: "100%",
   },
   number: {

@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   StyleSheet,
   SafeAreaView,
   BackHandler,
+  AppStateStatus,
+  AppState,
 } from 'react-native';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -108,6 +110,8 @@ const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navi
   const [profileModal, setProfileModal] = useState<boolean>(false)
   const [errorSnackbar, setErrorSnackbar] = useState<boolean>(false)
   const isChatStateActive = useSelector(chatScreenActiveSelector)
+  const backgroundTimeRef = useRef<number | null>(null);
+  const appState = useRef(AppState.currentState);
   // const messageCount = useSelector(MessageCountSelector)
   // const dispatch = useDispatch()
   const handleToggleMic = () => {
@@ -164,6 +168,36 @@ const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navi
   }, [isChatStateActive]);
 
 
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        if (backgroundTimeRef.current) {
+          const backgroundDuration = Date.now() - backgroundTimeRef.current;
+          setSeconds(prevSeconds => prevSeconds + Math.floor(backgroundDuration / 1000));
+          backgroundTimeRef.current = null;
+        }
+      } else if (nextAppState.match(/inactive|background/)) {
+        backgroundTimeRef.current = Date.now();
+      }
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSeconds(prevSeconds => prevSeconds + 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
 
   console.log(otherUserMute, "otherusermate")
 
@@ -217,7 +251,7 @@ const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navi
             <Text style={styles.readReceiptsText}>View Profile</Text>
           </TouchableOpacity> */}
         </View>
-        <AnimatedCounter seconds={seconds} setSeconds={setSeconds} />
+        <AnimatedCounter seconds={seconds} />
       </View>
 
       {/* Action buttons */}

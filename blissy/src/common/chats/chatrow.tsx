@@ -23,7 +23,7 @@ interface ChatRowProps {
   index: number;
   user: UserInterface | null;
   animatedRowStyles:StyleProp<ViewStyle>;
-  typingUser: { userData: UserInterface, typingState: boolean }[] | undefined;
+  typingUser: { userData: {_id:string}, typingState: boolean }[] | undefined;
   activeUserList: ActiveUserList[];
   navigation: NativeStackNavigationProp<RootStackParamList>;
   scrollY:SharedValue<number>;

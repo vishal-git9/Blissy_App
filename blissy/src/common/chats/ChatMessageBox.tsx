@@ -105,18 +105,14 @@ const ChatMessageBox = ({ setReplyOnSwipeOpen, updateRowRef, ...props }: ChatMes
 
   return (
     <GestureHandlerRootView>
-      <Swipeable
+      {/* <Swipeable
         ref={updateRowRef}
         friction={2}
         rightThreshold={40}
         renderLeftActions={renderRightAction}
-        onSwipeableWillOpen={onSwipeOpenAction}>
-        {/* {
-          props.currentMessage?.isReply ? <CustomMessageText {...props} /> : <Message {...props} />
-
-        } */}
+        onSwipeableWillOpen={onSwipeOpenAction}> */}
         <Message {...props}/>
-      </Swipeable>
+      {/* </Swipeable> */}
     </GestureHandlerRootView>
   );
 };

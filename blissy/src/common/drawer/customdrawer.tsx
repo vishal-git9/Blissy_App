@@ -91,7 +91,7 @@ const CustomDrawer: React.FC<any> = props => {
               onPress={async () => {
                 setConfirmModal(false);
                 await deleteFcmToken({}) // delete the fcm token
-                await logoutUserSession({}) // logout user session
+                // await logoutUserSession({}) // logout user session
                 dispatch(AuthApi.util.resetApiState())
                 dispatch(UserApi.util.resetApiState())
                 dispatch(ChatApi.util.resetApiState())
@@ -103,7 +103,11 @@ const CustomDrawer: React.FC<any> = props => {
                 props.navigation.closeDrawer()
                 // props.navigation.popToTop()
                 // deleting fcm token from the backend for this user so that notification are disabled for this user
-                props.navigation.replace('Login');
+                // props.navigation.replace('Login');
+                props.navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                  })
                 // console.log('Yes');
               }}>
               <View style={{ justifyContent: 'center', alignItems: 'center' }}>

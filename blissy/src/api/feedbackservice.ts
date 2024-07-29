@@ -19,6 +19,13 @@ export const FeebackApi = API.injectEndpoints({
       }),
       keepUnusedDataFor: 0,
     }),
+    getTenAppreview: builder.query<any, any>({
+      query: () => ({
+        url: `/app-reviews/`,
+        method: 'GET',
+      }),
+      keepUnusedDataFor: 0,
+    }),
     postBugReports: builder.mutation<any, any>({
       query: (body) => ({
         url: `/bug-reports/`,
@@ -50,4 +57,4 @@ export const FeebackApi = API.injectEndpoints({
   })
 });
 
-export const {useGetAppreviewQuery,usePostAppreviewMutation,usePostBugReportsMutation,useGetmyBugReportsQuery,useGetmyTodayquotesQuery,useAddmyquotesMutation} = FeebackApi;
+export const {useGetAppreviewQuery,usePostAppreviewMutation,usePostBugReportsMutation,useGetmyBugReportsQuery,useGetmyTodayquotesQuery,useAddmyquotesMutation,useGetTenAppreviewQuery} = FeebackApi;
