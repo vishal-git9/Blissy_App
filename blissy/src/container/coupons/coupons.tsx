@@ -32,6 +32,7 @@ import { useGetallUserCoinsQuery,useClaimUsercoinsMutation, useGetallUserTotalCo
 import { CouponsSelector, setAllCoupons, setPrevCoins, setTotalCoins, } from '../../redux/rewardSlice';
 import { Snackbar } from 'react-native-paper';
 import { BlissyLoader } from '../../common/loader/blissy';
+import useBackHandler from '../../hooks/usebackhandler';
 
 
 const HEADER_MAX_HEIGHT = 240;
@@ -68,6 +69,12 @@ export const Coupons: React.FC<NavigationStackProps> = ({navigation}) => {
   const [claimUsercoins] = useClaimUsercoinsMutation();
   console.log(coupons, "coupons--->")
   console.log(totalCoinsData, "coupons--->")
+
+
+
+  // calling use backhandler
+  useBackHandler()
+
 
   useEffect(() => {
     if (isSuccess && data) {

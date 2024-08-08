@@ -102,6 +102,7 @@ export const AuthSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder.addMatcher(AuthApi.endpoints.verifyOtp.matchFulfilled, (state, { payload }) => {
+            console.log("Callinguserapi------->")
             const { token } = payload.data
             state.token = token
             state.isAuthenticated = true

@@ -18,7 +18,7 @@ export const MarkMessageDelivered = async (messageId: string) => {
   console.log(messageId,"messageId----->",AppState.currentState,token) // not receiving token in killed state of the app
 
     try {
-      const response = await axios.put(`${serverLocalUrl}chat/markRead`,{messageIds:[messageId],updateType:"isDelivered"}, {
+      const response = await axios.put(`${serverBaseUrl}chat/markRead`,{messageIds:[messageId],updateType:"isDelivered"}, {
         headers: {
           Authorization: `Bearer ${token}`
         }});

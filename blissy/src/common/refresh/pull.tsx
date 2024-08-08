@@ -25,6 +25,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { fonts } from '../../constants/fonts';
+import colors from '../../constants/colors';
 type ScrollRef = AnimatedRef<Animated.FlatList<any>> | AnimatedRef<Animated.ScrollView>;
 
 interface PullToRefreshProps {
@@ -159,7 +160,7 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({scrollRef,handleOnscroll,i
               <Animated.View style={pullDownIconSection}>
                 <Icon name="arrow-down-circle" color="white" size={35} />
               </Animated.View>
-              <Text style={{fontFamily:fonts.NexaRegular}}>Pull Down to Refresh</Text>
+              <Text style={{fontFamily:fonts.NexaRegular,color:colors.white}}>Pull Down to Refresh</Text>
             </Animated.View>
             {toggleLottie && (
               <Lottie

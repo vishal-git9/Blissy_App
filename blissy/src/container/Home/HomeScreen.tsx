@@ -28,20 +28,21 @@ import { SwipeButtonComponent } from '../../common/button/swipebutton';
 import { fonts } from '../../constants/fonts';
 import PermissionDenied from '../../common/permissions/permissiondenied';
 import { PermissionStatus } from 'react-native-permissions';
-import { useGetChatlistQuery, useMarkReadMessageMutation } from '../../api/chatService';
+import { useGetChatlistQuery, useLazyGetChatlistQuery, useMarkReadMessageMutation } from '../../api/chatService';
 import checkNotificationPermission from '../../common/permissions/checkNotificationPermission';
 import { eventEmitter } from '../../..';
 import { useAddFcmTokenMutation, useGetUserQuery, usePostUserDevieInfoMutation } from '../../api/userService';
 import DeviceInfo from 'react-native-device-info';
 import { getDeviceUniqueId } from '../../utils/getDeviceUniqueId';
 import { playNotificationSound } from '../../common/sound/notification';
-import { useAddmyquotesMutation, useGetTenAppreviewQuery, useGetmyTodayquotesQuery } from '../../api/feedbackservice';
+import { useAddmyquotesMutation, useGetTenAppreviewQuery,useLazyGetTenAppreviewQuery,useLazyGetAppreviewQuery,useLazyGetmyTodayquotesQuery, useGetmyTodayquotesQuery } from '../../api/feedbackservice';
 import { Animated } from 'react-native';
-import { useGetmyCallInfoQuery } from '../../api/callService';
+import { useGetmyCallInfoQuery, useLazyGetmyCallInfoQuery } from '../../api/callService';
 import { BlissyLoader } from '../../common/loader/blissy';
 import { Appbackground } from '../../common/animation/appbackground';
 import moment from 'moment';
 import { findNewMessage } from '../../utils/sortmessagebyData';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
@@ -80,12 +81,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const dispatch = useDispatch()
   const chatlistdata = useSelector(chatListSelector);
   const { todayquotes } = useSelector(AuthSelector)
-  const { refetch: refetchQuote, isFetching: isquotesLoading, isSuccess: isquotesSuccess, isError: isquotesError } = useGetmyTodayquotesQuery({})
-  const { refetch, isError, isFetching: isChatlistloading, isSuccess: ischatlistSuccess } = useGetChatlistQuery({})
+  const [refetch,{isError, isFetching: isChatlistloading,isSuccess:ischatlistsuccess  }] = useLazyGetChatlistQuery({})
+  const [ refetchQuote, {isFetching: isquotesLoading, isSuccess: isquotesSuccess, isError: isquotesError }] = useLazyGetmyTodayquotesQuery({})
   const { refetch: refetchUser, isError: isErrorUser, isFetching: isLoadingUser, isSuccess: isSuccessUser } = useGetUserQuery()
   const [postDeviceinfo, { isError: isPostDeviceinfoError, isLoading: isPostDeviceinfoLoading, data: postDeviceinfoData }] = usePostUserDevieInfoMutation()
-  const { refetch: getCallinfo, isFetching: isCallinfoloading, isError: isCallinfoerror, isSuccess: isCallinfoloadingisCallinfosuccess } = useGetmyCallInfoQuery({})
-  const { refetch: refetchNewReviews, data: appreviewdata, isError: isAppreviewerror, isLoading: isAppreviewLoading } = useGetTenAppreviewQuery({})
+  const [ getCallinfo, {isFetching: isCallinfoloading, isError: isCallinfoerror, isSuccess: isCallinfoloadingisCallinfosuccess }] = useLazyGetmyCallInfoQuery({})
+  const [refetchNewReviews,{ data: appreviewdata, isError: isAppreviewerror, isLoading: isAppreviewLoading }] = useLazyGetTenAppreviewQuery({})
   // const [postrandomequote, { }] = useAddmyquotesMutation()
 
   const [postFcmToken, { isLoading: isPostfcmtokenLoading, isError: isPostfcmtokeError, isSuccess: isPostfcmtokeSuccess }] = useAddFcmTokenMutation()
@@ -99,7 +100,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const otherUserScoketId = useRef<string | null>(null);
 
   const scrollY = useRef(new Animated.Value(0)).current
-  console.log(user, "user home screens")
   const socket = useMemo(
     () =>
       io(ApiEndPoint, {
@@ -115,7 +115,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       }),
     [user?._id],
   ); // Empty dependency array means this runs once on mount
-  console.log(socket.id)
   // Function to load more cards
   const loadMoreData = () => {
     setData(prevData => {
@@ -130,16 +129,13 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       const permissionResult: PermissionStatus = response[permissionKey];
       switch (permissionResult) {
         case 'granted':
-          console.log(`${permissionKey} permission granted.`);
           // Handle logic for granted permission
           // setpermission(false);
           break;
         case 'denied':
-          console.log(`${permissionKey} permission denied.`);
           // Handle logic for denied permission
           break;
         case 'blocked':
-          console.log(`${permissionKey} permission blocked.`);
           // showBlockedModal(permissionKey);
           setpermission(true)
           if (permissionKey === "android.permission.ACCESS_FINE_LOCATION") {
@@ -152,7 +148,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
           // Handle logic for blocked permission
           break;
         default:
-          console.log(`${permissionKey} permission unknown status.`);
           // Handle logic for unknown status
           break;
       }
@@ -161,7 +156,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
   const intiateRandomConnection = () => {
     navigation.navigate("AudioCallScreen", { user: user })
-    console.log("emitted the event for call")
     socket.emit('connectRandom')
   }
 
@@ -199,6 +193,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
   useEffect(() => {
 
+   
     // verifyMicroPhonePermissions()
     // verifyLocationPermissions()
     const backHandler = BackHandler.addEventListener(
@@ -237,7 +232,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     try {
       await messaging().registerDeviceForRemoteMessages();
       const token = await messaging().getToken();
-      console.log("I am here----->")
+      console.log("I am here----->",fcmToken,token)
       if (fcmToken && fcmToken === token) {
         console.log("OLD FCM_TOKEN FOUND", fcmToken)
       } else {
@@ -361,7 +356,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   useEffect(() => {
     const getInitialNotificationDetail = async () => {
       const getInitialNotification = await notifee.getInitialNotification()
-      console.log(getInitialNotification, "getInitialNotification------>")
       if (getInitialNotification) {
         // refetch().then((res) =>{
         //   dispatch(pushChatlist(res.data.chatList))
@@ -428,23 +422,17 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       socket?.off("privateMessageSuccessfulAdd")
       socket?.off("messageDelivered")
       socket?.off("messageSeen")
-      socket?.off('notify_typing_state');
     }
 
   }, [chatlistdata, socket]);
 
   useEffect(() => {
-    refetch().then((res) => {
-      const sortedMsg = findNewMessage(res.data.chatList)
-      dispatch(pushChatlist(sortedMsg))
-    }).catch((err) => console.log(err))
-    refetchQuote()
-    getCallinfo()
-    refetchNewReviews()
-    // dispatch(resetMessages())
+    refetch({},false)
+    refetchQuote({},false)
+    getCallinfo({},false)
+    refetchNewReviews({},false)
+    dispatch(resetMessages())
     socket.on("connect", () => {
-      console.log("user connected------>", socket.id)
-      console.log(socket, "sockeet state")
       socket.emit("getActiveUserList")
       dispatch(setSocket(socket))
       // fetchNewMsg().then((res)=>dispatch(pushCurrentMessage(res.data.chat))).catch((err)=>console.log(err))
@@ -480,6 +468,14 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     socket.on('reconnect_failed', () => {
       console.log('Reconnection failed');
     })
+
+    socket.on('disconnect', () => {
+      dispatch(resetMessageCount())
+      dispatch(resetMessages())
+      socket.emit("callEnded", otherUserScoketId.current)
+      console.log('user disconnected from socket');
+    })
+
     return () => {
       socket.off("initiateCall")
       socket.off('activeUserList')
@@ -488,19 +484,12 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       socket.off('reconnect_attempt');
       socket.off('reconnect_error');
       socket.off('reconnect_failed');
-      socket.on('disconnect', () => {
-        dispatch(resetMessageCount())
-        dispatch(resetMessages())
-        socket.emit("callEnded", otherUserScoketId.current)
-        console.log('user disconnected from socket');
-      })
-
+      socket.off("disconnect");
       console.log("user out of app")
     }
   }, []);
 
   // console.log(chatlistdata, "chatlistdata")
-  console.log(appreviewdata, "appreviewdata------->")
   const getCardHeight = () => {
     const cardMarginBottom = actuatedNormalize(20);
     const cardPaddingHorizontal = actuatedNormalize(5);
@@ -527,8 +516,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     return cardHeight;
   };
   const ITEM_SIZE = getCardHeight() + 40
-  console.log(ITEM_SIZE, "ITEM_SIZE----->")
-  console.log(isError, isCallinfoerror, isPostDeviceinfoError, isPostfcmtokeError, isErrorUser, "isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading")
+  // console.log(isError, isCallinfoerror, isPostDeviceinfoError, isPostfcmtokeError, isErrorUser, "isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading")
   return (
     <>
       {(isCallinfoloading || isLoadingUser || isquotesLoading || isChatlistloading || isPostDeviceinfoLoading || isPostfcmtokenLoading) && <BlissyLoader />}
@@ -556,7 +544,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
                     inputRange: opacityInputRange,
                     outputRange: [1, 1, 1, 0]
                   })
-                  console.log("hey------>", scale, opacity)
 
                   return (<Animated.View style={{ transform: [{ scale }], opacity: opacity }}>
                     <ProfileCard shouldAnimate={healerAnimate} {...item} />

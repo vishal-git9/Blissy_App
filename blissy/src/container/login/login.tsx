@@ -8,7 +8,7 @@ import { NavigationStackProps } from '../Prelogin/onboarding';
 import { useGetOtpMutation, useVerifyOtpMutation } from '../../api/authService';
 import { useDispatch, useSelector } from 'react-redux';
 import { AuthSelector, setNewlyInstalled, setSessionStatus, setUserState } from '../../redux/uiSlice';
-import { useGetUserQuery } from '../../api/userService';
+import { useGetUserQuery, useLazyGetUserQuery } from '../../api/userService';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import HelloModal from '../../common/modals/middleScreen';
 
@@ -59,14 +59,16 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const backgroundTimeRef = useRef<number | null>(null);
   const [getOtp, { error, data, isLoading, reset: resetMobile }] = useGetOtpMutation();
   const { token, isAuthenticated, user, isRegisterd,isNewlyInstalled } = useSelector(AuthSelector)
-  const { data: userData, isLoading: userLoading, refetch } = useGetUserQuery()
+  const [ refetchUser,{data: userData, isLoading: userLoading }]= useLazyGetUserQuery()
   const [OtpVerify, { error: verifyOtpErr, data: verifyOtpData, isLoading: verifyOtpLoading, reset }] = useVerifyOtpMutation()
 
   const reduxDispatch = useDispatch()
   // console.log(user, isNewUser, isRegisterd, "------user--------")
   const handleSubmitMobileNumber = async () => {
-    if (validateEmail(state.email)) {
-      const res = await getOtp({ email: `${state.email}` });
+    if (validateEmail(state?.email)) {
+      const loginEmail = state?.email?.toLowerCase()
+      console.log(loginEmail,"loginemail-------->")
+      const res = await getOtp({ email: `${loginEmail}` });
       console.log(res, "---res-----", error)
       if ('data' in res) {
         console.log(data, "data of MobileNumber")
@@ -86,10 +88,12 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   };
 
   const handleOtpSubmit = async () => {
-    const res = await OtpVerify({ email: `${state.email}`, otp: parseInt(state.OTP) });
+    const loginEmail = state?.email?.toLowerCase()
+
+    const res = await OtpVerify({ email: `${loginEmail}`, otp: parseInt(state.OTP) });
     if ('data' in res) {
       console.log(res, "data of OTP")
-      const isNewuser =  (await refetch()).data
+      const isNewuser =  (await refetchUser()).data
       // fetch user details
       // use   .unwrap()
       // console.log(isNewUser, "newUser from login---")
@@ -131,12 +135,19 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     } 
   }, [isOtpSent, resendOtp]);
 
+  console.log(progressDuration,"progress")
+
   useEffect(() => {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         if (backgroundTimeRef.current) {
           const backgroundDuration = Date.now() - backgroundTimeRef.current;
-          setProgressDuration(prevDuration => prevDuration - Math.floor(backgroundDuration / 1000));
+          const newProgressDuration = progressDuration - Math.floor(backgroundDuration / 1000);
+          
+          // Ensure the duration doesn't go below zero
+          if (progressDuration > 0) {
+            setProgressDuration(prevDuration => Math.max(prevDuration - Math.floor(backgroundDuration / 1000), 0));
+          }
           backgroundTimeRef.current = null;
         }
       } else if (nextAppState.match(/inactive|background/)) {
@@ -150,7 +161,7 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [progressDuration]);
 
   useEffect(() => {
     if (state.OTP.length === 4) {

@@ -23,10 +23,11 @@ const PermissionDenied: React.FC<PermissionModalProps> = ({
 }) => {
   return (
     <Modal
+
       isVisible={visible}
       hasBackdrop={false}
-      // onBackdropPress={()=>{console.log("backdrop called")}}
-      backdropColor="transparent"
+    //  onBackdropPress={close}
+      backdropColor={colors.transparent}
       animationInTiming={500}
       // style={{backgroundColor:colors.accent}}
       animationIn="slideInUp"

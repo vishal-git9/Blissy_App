@@ -14,6 +14,7 @@ export const Navigator:React.FC = () => {
    
     const {isNewUser,isAuthenticated} = useSelector(AuthSelector)
 
+    console.log(isNewUser,"isnewuser",isAuthenticated,"isauthenticated")
 
   return <MainNavigator isLoggedIn={isAuthenticated} isNewUser={isNewUser}/>
    

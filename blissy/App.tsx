@@ -24,6 +24,7 @@ import {
   MD3LightTheme as DefaultTheme,
   PaperProvider,
 } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const theme = {
@@ -82,6 +83,10 @@ const App: React.FC = () => {
     // const timer = setTimeout(() => {
     //   setHasSplash(false)
     // }, 4200);
+    AsyncStorage.getItem('persist:root').then((state) => {
+      console.clear()
+      console.log('Persisted State:', state);
+    });
     setupNotificationChannel()
     setupNotificationListener()
     // return ()=> clearTimeout(timer)
@@ -91,7 +96,7 @@ const App: React.FC = () => {
 
 
 
-  console.log(hasSplash, "---hassplash---")
+  console.log(store.getState(), "---hassplash---")
 
   return (
     <Provider store={store}>
@@ -105,7 +110,6 @@ const App: React.FC = () => {
                 backgroundColor={colors.black}
               />
               <PaperProvider theme={theme}>
-
                 <Navigator />
               </PaperProvider>
             </View>

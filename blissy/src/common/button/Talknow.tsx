@@ -15,7 +15,7 @@ const TalkNowButton:React.FC<{label:string,onPress:()=>void}> = ({label,onPress}
 const styles = StyleSheet.create({
   buttonContainer: {
     borderWidth: 2,
-    borderColor: '#00ff00', // Initial border color (green)
+    borderColor: colors.primary, // Initial border color (green)
     borderRadius: 10,
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 10,
     // Glowing effect
-    shadowColor: '#00ff00', // Green shadow color
+    shadowColor: colors.primary, // Green shadow color
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 10,

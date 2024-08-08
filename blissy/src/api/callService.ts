@@ -37,4 +37,4 @@ export const CallApi = API.injectEndpoints({
   })
 });
 
-export const {useUpdateCallInfoMutation,useGetmyCallInfoQuery,usePostCallInfoMutation,useDeleteSingleCallInfoMutation} = CallApi;
+export const {useUpdateCallInfoMutation,useGetmyCallInfoQuery,useLazyGetmyCallInfoQuery,usePostCallInfoMutation,useDeleteSingleCallInfoMutation} = CallApi;

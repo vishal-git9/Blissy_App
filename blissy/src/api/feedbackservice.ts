@@ -57,4 +57,4 @@ export const FeebackApi = API.injectEndpoints({
   })
 });
 
-export const {useGetAppreviewQuery,usePostAppreviewMutation,usePostBugReportsMutation,useGetmyBugReportsQuery,useGetmyTodayquotesQuery,useAddmyquotesMutation,useGetTenAppreviewQuery} = FeebackApi;
+export const {useGetAppreviewQuery,useLazyGetAppreviewQuery,usePostAppreviewMutation,usePostBugReportsMutation,useGetmyBugReportsQuery,useLazyGetTenAppreviewQuery,useLazyGetmyBugReportsQuery,useLazyGetmyTodayquotesQuery,useGetmyTodayquotesQuery,useAddmyquotesMutation,useGetTenAppreviewQuery} = FeebackApi;

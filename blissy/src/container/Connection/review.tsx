@@ -9,6 +9,7 @@ import colors from '../../constants/colors';
 import {actuatedNormalize} from '../../constants/PixelScaling';
 import * as Animatable from 'react-native-animatable';
 const ratingColors: {[key: number]: string} = {
+  0.5:colors.red,
   1: colors.red,
   1.5: colors.red,
   2: colors.red,
@@ -26,6 +27,7 @@ import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { RouteProp } from '@react-navigation/native';
 import { usePostUserRatingMutation } from '../../api/rewardservice';
 import generateRandomId from '../../utils/randomIdGenerator';
+import useBackHandler from '../../hooks/usebackhandler';
 
 interface ReviewScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -43,20 +45,30 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({navigation,route}) => {
     await postRating({appId:generateRandomId(24),userId:user?._id,rating})
     navigation.navigate("Drawer")
   }
-useEffect(()=>{
-  const backHandler = BackHandler.addEventListener(
-    'hardwareBackPress',
-    () => {
-      navigation.navigate("Drawer")
-      return true;
-    },
-  );
-  return () => backHandler.remove();
 
-},[])
+  const handleGoback = ()=>{
+    handleSubmitReview()
+    // navigation.navigate("Drawer")
+  }
+
+  useBackHandler(handleGoback)
+// useEffect(()=>{
+//   const backHandler = BackHandler.addEventListener(
+//     'hardwareBackPress',
+//     () => {
+//       navigation.navigate("Drawer")
+//       return true;
+//     },
+//   );
+//   return () => backHandler.remove();
+
+// },[])
   return (
     <>
-      <RouteBackButton onPress={() => navigation.pop(2)} />
+      <RouteBackButton onPress={() => {
+        handleSubmitReview()
+        // navigation.navigate("Drawer")
+      }} />
       <View style={styles.container}>
         {/* <View style={styles.headerContainer} >
         <Text style={styles.headerText}>Your Call has ended!</Text>

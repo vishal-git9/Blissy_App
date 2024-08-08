@@ -23,6 +23,7 @@ import {  MessageCountSelector, chatScreenActiveSelector } from '../../redux/mes
 import ProfileScreenModal from '../../common/modals/profile';
 import { Snackbar } from 'react-native-paper';
 import { RouteProp } from '@react-navigation/native';
+import useBackHandler from '../../hooks/usebackhandler';
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'Outgoing'>;
 
 interface CallingScreenProps {
@@ -69,6 +70,11 @@ const isChatStateActive = useSelector(chatScreenActiveSelector)
 const messageCount = useSelector(MessageCountSelector)
 // console.log(isChatStateActive)
 const dispatch = useDispatch()
+
+
+  // calling use backhandler
+  useBackHandler()
+
 
   // switch (userChannel) {
   //   case "Chat" :

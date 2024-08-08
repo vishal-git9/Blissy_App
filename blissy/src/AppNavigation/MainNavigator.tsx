@@ -191,7 +191,7 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="Userreview" component={UserreviewScreen} />
         <Stack.Screen name="Outgoing" component={OutgoingCallScreen} />
       </Stack.Navigator>
-      <GlobalBackHandler />
+      {/* <GlobalBackHandler /> */}
       <SessionError title='Session Expired!' description='Your session has expired please login again' />
       <ConnectionModal title='OFFLINE!' description='Please check your internet connection' onPressPrimaryButton={() => console.log("networkhi--->")} />
     </NavigationContainer>

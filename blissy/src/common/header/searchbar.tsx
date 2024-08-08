@@ -69,6 +69,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               value={querytext}
               iconColor={colors.white}
               placeholder={placeholder}
+              placeholderTextColor={colors.white}
               inputStyle={{fontFamily:fonts.NexaRegular}}
              selectionColor={colors.white}
             //   placeholderTextColor={colors.white}
@@ -80,6 +81,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         ) : (
           <Searchbar
             value={querytext}
+            placeholderTextColor={colors.white}
             iconColor={colors.white}
             inputStyle={{fontFamily:fonts.NexaRegular}}
             selectionColor={colors.white}

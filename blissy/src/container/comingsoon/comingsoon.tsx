@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack"
 import { RouteProp } from "@react-navigation/native"
 import colors from "../../constants/colors"
 import { fonts } from "../../constants/fonts"
+import useBackHandler from "../../hooks/usebackhandler"
 
 interface AppProps {
     navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -20,6 +21,9 @@ interface AppProps2 {
 }
 export const ComingSoon:React.FC<AppProps> = ({navigation,route}) => {
     const {screenName} = route.params
+
+  // calling use backhandler
+  useBackHandler()
     return (
         <View style={styles.container}>
             <RouteBackButton  onPress={()=>navigation.goBack()}/>

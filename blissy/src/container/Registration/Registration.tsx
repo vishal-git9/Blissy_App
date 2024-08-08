@@ -1,5 +1,5 @@
 import { RouteProp } from '@react-navigation/native';
-import { useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import { BackHandler, Dimensions, Text, View, useWindowDimensions } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { RouteBackButton, RouteBackButton2 } from '../../common/button/BackButton';
@@ -27,6 +27,7 @@ import SelectMentalissue from "../../common/forms/SelectMentalissue"
 import InputBio from "../../common/forms/InputBio"
 import Ionicons from "react-native-vector-icons/Ionicons"
 import { BlissyLoader } from '../../common/loader/blissy';
+import useBackHandler from '../../hooks/usebackhandler';
 const screenWidth = Dimensions.get('window').width;
 
 // export const reducerAction = (state, action) => {
@@ -149,6 +150,33 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
   }, [navigation, steps])
 
 
+  const handleBackhandler = useCallback(() => {
+
+    if (UserData) {
+      if (steps === 1) {
+        if (navigation.canGoBack()) {
+          navigation.goBack()
+        }
+      } else {
+        setSteps(steps => steps - 1)
+      }
+    } else {
+      if (steps > 1) {
+        console.log("Calling------->")
+        setSteps(steps => steps - 1)
+
+      } else {
+        return true
+      }
+    }
+  }, [steps])
+
+
+  useBackHandler(handleBackhandler)
+
+
+
+
   const handleUserName = () => {
     const errorPostion = error[steps - 1];
     console.log(errorPostion, 'error positon');
@@ -195,7 +223,7 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
     if (state?.interest?.length < 3) {
       errors2.interest = 'please select at least 3 Interest';
     }
-   
+
     if (state?.language?.length === 0) {
       errors5.language = 'please select at least one Language';
     }
@@ -211,12 +239,12 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
     if (state?.mentalIssues?.length > 6) {
       errors3.mentalIssues = 'you can select up to 6 mental issues';
     }
-    return [errors, errors2, errors3, errors4,errors5,errors6];
+    return [errors, errors2, errors3, errors4, errors5, errors6];
   };
 
   const validateStepsForm = () => {
     const errorPostion = error[steps - 1];
-    console.log(steps,"steps------->")
+    console.log(steps, "steps------->")
     console.log(errorPostion, 'error positon');
     setErrorMessage(Object.values(errorPostion)[0]);
     if (Object.keys(errorPostion).length !== 0) {
@@ -234,10 +262,10 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
     // ToastAndroid.show('Added Successfully !', ToastAndroid.SHORT);
   }, [state]);
 
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true)
-    return () => backHandler.remove()
-  }, [])
+  // useEffect(() => {
+  //   const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true)
+  //   return () => backHandler.remove()
+  // }, [])
 
   // console.log(state, '--registration state---');
   // console.log(isLoading, userLoading, "===loadingstate===")
@@ -248,7 +276,7 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
       scrollEnabled={true}>
       {steps !== 1 && (
         <RouteBackButton2 containerstyle={{
-          alignSelf:"flex-start",
+          alignSelf: "flex-start",
           // backgroundColor:"red",
         }} onPress={() => setSteps(steps => steps - 1)} />
       )}
@@ -364,13 +392,13 @@ export const Registration: React.FC<RegistrationInterface> = ({ navigation, rout
             theme={{
               colors: {
                 inverseOnSurface: colors.white,
-                 surface: colors.white
+                surface: colors.white
               },
-          }}
+            }}
             action={{
               label: 'Okay',
-              
-              labelStyle: { fontFamily: fonts.NexaBold,color:colors.white },
+
+              labelStyle: { fontFamily: fonts.NexaBold, color: colors.white },
               onPress: () => {
                 // Do something
                 setErrorSnackbar(false);

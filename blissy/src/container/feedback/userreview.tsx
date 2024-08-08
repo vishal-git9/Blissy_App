@@ -17,6 +17,7 @@ import { useGetAppreviewQuery, usePostAppreviewMutation } from '../../api/feedba
 import { useSelector } from 'react-redux';
 import { AuthSelector } from '../../redux/uiSlice';
 import { BlissyLoader } from '../../common/loader/blissy';
+import useBackHandler from '../../hooks/usebackhandler';
 
 
 const screenHeight = Dimensions.get('window').height;
@@ -56,6 +57,11 @@ const UserreviewScreen: React.FC<UserreviewProps> = ({ navigation }) => {
   const [myappreview, setmyappreview] = useState<IAppReview[]>([])
   const [postappreview, { isLoading, isError, isSuccess }] = usePostAppreviewMutation()
   const { refetch, isLoading: isappreviewloading, isError: isappreviewerror, isSuccess: isappreviewsuccess } = useGetAppreviewQuery({})
+
+
+  // calling use backhandler
+  useBackHandler()
+
   React.useLayoutEffect(() => {
     navigation.setOptions(({
       headerShown: true,

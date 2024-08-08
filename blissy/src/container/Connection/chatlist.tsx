@@ -42,7 +42,7 @@ import ChatItemSkeleton from '../../common/loader/skeleton';
 import { Empty } from '../../common/Empty/Empty';
 import moment from 'moment';
 import AppleStyleSwipeableRow from '../../common/animation/swipeable';
-import { useBlockUserMutation, useDeleteUserMutation, useGetChatlistQuery, useUnblockUserMutation } from '../../api/chatService';
+import { useBlockUserMutation, useDeleteUserMutation, useGetChatlistQuery, useLazyGetChatlistQuery, useUnblockUserMutation } from '../../api/chatService';
 import { BlissyLoader } from '../../common/loader/blissy';
 import PullToRefresh from '../../common/refresh/pull';
 import { SegmentedControl } from '../../common/tab/segmented';
@@ -51,6 +51,7 @@ import { defaultStyles } from '../../common/styles/defaultstyles';
 import SearchBar from '../../common/header/searchbar';
 import Chatrow from '../../common/chats/chatrow';
 import { findNewMessage } from '../../utils/sortmessagebyData';
+import useBackHandler from '../../hooks/usebackhandler';
 interface AlertMessage {
   show: boolean;
   message: string;
@@ -77,7 +78,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [contentHeight, setContentHeight] = useState(0);
 
   const [AlertMessage, setAlertMessage] = useState<AlertMessage>({ show: false, message: "" })
-  const { refetch, isError, isLoading, isSuccess } = useGetChatlistQuery({})
+  const [refetch,{ isError, isLoading, isSuccess }] = useLazyGetChatlistQuery()
   const [deleteUser, { isLoading: isdeleteloading, isError: isdeleteerror, isSuccess: isdeletesccuess }] = useDeleteUserMutation()
   const [typingUser, setTypingUser] = useState<{ userData: UserInterface, typingState: boolean }[]>([])
   const [blockUser, { isLoading: isblockloading, isError: isblockerror, isSuccess: isblocksccuess }] = useBlockUserMutation()
@@ -90,6 +91,11 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const ITEM_HEIGHT = 40; // Example item height
   const dispatch = useDispatch();
   const theme = useTheme()
+
+
+  // calling use backhandler
+  useBackHandler()
+
 
   const updatePanState = (offset: number) => {
     'worklet';
@@ -178,10 +184,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   });
 
   const RefreshNewMessages = async () => {
-    await refetch().then((res) => {
-      const sortedMsg = findNewMessage(res.data.chatList)
-      dispatch(pushChatlist(sortedMsg))
-    }).catch((err) => console.log(err)) // after getting refreshed chatlist
+    await refetch({},false) // after getting refreshed chatlist
     // findNewMessage() // sort by new messages
   }
 
@@ -209,12 +212,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       // make delete api call
       try {
         await deleteUser(item.chatPartner._id);
-        await refetch()
-          .then((res) => {
-            const sortedMsg = findNewMessage(res.data.chatList)
-            dispatch(pushChatlist(sortedMsg))
-          })
-          .catch((err) => console.log(err)); // after getting refreshed chatlist
+        await refetch({},false)
         setAlertMessage({ show: true, message: "User Deleted" });
       } catch (error) {
         console.log(error);
@@ -223,14 +221,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       // make block api call
       try {
         await blockUser(item.chatPartner._id);
-        await refetch()
-          .then((res) => {
-            const sortedMsg = findNewMessage(res.data.chatList)
-            dispatch(pushChatlist(sortedMsg))
-            // const filteredData = res.data.chatList.filter((el: ChatList) => el.isBlocked === false)
-            // setChatData(filteredData)
-          })
-          .catch((err) => console.log(err)); // after getting refreshed chatlist  
+        await refetch({},false)
         setAlertMessage({ show: true, message: "User Blocked" });
       } catch (error) {
         console.log(error);
@@ -239,14 +230,7 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       // make unblock api call
       try {
         await UnblockUser(item.chatPartner._id);
-        await refetch()
-          .then((res) => {
-            const sortedMsg = findNewMessage(res.data.chatList)
-            dispatch(pushChatlist(sortedMsg))            // const filteredData = res.data.chatList.filter((el: ChatList) => el.isBlocked === true)
-            // setChatData(filteredData)
-          })
-          .catch((err) => console.log(err)); // after getting refreshed chatlist
-
+        await refetch({},false)
         setAlertMessage({ show: true, message: "User Unblocked" });
         // const filteredData = chatlistdata.filter((el)=>el.isBlocked === true)
         // setChatData(filteredData)  
@@ -293,27 +277,22 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
 
 
-  // useEffect(() => {
-  //   const unsubscribe = navigation.addListener('focus', async () => {
-  //     findNewMessage();
-  //   });
-  //   return unsubscribe;
-  // }, [navigation, chatlistdata]);
-
   useEffect(() => {
-    socket?.on('notify_typing_state', data => {
-      console.log(data, "Dataof typing user")
-      handleTypingUserStates(data)
+    const unsubscribe = navigation.addListener('focus', async () => {
+      console.log("I am focussed----->")
+      socket?.on('notify_typing_state', data => {
+        console.log(data, "Dataof typing user")
+        handleTypingUserStates(data)
+      });
     });
+    return ()=> {
+      socket?.off("notify_typing_state")
+      unsubscribe()
+    }
+  }, [navigation]);
 
 
-    return () => {
-      // socket?.off('notify_typing_state');
-      console.log("chatlist0ut-->")
-    };
-  }, [typingUser])
-
-  console.log(typingUser, "typinguser------->")
+  // console.log(typingUser, "typinguser------->")
 
 
   // const AvatarWithBanIcon = ({ item }: { item: ChatList }) => (

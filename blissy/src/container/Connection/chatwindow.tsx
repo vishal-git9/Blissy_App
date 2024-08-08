@@ -17,8 +17,8 @@ import { GiftedChat, Bubble, InputToolbar, Send, SystemMessage, IMessage, Compos
 import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ActiveUserListSelector, chatListSelector, addMessage, pushChatlist, resetMessageCount, Message, ChatList, MessageSelector, UsertypingSelector, resettypingState } from '../../redux/messageSlice';
-import { AuthSelector } from '../../redux/uiSlice';
-import { useGetChatlistQuery, useSendMessageMutation, useMarkReadMessageMutation, useDeleteChatHistoryMutation } from '../../api/chatService';
+import { AuthSelector, UserInterface } from '../../redux/uiSlice';
+import { useGetChatlistQuery, useSendMessageMutation, useMarkReadMessageMutation, useDeleteChatHistoryMutation, useLazyGetChatlistQuery } from '../../api/chatService';
 import generateRandomId from '../../utils/randomIdGenerator';
 import { formatDateTime, getFormattedDate } from '../../utils/formatedateTime';
 import { playSendMsgSound } from '../../common/sound/notification';
@@ -40,6 +40,7 @@ import { Button, Divider, Menu } from 'react-native-paper';
 import { displayCallNotificationAndroid } from '../../common/call/incoming';
 import { BlissyLoader } from '../../common/loader/blissy';
 import { findNewMessage } from '../../utils/sortmessagebyData';
+import useBackHandler from '../../hooks/usebackhandler';
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ChatWindow'>;
 interface ProfileScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -72,7 +73,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const [sendMsg] = useSendMessageMutation();
   const [stickyHeaderDate, setStickyHeaderDate] = useState(null);
   const [istyping, setIsTyping] = useState<boolean>(false);
-  const { refetch } = useGetChatlistQuery(user?._id);
+  const [refetch,{ isError, isLoading, isSuccess }] = useLazyGetChatlistQuery()
   const [deleteChathistory, { isLoading: isDeleteChatloading, isError: isDeleteChatError, isSuccess: isDeleteChatSuccess }] = useDeleteChatHistoryMutation()
   const [replyMessage, setReplyMessage] = useState<IMessage | null>(null);
   const swipeableRowRef = useRef<Swipeable | null>(null);
@@ -83,6 +84,8 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const TYPING_DELAY = 2000; // 2 seconds delay
 
+  // calling use backhandler
+  useBackHandler()
 
   useEffect(() => {
     const socketId = Chats ? activeUserList?.find(el => el?.userId?._id === Chats?.chatPartner?._id) : activeUserList?.find(el => el?.userId?._id === senderUserId);
@@ -118,6 +121,8 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
 
     return () => {
       clearTimeout(timerRef.current);
+      console.log("user out of chatwindow------>")
+      socket?.off('notify_typing_state')
     };
   }, [chatlistdata, UserSocketId]);
 
@@ -130,25 +135,73 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   }, []);
 
 
+  // const addMyMessage = useCallback(
+  //   (message: Message, newChatlistdata: ChatList[]) => {
+  //     try {
+  //       const newChatlist: ChatList[] = newChatlistdata.map((chatItem) => {
+  //         const myMessage = message?.receiverId === chatItem?.chatPartner?._id;
+  //         if (myMessage) {
+  //           return { ...chatItem, allMessages: [...chatItem.allMessages, message] };
+  //         }
+  //         return chatItem;
+  //       });
+  //       // const newMessage = { ...message, sender: 'them' };
+  //       const sortedMsg = findNewMessage(newChatlist)
+  //       dispatch(pushChatlist(sortedMsg));
+  //     } catch (error) {
+  //       console.error('An error occurred---->', error);
+  //     }
+  //   },
+  //   [dispatch, chatlistdata]
+  // );
+
+
   const addMyMessage = useCallback(
     (message: Message, newChatlistdata: ChatList[]) => {
       try {
+        let isReceiverPresent = false;
+  
         const newChatlist: ChatList[] = newChatlistdata.map((chatItem) => {
-          const myMessage = message?.receiverId === chatItem?.chatPartner?._id;
-          if (myMessage) {
+          const isMyMessage = message?.receiverId === chatItem?.chatPartner?._id;
+          if (isMyMessage) {
+            isReceiverPresent = true;
             return { ...chatItem, allMessages: [...chatItem.allMessages, message] };
           }
           return chatItem;
         });
-        // const newMessage = { ...message, sender: 'them' };
-        const sortedMsg = findNewMessage(newChatlist)
+  
+        if (!isReceiverPresent) {
+          const newChatItem: ChatList = {
+            _id: generateRandomId(24),
+            chatPartner: {
+              ...userDetails as UserInterface
+             },
+            allMessages: [message],
+            allMessagesId: generateRandomId(24),
+            ChatHistorydeletedby: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            newMessages: [message], 
+            newMessagesId: generateRandomId(24), 
+            isBlocked: false,
+            isBlockedBy: [],
+            isDeleted: false,
+            socketId: UserSocketId,
+            userId: user?._id as string, 
+          };
+          newChatlist.push(newChatItem);
+        }
+  
+        // Process and sort the new chat list
+        const sortedMsg = findNewMessage(newChatlist);
         dispatch(pushChatlist(sortedMsg));
       } catch (error) {
         console.error('An error occurred---->', error);
       }
     },
-    [dispatch, chatlistdata?.length]
+    [dispatch, chatlistdata]
   );
+  
 
 
   const sendMessage = async () => {
@@ -171,13 +224,14 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
           setInputText('');
           playSendMsgSound();
           await sendMsg(newMessage);
+          console.log(UserSocketId,"insidepostmessage--------->")
           // socket?.emit('privateMessageSendSuccessful', { messageId: newMessage.messageId, senderId: user?._id, receiverId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId, mysocketId: socket.id });
-          socket?.emit('private_typing_state', {
-            socketId: UserSocketId,
-            receiverId:Chats?.chatPartner._id,
-            userData: {_id:user?._id},
-            typingState: false
-          });
+          // socket?.emit('private_typing_state', {
+          //   socketId: UserSocketId,
+          //   receiverId:Chats?.chatPartner._id,
+          //   userData: {_id:user?._id},
+          //   typingState: false
+          // });
         } catch (error) {
           console.log('Error while sending message', error);
         }
@@ -239,12 +293,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     if (newMessageIds.length > 0) {
       await markRead({ messageIds: newMessageIds, updateType: 'isRead' });
       // UserSocketId && socket?.emit('messageSeen', { userId: Chats?.chatPartner?._id || senderUserId, socketId: UserSocketId });
-      refetch()
-        .then(res => {
-          const sortedMsg = findNewMessage(res.data.chatList)
-          dispatch(pushChatlist(sortedMsg))      
-        })
-        .catch(err => console.log(err));
+      refetch({},false)
     }
   }, [dispatch, chatlistdata, UserSocketId]);
 
@@ -260,10 +309,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     console.log("chat history deleted-------->")
     setMenuVisible(false)
    await deleteChathistory(Chats?.newMessagesId)
-   await refetch().then((res) => {
-    const sortedMsg = findNewMessage(res.data.chatList)
-    dispatch(pushChatlist(sortedMsg))
-   }).catch((err) => console.log(err)) // after getting refreshed chatlist
+   await refetch({},false)
   }
 
 
@@ -335,14 +381,14 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
 
   const formattedMessages: IMessage[] = useMemo(() => {
     const MessageData = MessageChatlistData?.filter((el) => {
-      if (el.isDeletedBy && el.isDeletedBy?.length > 0) {
-        el.isDeletedBy[0] !== user?._id || el.isDeletedBy[1] !== user._id
+      if (el.isDeletedBy && el.isDeletedBy.length > 0) {
+        return !el.isDeletedBy.includes(user?._id as string);
       } else {
-        return el
+        return true; // Include messages that do not have isDeletedBy field or isDeletedBy is empty
       }
-    })
+    });
 
-    console.log(MessageData, "MessageData------>")
+    // console.log(MessageChatlistData, "MessageChatlistData------>")
     if (!MessageData || !MessageData.length) return []; // Early return if MessageData is empty
 
     // console.log(MessageData, "MessageData----->")
@@ -382,15 +428,17 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     console.log('Calling...');
   };
 
-  console.log(inputText, "inputText------>")
+  // console.log(inputText, "inputText------>")
   console.log(UserSocketId, "UserSocketId------>")
-  console.log(istyping, "istyping------>")
+  // console.log(istyping, "istyping------>")
 
+  // console.log(chatlistdata, "MessageChatlistData------>")
 
 
   const renderInputToolbar = (props: any) => (
     <InputToolbar
       {...props}
+      renderComposer={props => <Composer {...props} textInputStyle={{color:colors.white,fontFamily:fonts.NexaRegular}} placeholderTextColor={colors.white}/>}
       // renderComposer={() => <Composer
       //   multiline={true}
       //   composerHeight={actuatedNormalize(50)}
@@ -422,12 +470,12 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
       <View style={styles.header}>
         <RouteBackButton2
           onPress={() => {
-            socket?.emit('private_typing_state', {
-              socketId: UserSocketId,
-              receiverId:Chats?.chatPartner._id,
-              userData: {_id:user?._id},
-              typingState: false
-            });
+            // socket?.emit('private_typing_state', {
+            //   socketId: UserSocketId,
+            //   receiverId:Chats?.chatPartner._id,
+            //   userData: {_id:user?._id},
+            //   typingState: false
+            // });
             // socket?.emit('private_typing_state', { socketId: UserSocketId, typingState: false });
             navigation.goBack();
           }}

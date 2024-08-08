@@ -6,12 +6,14 @@ import {API} from './Api';
 
 
 export const UserApi = API.injectEndpoints({
+  // overrideExisting:true,
   endpoints: builder => ({
     getUser: builder.query<any, void>({
       query: () => ({
         url: 'user/get-user',
         method: 'GET',
       }),
+    
       keepUnusedDataFor: 0,
     }),
     postUser: builder.mutation<any, Partial<UserState>>({
@@ -44,4 +46,4 @@ export const UserApi = API.injectEndpoints({
   }),
 });
 
-export const {useGetUserQuery,usePostUserMutation,usePostUserDevieInfoMutation,useDeleteFcmTokenMutation,useAddFcmTokenMutation} = UserApi;
+export const {useGetUserQuery,useLazyGetUserQuery,usePostUserMutation,usePostUserDevieInfoMutation,useDeleteFcmTokenMutation,useAddFcmTokenMutation} = UserApi;

@@ -93,4 +93,4 @@ export const ChatApi = API.injectEndpoints({
   
 });
 
-export const {useGetChatlistQuery,useSendMessageMutation,useGetNewMessageQuery,useAddNewUserToListMutation,useGetChatwindowListQuery,useMarkReadMessageMutation,useDeleteChatHistoryMutation,useBlockUserMutation,useDeleteUserMutation,useUnblockUserMutation} = ChatApi;
+export const {useGetChatlistQuery,useLazyGetChatlistQuery,useSendMessageMutation,useGetNewMessageQuery,useAddNewUserToListMutation,useGetChatwindowListQuery,useMarkReadMessageMutation,useDeleteChatHistoryMutation,useBlockUserMutation,useDeleteUserMutation,useUnblockUserMutation} = ChatApi;

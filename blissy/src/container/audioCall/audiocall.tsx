@@ -18,7 +18,7 @@ import colors from '../../constants/colors';
 import { View } from 'react-native';
 import { SCREEN_HEIGHT, SCREEN_WIDTH, actuatedNormalize } from '../../constants/PixelScaling';
 import AutoScrollCarousel from '../../common/cards/autoScrollCarousel';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import AnimatedBorderButton from '../../common/button/borderButton';
 import CircularImageReveal from '../../common/cards/waitingUser';
 import { fonts } from '../../constants/fonts';
@@ -48,6 +48,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   const dispatch = useDispatch()
   const [type, setType] = useState<string>('LOADING');
   const { user } = route.params
+  const callingScreenRef = useRef<{ stopTimer: () => void } | null>(null);
   // const [callerId] = useState<string>(
   //   Math.floor(100000 + Math.random() * 900000).toString(),
   // );
@@ -79,15 +80,24 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
 
   useEffect(() => {
     const handleCallEnded = () => {
+      if (callingScreenRef.current) {
+        callingScreenRef.current.stopTimer();
+      } 
+      peerConnection.current.close();
+      setLocalStream(null);
+      setRemoteStream(null);
+      otherUserScoketId.current = null;
+      InCallManager.stop();
       navigation.navigate("ReviewScreen", { user: otherUserData.current, socketId: otherUserScoketId.current });
       postCallInfotoDB();
-      // dispatch(resetMessages());
     };
-    socket?.on("callEnded", () => {
-      handleCallEnded()
-      // dispatch(resetMessages())
-    })
-  }, [seconds])
+
+    socket?.on("callEnded", handleCallEnded);
+
+    return () => {
+      socket?.off("callEnded", handleCallEnded);
+    };
+  }, [socket, seconds]);
 
   useEffect(() => {
 
@@ -200,7 +210,6 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
 
     return () => {
       console.log("removed from screen audiocall")
-
       socket?.off('newCall');
       socket?.off('callAnswered');
       socket?.off('ICEcandidate');
@@ -210,7 +219,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     };
   }, []);
 
-  
+
 
   useEffect(() => {
     InCallManager.start({ media: 'audio' });
@@ -231,6 +240,40 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       InCallManager.stop();
     };
   }, []);
+
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     return () => {
+  //       console.log("Cleanup on screen focus lost");
+  //       // Stop the timer
+  //       // setSeconds(0);
+  //       if (callingScreenRef.current) {
+  //         callingScreenRef.current.stopTimer();
+  //       } 
+  //       // Clean up peer connection
+  //       peerConnection.current.close();
+  //       setLocalStream(null);
+  //       setRemoteStream(null);
+  //       otherUserScoketId.current = null;
+
+  //       // Stop InCallManager
+  //       InCallManager.stop();
+
+  //       // Reset messages in Redux store
+  //       // dispatch(resetMessages());
+
+  //       // Close the socket connections
+  //       // socket?.emit("callEnded", otherUserScoketId.current);
+  //       socket?.off('newCall');
+  //       socket?.off('callAnswered');
+  //       socket?.off('ICEcandidate');
+  //       socket?.off("callEnded");
+  //       socket?.off("initiateCall")
+  //       socket?.off("callCancelled")
+  //     };
+  //   }, [socket])
+  // );
+
 
   function sendICEcandidate(data: {
     calleeId: string;
@@ -381,6 +424,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
     case 'AUDIO_ROOM':
       return (
         <CallingScreen
+          ref={callingScreenRef}
           socket={socket!}
           seconds={seconds}
           setSeconds={setSeconds}

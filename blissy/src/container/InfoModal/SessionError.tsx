@@ -9,12 +9,13 @@ import { PrimaryButton } from "../../common/button/PrimaryButton";
 import { fonts } from "../../constants/fonts";
 import { useDispatch, useSelector } from "react-redux";
 import { AuthSelector, logoutUser, setSessionStatus } from "../../redux/uiSlice";
-import { UserApi, useGetUserQuery } from "../../api/userService";
+import { UserApi, useGetUserQuery, useLazyGetUserQuery } from "../../api/userService";
 import { AuthApi, useLogoutUserSessionMutation } from "../../api/authService";
 import { ChatApi } from "../../api/chatService";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { navigate } from "../../utils/RootNavigation";
 import { RootStackParamList } from "../../AppNavigation/navigatorType";
+import { chatListSelector } from "../../redux/messageSlice";
 
 interface SessionError {
     title: string;
@@ -23,17 +24,17 @@ interface SessionError {
 }
 
 export const SessionError: React.FC<SessionError> = ({ title, description }) => {
-    const {token, isRegisterd, user, isNewUser, sessionStatus } = useSelector(AuthSelector)
+    const {user, fcmToken, isAuthenticated,token, isRegisterd, isNewUser, sessionStatus } = useSelector(AuthSelector)
     const [modalVisible, setModalVisible] = useState(false)
     const [logoutUserSession,{}] = useLogoutUserSessionMutation()
     const navigation = useNavigation<NavigationProp<RootStackParamList>>()
-    const { data: userData, isLoading, refetch } = useGetUserQuery()
+    const [ refetchUser,{data: userData, isLoading: userLoading }]= useLazyGetUserQuery()
     const dispatch = useDispatch()
-    console.log(isNewUser, "----user----", sessionStatus)
+    console.log(isNewUser, "----user----", sessionStatus,user)
     useEffect(() => {
         if (token) {
             console.log("hi from-----")
-            refetch().then(res => {
+            refetchUser().then(res => {
                 if (res.isError) {
                     setModalVisible(true)
                     dispatch(setSessionStatus(true))

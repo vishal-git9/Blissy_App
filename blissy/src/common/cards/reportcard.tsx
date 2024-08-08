@@ -19,10 +19,10 @@ const ReportCard: React.FC<ReportCardProps> = ({ reportName, status, resolvedTim
         <Text style={styles.reportName} numberOfLines={2}>{reportName}</Text>
         <ProgressBar
           progress={status === 'resolved' ? 1 : 0.5}
-          color={status === 'resolved' ? colors.green : colors.yellow}
+          color={status === 'resolved' ? colors.primary : colors.yellow}
           style={styles.progressBar}
         />
-        <Text style={[styles.status, { color: status === 'resolved' ? colors.green : colors.yellow }]}>
+        <Text style={[styles.status, { color: status === 'resolved' ? colors.primary : colors.yellow }]}>
           {status === 'resolved' ? 'Resolved' : 'Pending'}
         </Text>
         {status === 'resolved' && resolvedTime && (
@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
   reportName: {
     fontSize: 18,
     fontFamily:fonts.NexaBold,
+    color:colors.white,
     marginBottom: actuatedNormalize(10),
   },
   progressBar: {

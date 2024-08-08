@@ -18,6 +18,9 @@ import { useSelector } from 'react-redux';
 import { AuthSelector } from '../../redux/uiSlice';
 import { BlissyLoader } from '../../common/loader/blissy';
 import { Empty } from '../../common/Empty/Empty';
+import useBackHandler from '../../hooks/usebackhandler';
+import PullToRefresh from '../../common/refresh/pull';
+import Animated, { runOnJS, useAnimatedRef, useAnimatedScrollHandler } from 'react-native-reanimated';
 
 interface BugreportProps {
     navigation: DrawerNavigationProp<RootStackParamList>;
@@ -31,8 +34,20 @@ const BugReportScreen: React.FC<BugreportProps> = (props) => {
     const [text, setText] = useState<string>('');
     const [postbug, { isLoading, isError, isSuccess }] = usePostBugReportsMutation()
     const [isreportAdded, setisreportAdded] = useState(false)
+    const [isScrollable, setIsScrollable] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    const [view, setView] = useState<'create' | 'view'>('create');
+    const [reportName, setReportName] = useState<string>('');
+    const [reports, setReports] = useState<Array<{ name: string; status: 'pending' | 'resolved'; updatedAt?: string }>>([]);
     const { refetch, isLoading: isgetreportloading, isError: isgetreporterror } = useGetmyBugReportsQuery({})
+    const scrollRef = useAnimatedRef<Animated.ScrollView>();
+
     const { user } = useSelector(AuthSelector)
+
+
+  // calling use backhandler
+  useBackHandler()
+  
     React.useLayoutEffect(() => {
         props.navigation.setOptions(({
             headerShown: true,
@@ -57,9 +72,6 @@ const BugReportScreen: React.FC<BugreportProps> = (props) => {
         console.log('Button Pressed with Text:', text);
         // Add your desired action here
     };
-    const [view, setView] = useState<'create' | 'view'>('create');
-    const [reportName, setReportName] = useState<string>('');
-    const [reports, setReports] = useState<Array<{ name: string; status: 'pending' | 'resolved'; updatedAt?: string }>>([]);
 
     const handleCreateReport = async () => {
         setReportName("")
@@ -84,6 +96,34 @@ const BugReportScreen: React.FC<BugreportProps> = (props) => {
             // setReportName('');
             // setView('view');
         }
+    };
+
+
+  
+    const updatePanState = (offset: number) => {
+      'worklet';
+      if (offset > 0) {
+        runOnJS(setIsScrollable)(true);
+      } else {
+        runOnJS(setIsScrollable)(false);
+      }
+    };
+  
+    const handleOnScroll = useAnimatedScrollHandler({
+      onScroll({ contentOffset }) {
+        console.log(contentOffset.y, "contentOffset.y----->")
+        updatePanState(contentOffset.y);
+        // scrollY.value = contentOffset.y;
+      },
+    });
+  
+    const handleRefresh = async () => {
+      setRefreshing(true);
+      // Simulate a network request
+      await refetch().then((res) => setReports(res.data)).catch((err) => console.log(err))
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 2000);
     };
 
 
@@ -115,6 +155,7 @@ const BugReportScreen: React.FC<BugreportProps> = (props) => {
                             style={styles.textarea}
                             multiline={true}
                             numberOfLines={4}
+                            placeholderTextColor={colors.white}
                             onChangeText={setReportName}
                             value={reportName}
                             placeholder="Write your report here..."
@@ -125,7 +166,10 @@ const BugReportScreen: React.FC<BugreportProps> = (props) => {
                         </View>              
                   </KeyboardAvoidingView>
                 ) : (
-                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollView}>
+                    <PullToRefresh scrollRef={scrollRef} handleOnscroll={handleOnScroll} isScrollable={isScrollable} refreshing setIsScrollable={setIsScrollable} updatePanState={updatePanState} onRefresh={handleRefresh}>
+                    <Animated.ScrollView             scrollEnabled={true}
+  onMomentumScrollEnd={(e) => updatePanState(e.nativeEvent.contentOffset.y)}
+ ref={scrollRef} onScroll={handleOnScroll} nestedScrollEnabled={true} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollView}>
                         {reports.length === 0 &&   <Empty head='Bug reports' description='You have not raised any bug reports related to app' />
                         }
                         {reports.map((report, index) => (
@@ -136,7 +180,8 @@ const BugReportScreen: React.FC<BugreportProps> = (props) => {
                                 resolvedTime={report.updatedAt}
                             />
                         ))}
-                    </ScrollView>
+                    </Animated.ScrollView>
+                    </PullToRefresh>
                 )}
 
 
@@ -146,6 +191,12 @@ const BugReportScreen: React.FC<BugreportProps> = (props) => {
                 visible={isreportAdded}
                 style={{ backgroundColor: colors.dark }}
                 onDismiss={() => setisreportAdded(false)}
+                theme={{
+                    colors: {
+                      inverseOnSurface: colors.white,
+                      surface: colors.white
+                    },
+                  }}
                 action={{
                     theme: {
                         fonts: {

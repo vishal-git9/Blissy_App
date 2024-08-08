@@ -44,6 +44,7 @@ import { CallInfoSelector, Calls, pushCalllist } from '../../redux/callSlice';
 import { Snackbar } from 'react-native-paper';
 import { Empty } from '../../common/Empty/Empty';
 import { AuthSelector } from '../../redux/uiSlice';
+import useBackHandler from '../../hooks/usebackhandler';
 
 const transition = CurvedTransition.delay(100);
 
@@ -71,6 +72,12 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [searchQueryData, setsearchQueryData] = useState(Calls)
   const dispatch = useDispatch()
   const { user } = useSelector(AuthSelector)
+
+
+
+  // calling use backhandler
+  useBackHandler()
+
   // const getInputRanges = (index:number, ITEM_SIZE:number) => {
   //   const inputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)];
   //   const opacityInputRange = [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 1)];

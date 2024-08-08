@@ -1,5 +1,5 @@
 import React, { useRef, ReactNode } from 'react';
-import { Animated, StyleSheet, Text, View, I18nManager } from 'react-native';
+import { Animated, StyleSheet, Text, View, I18nManager, TouchableWithoutFeedback, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { RectButton } from 'react-native-gesture-handler';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
@@ -19,10 +19,10 @@ interface AppleStyleSwipeableRowProps {
   pressHandler: (action: string,item:ChatList) => void;
   actions:actionType[];
   item:ChatList;
+  swipeableRow:React.RefObject<Swipeable>
 }
 
-const AppleStyleSwipeableRow: React.FC<AppleStyleSwipeableRowProps> = ({ children,item, pressHandler,actions }) => {
-  const swipeableRow = useRef<Swipeable>(null);
+const AppleStyleSwipeableRow: React.FC<AppleStyleSwipeableRowProps> = ({swipeableRow, children,item, pressHandler,actions }) => {
 
   const renderRightAction = (
     text: string,
@@ -92,7 +92,9 @@ const AppleStyleSwipeableRow: React.FC<AppleStyleSwipeableRowProps> = ({ childre
         console.log(`Closing swipeable to the ${direction}`);
       }}
     >
-      {children}
+      {/* <TouchableOpacity onLongPress={()=>console.log("longpressed")}> */}
+        {children}
+      {/* </TouchableOpacity> */}
     </Swipeable>
   );
 };

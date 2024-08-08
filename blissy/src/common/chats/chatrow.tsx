@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Text, View, Image, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import Animated, { Extrapolation, FadeInUp, FadeOutUp, SharedValue, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -15,6 +15,7 @@ import { formatDateTime } from '../../utils/formatedateTime';
 import { NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../AppNavigation/navigatorType';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Swipeable } from 'react-native-gesture-handler';
 
 
 const ITEM_SIZE = 80
@@ -32,6 +33,7 @@ interface ChatRowProps {
 
 const ChatRow: React.FC<ChatRowProps> = ({ scrollY,item, index, user, typingUser, activeUserList, navigation,animatedRowStyles, handleRightActions }) => {
   const newMessageIds: any[] = [];
+  const swipeableRow = useRef<Swipeable>(null);
 
   const listanimatedStyle = useAnimatedStyle(() => {
     const scale = interpolate(scrollY.value, [-1, 0, ITEM_SIZE * index, ITEM_SIZE * (index + 2)], [1, 1, 1, 0], Extrapolation.CLAMP);
@@ -64,9 +66,13 @@ const ChatRow: React.FC<ChatRowProps> = ({ scrollY,item, index, user, typingUser
 
   const socketId = activeUserList?.find((el) => el?.userId?._id === item?.chatPartner?._id);
 
+  const handleLongPress = ()=>{
+    swipeableRow.current?.openRight()
+  }
   return (
-    <AppleStyleSwipeableRow item={item} actions={userActions} pressHandler={handleRightActions}>
+    <AppleStyleSwipeableRow swipeableRow={swipeableRow} item={item} actions={userActions} pressHandler={handleRightActions}>
       <Animated.View
+      
         entering={FadeInUp.delay(index * 20)}
         exiting={FadeOutUp}
         style={[listanimatedStyle,{ flexDirection: 'row', alignItems: 'center' }]}
@@ -74,7 +80,7 @@ const ChatRow: React.FC<ChatRowProps> = ({ scrollY,item, index, user, typingUser
         <Animated.View
           style={[defaultStyles.item, { paddingLeft: 20 }, animatedRowStyles]}
         >
-          <TouchableOpacity style={{
+          <TouchableOpacity onLongPress={handleLongPress} style={{
             flexDirection: "row", paddingLeft: 20, alignItems: 'center'
           }} onPress={() => {
             navigation.navigate('ChatWindow', {
@@ -157,6 +163,7 @@ const styles = StyleSheet.create({
   timestamp: {
     color: colors.gray,
     fontSize: actuatedNormalize(12),
+    fontFamily:fonts.NexaRegular
   },
   header: {
     flexDirection: 'column',

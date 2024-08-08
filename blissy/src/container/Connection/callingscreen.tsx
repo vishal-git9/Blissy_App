@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
+import React, { Dispatch, SetStateAction, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -37,6 +37,7 @@ interface IconContainerProps {
   muteEnabled: boolean;
   socketId: string | null;
   seconds: number;
+  handleEndcall?:()=>void;
   setSeconds: Dispatch<SetStateAction<number>>;
 }
 
@@ -44,9 +45,74 @@ interface CallingScreenProps extends IconContainerProps {
   socket: Socket;
 }
 
-const IconContainer: React.FC<IconContainerProps> = ({ seconds, setSeconds, socketId, ConnectedUserData, navigation, leave, toggleMic, toggleSpeaker, speakerEnabled, muteEnabled }) => {
+const IconContainer: React.FC<IconContainerProps> = ({handleEndcall, socketId, ConnectedUserData, navigation, leave, toggleMic, toggleSpeaker, speakerEnabled, muteEnabled }) => {
+
+  return (
+    <View style={styles.iconContainer}>
+      <TouchableOpacity style={[styles.icon, styles.leftIcon, { backgroundColor: muteEnabled ? colors.primary : colors.white }]} onPress={toggleMic}>
+        {/* Add your left icon here */}
+        <Entypo name="sound-mute" color={muteEnabled ? colors.white : colors.black} size={30} />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.icon, styles.middleIcon]}
+        onPress={handleEndcall}>
+        {/* Add your middle icon here */}
+        <MaterialIcons name="call-end" color={'white'} size={30} />
+      </TouchableOpacity>
+
+      <TouchableOpacity style={[styles.icon, styles.rightIcon, { backgroundColor: speakerEnabled ? colors.primary : colors.white }]} onPress={toggleSpeaker}>
+        {/* Add your right icon here */}
+        <Entypo name="sound" color={speakerEnabled ? colors.white : colors.black} size={30} />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const CallingScreen = forwardRef<{
+  stopTimer: () => void;}, CallingScreenProps>(({ seconds, setSeconds, navigation, leave, toggleMic, ConnectedUserData, toggleSpeaker, socketId, socket }, ref) => {
+
+  const [mute, setMute] = useState<boolean>(false);
+  const [otherUserMute, setotherUserMute] = useState<boolean>(true)
+  const [speaker, setSpeaker] = useState<boolean>(false)
+  const [profileModal, setProfileModal] = useState<boolean>(false)
+  const [errorSnackbar, setErrorSnackbar] = useState<boolean>(false)
+  const isChatStateActive = useSelector(chatScreenActiveSelector)
+  const backgroundTimeRef = useRef<number | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null); // Ref for the timer
+  const appState = useRef(AppState.currentState);
   const [postcallInfo, { isLoading, isError, isSuccess }] = usePostCallInfoMutation()
   const { user } = useSelector(AuthSelector)
+  // const messageCount = useSelector(MessageCountSelector)
+  // const dispatch = useDispatch()
+  const handleToggleMic = () => {
+    toggleMic()
+    setMute(!mute)
+    socket.emit("private_mute_state", { socketId, muteState: !mute })
+  }
+  const handleToggleSpeaker = () => {
+    toggleSpeaker()
+    setSpeaker(!speaker)
+  }
+
+  useImperativeHandle(ref, () => ({
+    stopTimer: () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current); // Stop the timer
+      }
+    },
+  }));
+
+  const handleProfileUsermodal = () => {
+    setProfileModal(true)
+  }
+  // switch (userChannel) {
+  //   case "Chat" :
+  //     return <ChatWindowScreen navigation={navigation} />
+  //   case "Profile" :
+  //     return <UserProfile navigation={navigation}/>
+  // }
+
 
   const postCallInfotoDB = async () => {
 
@@ -76,63 +142,16 @@ const IconContainer: React.FC<IconContainerProps> = ({ seconds, setSeconds, sock
     }
 
   }
-  return (
-    <View style={styles.iconContainer}>
-      <TouchableOpacity style={[styles.icon, styles.leftIcon, { backgroundColor: muteEnabled ? colors.primary : colors.white }]} onPress={toggleMic}>
-        {/* Add your left icon here */}
-        <Entypo name="sound-mute" color={muteEnabled ? colors.white : colors.black} size={30} />
-      </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.icon, styles.middleIcon]}
-        onPress={() => {
-          postCallInfotoDB()
-          leave()
-          navigation.navigate('ReviewScreen', { user: ConnectedUserData, socketId: socketId })
-        }
-        }>
-        {/* Add your middle icon here */}
-        <MaterialIcons name="call-end" color={'white'} size={30} />
-      </TouchableOpacity>
-
-      <TouchableOpacity style={[styles.icon, styles.rightIcon, { backgroundColor: speakerEnabled ? colors.primary : colors.white }]} onPress={toggleSpeaker}>
-        {/* Add your right icon here */}
-        <Entypo name="sound" color={speakerEnabled ? colors.white : colors.black} size={30} />
-      </TouchableOpacity>
-    </View>
-  );
-};
-
-const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navigation, leave, toggleMic, ConnectedUserData, toggleSpeaker, socketId, socket }) => {
-  const [mute, setMute] = useState<boolean>(false);
-  const [otherUserMute, setotherUserMute] = useState<boolean>(true)
-  const [speaker, setSpeaker] = useState<boolean>(false)
-  const [profileModal, setProfileModal] = useState<boolean>(false)
-  const [errorSnackbar, setErrorSnackbar] = useState<boolean>(false)
-  const isChatStateActive = useSelector(chatScreenActiveSelector)
-  const backgroundTimeRef = useRef<number | null>(null);
-  const appState = useRef(AppState.currentState);
-  // const messageCount = useSelector(MessageCountSelector)
-  // const dispatch = useDispatch()
-  const handleToggleMic = () => {
-    toggleMic()
-    setMute(!mute)
-    socket.emit("private_mute_state", { socketId, muteState: !mute })
-  }
-  const handleToggleSpeaker = () => {
-    toggleSpeaker()
-    setSpeaker(!speaker)
-  }
-
-  const handleProfileUsermodal = () => {
-    setProfileModal(true)
-  }
-  // switch (userChannel) {
-  //   case "Chat" :
-  //     return <ChatWindowScreen navigation={navigation} />
-  //   case "Profile" :
-  //     return <UserProfile navigation={navigation}/>
-  // }
+  const handleEndCall = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current); // Clear the timer
+    }
+    backgroundTimeRef.current = null; // Clear the background time
+    postCallInfotoDB();
+    leave(); // Clean up resources
+    navigation.navigate('ReviewScreen', { user: ConnectedUserData, socketId: socketId });
+  };
 
 
 
@@ -145,6 +164,8 @@ const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navi
     );
     return () => backHandler.remove();
   })
+
+  
 
 
   useEffect(() => {
@@ -191,11 +212,16 @@ const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navi
 
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    // Start the timer
+    timerRef.current = setInterval(() => {
       setSeconds(prevSeconds => prevSeconds + 1);
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current); // Clear timer on unmount
+      }
+    };
   }, []);
 
 
@@ -255,7 +281,7 @@ const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navi
       </View>
 
       {/* Action buttons */}
-      <IconContainer seconds={seconds} setSeconds={setSeconds} speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} socketId={socketId} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker} />
+      <IconContainer handleEndcall={handleEndCall} seconds={seconds} setSeconds={setSeconds} speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} socketId={socketId} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker} />
       <Snackbar
         duration={otherUserMute ? 10000 : 2000}
         visible={errorSnackbar}
@@ -281,7 +307,7 @@ const CallingScreen: React.FC<CallingScreenProps> = ({ seconds, setSeconds, navi
       </Snackbar>
     </SafeAreaView>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

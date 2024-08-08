@@ -3,6 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IRootState } from '.';
 import { UserInterface } from './uiSlice';
 import { ChatApi } from '../api/chatService';
+import { findNewMessage } from '../utils/sortmessagebyData';
 
 export interface Message {
   _id?:string;
@@ -30,6 +31,8 @@ export interface ChatList {
   isBlocked:Boolean;
   isBlockedBy:string[];
   isDeleted:Boolean;
+  createdAt?:string;
+  updatedAt?:string;
   ChatHistorydeletedby:string[];
 }
 export interface ActiveUserList {
@@ -120,9 +123,10 @@ const MessageSlice = createSlice({
     })
     builder.addMatcher(ChatApi.endpoints.getChatlist.matchFulfilled, (state, { payload }) => {
       console.log(payload,"chatlistpayload------>")
-      state.chatList = payload.chatList
-      state.ActiveUser=payload.chatList.filter((el:ChatList)=>el.isBlocked === false)
-      state.BlockedUser=payload.chatList.filter((el:ChatList)=>el.isBlocked === true)
+      const sortedMsg = findNewMessage(payload.chatList)
+      state.chatList = sortedMsg
+      state.ActiveUser=sortedMsg.filter((el:ChatList)=>el.isBlocked === false)
+      state.BlockedUser=sortedMsg.filter((el:ChatList)=>el.isBlocked === true)
     })
     builder.addMatcher(ChatApi.endpoints.sendMessage.matchFulfilled, (state, { payload }) => {
 

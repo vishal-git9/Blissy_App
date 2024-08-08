@@ -91,7 +91,7 @@ const CustomDrawer: React.FC<any> = props => {
               onPress={async () => {
                 setConfirmModal(false);
                 await deleteFcmToken({}) // delete the fcm token
-                // await logoutUserSession({}) // logout user session
+                await logoutUserSession({}) // logout user session
                 dispatch(AuthApi.util.resetApiState())
                 dispatch(UserApi.util.resetApiState())
                 dispatch(ChatApi.util.resetApiState())
