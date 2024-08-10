@@ -9,7 +9,6 @@ import messaging from '@react-native-firebase/messaging';
 
 import { name as appName } from './app.json';
 import colors from './src/constants/colors';
-// import { handleNotification } from './src/utils/notificationService';
  var EventEmitter = require('eventemitter3');
  export const eventEmitter = new EventEmitter();
 
@@ -83,8 +82,8 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
       data:{senderData : senderData},
       android: {
         channelId: "blissy1",
-        smallIcon: 'ic_stat_name', // ensure this icon is in your drawable folder
-        largeIcon: senderData?.profilePic, // URL of the sender's profile picture
+        smallIcon: 'ic_stat_name',
+        largeIcon: senderData?.profilePic,
         color:colors.primary,
         circularLargeIcon:true,
         // alarmManager: {
@@ -99,7 +98,7 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
         
         attachments: [
           {
-            url: remoteMessage?.data?.profilePictureUrl, // URL of the sender's profile picture
+            url: remoteMessage?.data?.profilePictureUrl, 
             thumbnailHidden: false,
             
           },

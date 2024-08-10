@@ -11,7 +11,7 @@ const rootReducer = combineReducers({
   Auth:AuthSlice.reducer,
   Message:MessageSlice.reducer,
   Calls:CallSlice.reducer,
-  // Rewards:RewardSlice.reducer,
+  Rewards:RewardSlice.reducer,
 });
 const persistConfig = {
   key: 'root',

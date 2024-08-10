@@ -213,8 +213,6 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       const notifyRes = await checkNotificationPermission();
       if (microphoneRes === 'granted' && notifyRes==='granted') {
         // Permission is granted
-        console.log( microphoneRes, "permissions from home check if ")
-        console.log("location permission granted");
       } else {
         // Handle other permission states accordingly
         // requestBluetoothPermission()
@@ -489,7 +487,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     }
   }, []);
 
-  // console.log(chatlistdata, "chatlistdata")
+  console.log(isAuthenticated, "Store------->")
   const getCardHeight = () => {
     const cardMarginBottom = actuatedNormalize(20);
     const cardPaddingHorizontal = actuatedNormalize(5);

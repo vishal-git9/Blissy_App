@@ -10,7 +10,7 @@ import {Icon} from 'react-native-vector-icons/Icon';
 import {Action} from '../../container/Registration/Registration';
 
 export const validateEmail = (email: string) => {
-  const EmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+  const EmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
   console.log(EmailRegex.test(email), "from regex", email)
   return EmailRegex.test(email);
 };

@@ -517,6 +517,12 @@ const ChatListScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
             inverseOnSurface: colors.white,
             surface: colors.white
           },
+          fonts: {
+                regular: { fontFamily: fonts.NexaRegular },
+                medium: { fontFamily: fonts.NexaBold },
+                light: { fontFamily: fonts.NexaBold },
+                thin: { fontFamily: fonts.NexaRegular },
+              },
         }}
       >
         {AlertMessage.message}

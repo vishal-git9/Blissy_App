@@ -224,6 +224,12 @@ const OTPInput: React.FC<OTPInputProps> = ({
             visible={otpAlreadySent}
             style={{backgroundColor: colors.black}}
             onDismiss={() => setAlreadyOtpSent(false)}
+            theme={{
+              colors: {
+                inverseOnSurface: colors.white,
+                surface: colors.white
+              },
+            }}
             action={{
               theme: {
                 fonts: {

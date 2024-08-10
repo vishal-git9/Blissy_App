@@ -68,7 +68,7 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     if (validateEmail(state?.email)) {
       const loginEmail = state?.email?.toLowerCase()
       console.log(loginEmail,"loginemail-------->")
-      const res = await getOtp({ email: `${loginEmail}` });
+      const res = await getOtp({ email: loginEmail });
       console.log(res, "---res-----", error)
       if ('data' in res) {
         console.log(data, "data of MobileNumber")
@@ -89,15 +89,15 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
 
   const handleOtpSubmit = async () => {
     const loginEmail = state?.email?.toLowerCase()
+    const res = await OtpVerify({ email: loginEmail, otp: parseInt(state.OTP) });
 
-    const res = await OtpVerify({ email: `${loginEmail}`, otp: parseInt(state.OTP) });
     if ('data' in res) {
-      console.log(res, "data of OTP")
+      console.clear()
+      console.log(res, "OTP VERIFIED------>")
       const isNewuser =  (await refetchUser()).data
       // fetch user details
       // use   .unwrap()
       // console.log(isNewUser, "newUser from login---")
-      clearInterval(timerRef.current);
       setModalState(false)
       console.log(isNewuser, "---user isnewuser")
       if (isNewuser?.data?.user?.isNewUser) {
@@ -167,7 +167,15 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     if (state.OTP.length === 4) {
       // Call OTP verification function here
       Keyboard.dismiss();
+      if(timerRef.current){
+        clearInterval(timerRef.current);
+      }
       handleOtpSubmit()
+    }
+
+
+    return ()=>{
+      clearInterval(timerRef.current);
     }
   }, [state.OTP]);
 

@@ -83,11 +83,11 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       if (callingScreenRef.current) {
         callingScreenRef.current.stopTimer();
       } 
-      peerConnection.current.close();
-      setLocalStream(null);
-      setRemoteStream(null);
-      otherUserScoketId.current = null;
-      InCallManager.stop();
+      // peerConnection.current.close();
+      // setLocalStream(null);
+      // setRemoteStream(null);
+      // otherUserScoketId.current = null;
+      // InCallManager.stop();
       navigation.navigate("ReviewScreen", { user: otherUserData.current, socketId: otherUserScoketId.current });
       postCallInfotoDB();
     };
@@ -213,7 +213,6 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       socket?.off('newCall');
       socket?.off('callAnswered');
       socket?.off('ICEcandidate');
-      socket?.off("callEnded");
       socket?.off("initiateCall")
       socket?.off("callCancelled")
     };

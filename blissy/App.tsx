@@ -19,12 +19,10 @@ import { SplashScreenAnimated } from './src/common/splashscreen.tsx/splash';
 import setupNotificationListener from './src/utils/notificationService';
 import notifee, { EventType, AndroidImportance, AndroidVisibility } from '@notifee/react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { fonts } from './src/constants/fonts';
 import {
   MD3LightTheme as DefaultTheme,
   PaperProvider,
 } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const theme = {
@@ -83,10 +81,6 @@ const App: React.FC = () => {
     // const timer = setTimeout(() => {
     //   setHasSplash(false)
     // }, 4200);
-    AsyncStorage.getItem('persist:root').then((state) => {
-      console.clear()
-      console.log('Persisted State:', state);
-    });
     setupNotificationChannel()
     setupNotificationListener()
     // return ()=> clearTimeout(timer)

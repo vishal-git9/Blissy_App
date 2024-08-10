@@ -30,11 +30,11 @@ import { SegmentedControl } from '../../common/tab/segmented';
 import { defaultStyles } from '../../common/styles/defaultstyles';
 import { formatDateTime, getFormattedDate } from '../../utils/formatedateTime';
 import colors from '../../constants/colors';
-import { CallInfoData as calls } from '../../mockdata/call';
+// import { CallInfoData as calls } from '../../mockdata/call';
 import { actuatedNormalize } from '../../constants/PixelScaling';
 import { fonts } from '../../constants/fonts';
 import { HeaderComponent } from '../../common/header/screenheader';
-import { useDeleteSingleCallInfoMutation, useGetmyCallInfoQuery } from '../../api/callService';
+import { useDeleteSingleCallInfoMutation, useGetmyCallInfoQuery, useLazyGetmyCallInfoQuery } from '../../api/callService';
 import PullToRefresh from '../../common/refresh/pull';
 import { NavigationStackProps } from '../Prelogin/onboarding';
 import SearchBar from '../../common/header/searchbar';
@@ -53,11 +53,10 @@ const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpaci
 
 const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [selectedOption, setSelectedOption] = useState('All');
-  const [items, setItems] = useState(calls);
   const [searchQuerytext, SetsearchQuerytext] = useState<string>("")
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const editing = useSharedValue(-30);
-  const { refetch, isLoading, isError, isSuccess } = useGetmyCallInfoQuery({})
+  const [ refetch, {isLoading, isError, isSuccess} ] = useLazyGetmyCallInfoQuery()
   const [deleteCall, { isLoading: isdeleteloading, isError: isdeleteerror, isSuccess: isdeletesccuess }] = useDeleteSingleCallInfoMutation()
   const [isSearchActive, setIsSearchActive] = useState<boolean>(false);
   const [isCallDeleted, setisCallDeleted] = useState<boolean>(false)
@@ -69,6 +68,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   const scrollRef = useAnimatedRef<Animated.FlatList<any>>();
   const [contentHeight, setContentHeight] = useState<number>(0);
   const { Calls, missedCalls } = useSelector(CallInfoSelector)
+  const [items, setItems] = useState(Calls);
   const [searchQueryData, setsearchQueryData] = useState(Calls)
   const dispatch = useDispatch()
   const { user } = useSelector(AuthSelector)
@@ -144,14 +144,14 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   const onSegmentChange = (option: string) => {
     setSelectedOption(option);
     if (option === 'All') {
-      setItems(calls);
+      setItems(Calls);
     } else {
-      setItems(calls.filter((call) => call.missed));
+      setItems(missedCalls);
     }
   };
 
   const handlerefreshMessage = async () => {
-    await refetch()
+    await refetch({},false)
   }
 
   const handleSearchFriendsQuery = useCallback((text: string) => {
@@ -170,7 +170,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
     const data = await deleteCall(toDelete._id)
     console.log(toDelete, "toDelete---->")
     if ('data' in data) {
-      refetch().then((res) => dispatch(pushCalllist(res.data))).catch((err) => console.log(err, "err"))
+      refetch({},false)
       setisCallDeleted(true)
 
     } else if ('error' in data) {
@@ -224,7 +224,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   }, [isSearchActive, Calls, selectedOption, searchQueryData])
 
 
-  console.log(missedCalls, "missedCalls----->")
+  console.log(Calls, "missedCalls----->")
   return (
     <View style={{ flex: 1 }}>
       {/* <HeaderComponent title='Calls' onPress={()=>console.log("back")}/> */}
@@ -260,7 +260,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
             nestedScrollEnabled={true}
             contentContainerStyle={{ minHeight: contentHeight, marginTop: isSearchActive ? actuatedNormalize(10) : actuatedNormalize(0) }}
             onContentSizeChange={(w, h) => setContentHeight(h)}
-            ListEmptyComponent={calls.length === 0 ? <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' /> : (missedCalls.length === 0 && !isSearchActive) ? <Empty head='Missed Calls' description='You have no missed calls records' /> : <Empty head='Search Users' description='User not found' />}
+            ListEmptyComponent={Calls.length === 0 ? <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' /> : (missedCalls.length === 0 && !isSearchActive) ? <Empty head='Missed Calls' description='You have no missed calls records' /> : <Empty head='Search Users' description='User not found' />}
             // style={[defaultStyles.block]}
             // onViewableItemsChanged={({ viewableItems: vItems }) => {
             //   viewableItems.value = vItems;
@@ -335,6 +335,18 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
         duration={2000}
         visible={isCallDeleted}
         style={{ backgroundColor: colors.dark }}
+        theme={{
+          colors: {
+            inverseOnSurface: colors.white,
+            surface: colors.white
+          },
+          fonts: {
+                regular: { fontFamily: fonts.NexaRegular },
+                medium: { fontFamily: fonts.NexaBold },
+                light: { fontFamily: fonts.NexaBold },
+                thin: { fontFamily: fonts.NexaRegular },
+              },
+        }}
         onDismiss={() => setisCallDeleted(false)}
         action={{
           theme: {
