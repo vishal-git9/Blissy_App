@@ -16,6 +16,7 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { navigate } from "../../utils/RootNavigation";
 import { RootStackParamList } from "../../AppNavigation/navigatorType";
 import { chatListSelector } from "../../redux/messageSlice";
+import notifee, {EventType } from '@notifee/react-native';
 
 interface SessionError {
     title: string;
@@ -44,6 +45,7 @@ export const SessionError: React.FC<SessionError> = ({ title, description }) => 
                     dispatch(AuthApi.util.resetApiState())
                     dispatch(UserApi.util.resetApiState())
                     dispatch(ChatApi.util.resetApiState())
+                    notifee.cancelDisplayedNotifications()
                     // navigate("Login")
 
                     // navigate to token expire screen or modal

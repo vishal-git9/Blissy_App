@@ -26,4 +26,5 @@ export type RootStackParamList = {
   Bugreport:{}
   Userreview:{}
   Outgoing:{ConnectedUserData:UserInterface | undefined,socketId:string | undefined}
+  appUpdate:undefined;
 };

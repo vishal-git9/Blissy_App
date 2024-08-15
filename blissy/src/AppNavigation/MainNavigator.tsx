@@ -33,6 +33,7 @@ import CalllistData from '../container/Connection/callinfo';
 import { fonts } from '../constants/fonts';
 import { actuatedNormalize } from '../constants/PixelScaling';
 import withPermissions from '../hooks/permissionsHoc';
+import { AppUpdateModal } from '../common/modals/Appupdate';
 // import { navigationRef } from '../utils/notificationService';
 
 const deepLinksConf = {
@@ -190,8 +191,11 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name="Bugreport" component={BugReportScreen} />
         <Stack.Screen name="Userreview" component={UserreviewScreen} />
         <Stack.Screen name="Outgoing" component={OutgoingCallScreen} />
+        {/* <Stack.Screen name="appUpdate" component={AppUpdateModal}  options={{headerShown:false,presentation:"modal"}}/> */}
+
       </Stack.Navigator>
       {/* <GlobalBackHandler /> */}
+      <AppUpdateModal/>
       <SessionError title='Session Expired!' description='Your session has expired please login again' />
       <ConnectionModal title='OFFLINE!' description='Please check your internet connection' onPressPrimaryButton={() => console.log("networkhi--->")} />
     </NavigationContainer>

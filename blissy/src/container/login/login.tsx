@@ -92,7 +92,6 @@ export const LoginScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     const res = await OtpVerify({ email: loginEmail, otp: parseInt(state.OTP) });
 
     if ('data' in res) {
-      console.clear()
       console.log(res, "OTP VERIFIED------>")
       const isNewuser =  (await refetchUser()).data
       // fetch user details

@@ -164,7 +164,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   }, [selectedOption, searchQuerytext])
 
   const removeCall = async (toDelete: Calls) => {
-    Vibration.vibrate(500);
+    // Vibration.vibrate(500);
     console.log(toDelete, "toDelete---->")
 
     const data = await deleteCall(toDelete._id)
