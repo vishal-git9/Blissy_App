@@ -41,7 +41,7 @@ export const SessionError: React.FC<SessionError> = ({ title, description }) => 
                     dispatch(setSessionStatus(true))
                     console.log("tokenError2------->")
                     dispatch(logoutUser())
-                    logoutUserSession({}) // logout user session
+                    //logoutUserSession({}) // logout user session
                     dispatch(AuthApi.util.resetApiState())
                     dispatch(UserApi.util.resetApiState())
                     dispatch(ChatApi.util.resetApiState())

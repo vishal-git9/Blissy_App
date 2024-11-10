@@ -33,8 +33,60 @@ export const CallApi = API.injectEndpoints({
         body:{id},
         // responseHandler:"text"
       })
-    })
+    }),
+    createPrivateCall:builder.mutation<any,any>({
+      query:(callBody)=>({
+        url:`/call-record/create-private-call`,
+        method: 'POST',
+        body:callBody,
+        // responseHandler:"text"
+      })
+    }),
+
+    // cancel private call
+    cancelPrivateCall:builder.mutation<any,any>({
+      query:(callBody)=>({
+        url:`/call-record/cancel-private-call`,
+        method: 'POST',
+        body:callBody,
+        // responseHandler:"text"
+      })
+    }),
+
+    awakePrivateCall:builder.mutation<any,any>({
+      query:(callBody)=>({
+        url:`/call-record/awake-private-call`,
+        method: 'PUT',
+        body:callBody,
+        // responseHandler:"text"
+      })
+    }),
+
+    answerPrivateCall:builder.mutation<any,any>({
+      query:(callBody)=>({
+        url:`/call-record/pick-incoming-call`,
+        method: 'POST',
+        body:callBody,
+        // responseHandler:"text"
+      })
+    }),
+
+    declinePrivateCall:builder.mutation<any,any>({
+      query:(callBody)=>({
+        url:`/call-record/declined-incoming-call`,
+        method: 'PUT',
+        body:callBody,
+        // responseHandler:"text"
+      })
+    }),
+    updatePrivateCallInfo: builder.mutation<any, any>({
+      query: (body) => ({
+        url: `/call-record/create-private-call/update`,
+        method: 'PUT',
+        body
+      }),
+    }),
   })
 });
 
-export const {useUpdateCallInfoMutation,useGetmyCallInfoQuery,useLazyGetmyCallInfoQuery,usePostCallInfoMutation,useDeleteSingleCallInfoMutation} = CallApi;
+export const {useUpdateCallInfoMutation,useGetmyCallInfoQuery,useLazyGetmyCallInfoQuery,usePostCallInfoMutation,useDeleteSingleCallInfoMutation,useCreatePrivateCallMutation,useAwakePrivateCallMutation,useCancelPrivateCallMutation,useAnswerPrivateCallMutation,useDeclinePrivateCallMutation,useUpdatePrivateCallInfoMutation} = CallApi;

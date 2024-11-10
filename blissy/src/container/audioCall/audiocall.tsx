@@ -89,7 +89,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       // otherUserScoketId.current = null;
       // InCallManager.stop();
       navigation.navigate("ReviewScreen", { user: otherUserData.current, socketId: otherUserScoketId.current });
-      postCallInfotoDB();
+      // postCallInfotoDB();
     };
 
     socket?.on("callEnded", handleCallEnded);
@@ -216,7 +216,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       socket?.off("initiateCall")
       socket?.off("callCancelled")
     };
-  }, []);
+  }, [socket]);
 
 
 
@@ -373,34 +373,34 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
   }
 
 
-  const postCallInfotoDB = useCallback(() => {
-    console.log(seconds, "seconds-------->")
-    if (seconds >= 120) {
-      const callInfobody = {
-        callType: "Random", // individual  or random
-        callerId: user?._id, // caller Id
-        calleeId: otherUserData.current?._id, // calleeId
-        callDuration: seconds, // duration
-        isMissed: false,
-        isRejected: false,
-        isSuccessful: true,
-      }
-      postcallInfo(callInfobody)
-    } else {
-      const callInfobody = {
-        callType: "Random", // individual  or random
-        callerId: user?._id, // caller Id
-        calleeId: otherUserData.current?._id, // calleeId
-        callDuration: seconds, // duration
-        isMissed: false,
-        isRejected: false,
-        isSuccessful: false,
-      }
-      postcallInfo(callInfobody)
+  // const postCallInfotoDB = useCallback(() => {
+  //   console.log(seconds, "seconds-------->")
+  //   if (seconds >= 120) {
+  //     const callInfobody = {
+  //       callType: "Random", // individual  or random
+  //       callerId: user?._id, // caller Id
+  //       calleeId: otherUserData.current?._id, // calleeId
+  //       callDuration: seconds, // duration
+  //       isMissed: false,
+  //       isRejected: false,
+  //       isSuccessful: true,
+  //     }
+  //     postcallInfo(callInfobody)
+  //   } else {
+  //     const callInfobody = {
+  //       callType: "Random", // individual  or random
+  //       callerId: user?._id, // caller Id
+  //       calleeId: otherUserData.current?._id, // calleeId
+  //       callDuration: seconds, // duration
+  //       isMissed: false,
+  //       isRejected: false,
+  //       isSuccessful: false,
+  //     }
+  //     postcallInfo(callInfobody)
 
-    }
-  }, [seconds])
-  console.log(seconds, "seconds-------->")
+  //   }
+  // }, [seconds])
+  // console.log(seconds, "seconds-------->")
 
 
 
@@ -410,7 +410,7 @@ const VoiceCall: React.FC<AppProps> = ({ navigation, route }) => {
       return (
         <View style={styles.loaderContainer}>
           {/* <RouteBackButton onPress={()=>navigation.goBack()}/> */}
-          <AutoScrollCarousel />
+          <AutoScrollCarousel profilePic={user?.profilePic} />
           <View style={{ width: "60%", alignSelf: "center", marginTop: actuatedNormalize(30), rowGap: actuatedNormalize(15) }}>
             <CircularImageReveal />
             <Text style={styles.waitText}>Hang on {user?.name}! Healing awaits... </Text>

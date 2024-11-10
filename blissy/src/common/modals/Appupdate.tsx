@@ -28,7 +28,7 @@ export const AppUpdateModal : React.FC = ()=>{
             //     latestVersion:"1.2.0"
             // });
              const updateInfo = await VersionCheck.needUpdate()
-            // console.log(updateInfo,"updateInfo-------->")
+            console.log(updateInfo,"updateInfo-------->")
             if (updateInfo && updateInfo?.isNeeded) {
               setStoreUrl(updateInfo?.storeUrl);
               setModalVisible(true);

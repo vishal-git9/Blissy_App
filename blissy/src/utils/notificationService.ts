@@ -6,6 +6,7 @@ import { serverBaseUrl, serverLocalUrl } from './globalVariable';
 import { AuthSelector, UserInterface } from '../redux/uiSlice';
 import { AppState } from 'react-native';
 import { store } from '../redux';
+import { displayCallNotificationAndroid } from '../common/call/incoming';
 
 
 // data: {
@@ -30,11 +31,52 @@ export const MarkMessageDelivered = async (messageId: string) => {
     }
 };
 
+export const MarkCallDelivered = async (callId: string,senderId:string) => {
+  const {token} = AuthSelector(store.getState()); //active in foreground
+  console.log(callId,"callId----->",AppState.currentState,token) // not receiving token in killed state of the app
+
+    try {
+      const response = await axios.put(`${serverBaseUrl}call-record/awake-private-call`,{callId,senderId}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }});
+      console.log(response.data,"call delivery reponse------>")
+      return response.data;
+    } catch (error) {
+      console.error('Error Marking call Delivered:', error);
+      throw error;
+    }
+};
+
+
+
+export const MarkCallRejected = async (callerId: string) => {
+  const {token} = AuthSelector(store.getState()); //active in foreground
+  console.log(callerId,"callId----->",AppState.currentState,token) // not receiving token in killed state of the app
+
+    try {
+      const response = await axios.put(`${serverBaseUrl}call-record/declined-incoming-call`,{callerId}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }});
+      console.log(response.data,"call delivery reponse------>")
+      return response.data;
+    } catch (error) {
+      console.error('Error Marking call Delivered:', error);
+      throw error;
+    }
+};
+
 export const handleNotification = async (remoteMessage: any) => {
   console.log(remoteMessage,"BackgroundremoteMessage------>")
   const senderData = JSON.parse(remoteMessage.data?.senderData);
   const messageDetails = JSON.parse(remoteMessage.data?.messageDetails);
-  MarkMessageDelivered(messageDetails?.messageId)
+
+  if(messageDetails?.NotificationType === "call"){
+    MarkCallDelivered(messageDetails?.callId,senderData?.id)
+  }else if(messageDetails?.NotificationType === "chat"){
+    MarkMessageDelivered(messageDetails?.messageId)
+  }
 
   // const chatList = store.getState().Message.chatList
   // console.log(chatList,"Chatlist----->",AppState.currentState)
@@ -87,94 +129,82 @@ const setupNotificationListener = () => {
         messageDetails:remoteMessage.data?.messageDetails
       }
     }
-    const senderData : UserInterface = JSON.parse(RemoteMessage?.data?.senderData);
+    const senderData : any = JSON.parse(RemoteMessage?.data?.senderData);
     const messageDetails = JSON.parse(RemoteMessage?.data?.messageDetails);
     await handleNotification(remoteMessage);
-    await notifee.displayNotification({
-      title: senderData?.name,
-      body: messageDetails?.messageText,
-      data:{senderData : senderData},
-      android: {
-        channelId: "blissy1",
-        smallIcon: 'ic_stat_name', // ensure this icon is in your drawable folder
-        largeIcon: senderData?.profilePic, // URL of the sender's profile picture
-        color:colors.primary,
-        circularLargeIcon:true,
-        
-        pressAction: {
-          id: 'default',
-        },
-      },
-      ios: {
-        categoryId: 'blissy1',
-        attachments: [
-          {
-            url: remoteMessage?.data?.profilePictureUrl as string, // URL of the sender's profile picture
-            thumbnailHidden: false,
-            
+    if(messageDetails?.NotificationType === "call"){
+
+      console.log("IAMRUNIING------>",senderData)
+    displayCallNotificationAndroid({hasVideo:false, callId:senderData?.id, callerName:senderData?.callerName,senderData:senderData });
+    }else if(messageDetails?.NotificationType === "missedcall"){
+
+      await notifee.cancelNotification(messageDetails?.lastCallId)
+      console.log("IAMRUNIING------>",messageDetails?.profilePic,messageDetails)
+
+
+      await notifee.displayNotification({
+        title: senderData?.callerName,
+        // id:messageDetails?.lastCallId,
+        body: `📞 missed audio call from ${senderData?.callerName}`,
+        data:{senderData : senderData},
+        android: {
+          channelId: "blissy1",
+          smallIcon: 'ic_stat_name',
+          largeIcon: messageDetails?.profilePic,
+          color:colors.primary,
+          circularLargeIcon:true,
+          // alarmManager: {
+          //   allowWhileIdle: true,
+          // },
+          pressAction: {
+            id: 'default',
           },
-        ],
-      },
-    });
+        },
+        ios: {
+          categoryId: 'blissy1',
+          
+          attachments: [
+            {
+              url: remoteMessage?.data?.profilePictureUrl as string, 
+              thumbnailHidden: false,
+              
+            },
+          ],
+        },
+      });
+    }else{
+
+      await notifee.displayNotification({
+        title: senderData?.name,
+        body: messageDetails?.messageText,
+        data:{senderData : senderData},
+        android: {
+          channelId: "blissy1",
+          smallIcon: 'ic_stat_name', // ensure this icon is in your drawable folder
+          largeIcon: senderData?.profilePic, // URL of the sender's profile picture
+          color:colors.primary,
+          circularLargeIcon:true,
+          
+          pressAction: {
+            id: 'default',
+          },
+        },
+        ios: {
+          categoryId: 'blissy1',
+          attachments: [
+            {
+              url: senderData?.profilePic as string, // URL of the sender's profile picture
+              thumbnailHidden: false,
+              
+            },
+          ],
+        },
+      });
+    }
+  
   });
-  // messaging().onNotificationOpenedApp(remoteMessage => {
-  //   console.log('Notification caused app to open from background state:', remoteMessage);
-  //   handleNotification(remoteMessage);
-  // });
-
-  // messaging()
-  //   .getInitialNotification()
-  //   .then(remoteMessage => {
-  //     if (remoteMessage) {
-  //       console.log('Notification caused app to open from quit state:', remoteMessage);
-  //       handleNotification(remoteMessage);
-  //     }
-  //   });
-
-  // notifee.onBackgroundEvent(async ({ type, detail }) => {
-  //   const { notification, pressAction } = detail;
-  //   if (type === EventType.ACTION_PRESS) {
-  //     handleNotification(notification)
-  //   }
-  // });
-
-  // notifee.onForegroundEvent(async ({ type, detail }) => {
-  //   const { notification, pressAction } = detail;
-  //   if (type === EventType.ACTION_PRESS && pressAction?.id === 'default') {
-  //     handleNotification(BackgroundremoteMessage------>notification)
-  //   }
-  // });
-  // notifee.getInitialNotification().then(notification => {
-  //   if (notification) {
-  //     console.log('Notification caused app to open from quit state:', notification);
-  //     handleNotification(notification);
-  //   }
-  // });
   
 };
 
 export default setupNotificationListener;
 
-// for fullscren like call
-
-// fullScreen: {
-//   title: 'Full-screen',
-//   body: 'notification',
-//   android: {
-//     channelId: 'fullscreen',
-//     // Recommended to set a category
-//     category: AndroidCategory.CALL,
-//     // Recommended to set importance to high
-//     importance: AndroidImportance.HIGH,
-//     visibility: AndroidVisibility.PUBLIC,
-//     sound: 'default',
-//     fullScreenAction: {
-//       id: 'default',
-//       // mainComponent: 'full-screen-main-component'
-//       launchActivity: 'com.example.CustomActivity',
-//     },
-//   },
-//   ios: {
-//     sound: 'default',
-//   },
-// },

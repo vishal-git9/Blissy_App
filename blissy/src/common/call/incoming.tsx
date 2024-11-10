@@ -5,12 +5,13 @@ interface DisplayCallNotificationAndroidProps {
   callId: string;
   callerName: string;
   hasVideo: boolean;
+  senderData:{name:string,profilePic:string}
 }
 
 export const displayCallNotificationAndroid = async ({
   callId,
   callerName,
-  hasVideo,
+  senderData
 }: DisplayCallNotificationAndroidProps): Promise<void> => {
   console.log('📞 📥  displayCallNotificationAndroid: ', callId);
 
@@ -22,18 +23,23 @@ export const displayCallNotificationAndroid = async ({
 
   const dnr = await notifee.displayNotification({
     title: callerName,
-    body: `is calling you on ${hasVideo ? 'video' : 'voice'}...`,
+    body: `${callerName} is calling you`,
     id: callId,
+    data:{senderData : senderData},
     android: {
       channelId:"nuggets-call2",
       smallIcon: 'ic_stat_name',
       color: '#dedede',
       loopSound:true,
       ongoing:true,
-      timeoutAfter:10000,
+      timeoutAfter:60000,
+      largeIcon:senderData?.profilePic,
       category: AndroidCategory.CALL,
       visibility: AndroidVisibility.PUBLIC,
       importance: AndroidImportance.HIGH,
+      lightUpScreen: true,
+      colorized: true,
+
       pressAction: {
         id: "default",
         // launchActivity: 'com.blissy.CustomActivity',
@@ -62,8 +68,6 @@ export const displayCallNotificationAndroid = async ({
           },
         },
       ],
-      lightUpScreen: true,
-      colorized: true,
     },
   });
   console.log('🔭 displayNotification result: ', dnr);

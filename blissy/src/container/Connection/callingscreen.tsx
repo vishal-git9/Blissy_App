@@ -25,7 +25,7 @@ import { MessageCountSelector, chatScreenActiveSelector } from '../../redux/mess
 import ProfileScreenModal from '../../common/modals/profile';
 import { Snackbar } from 'react-native-paper';
 import { usePostUserRatingMutation } from '../../api/rewardservice';
-import { usePostCallInfoMutation, useUpdateCallInfoMutation } from '../../api/callService';
+import { usePostCallInfoMutation, useUpdateCallInfoMutation, useUpdatePrivateCallInfoMutation } from '../../api/callService';
 
 interface IconContainerProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -37,15 +37,17 @@ interface IconContainerProps {
   muteEnabled: boolean;
   socketId: string | null;
   seconds: number;
-  handleEndcall?:()=>void;
+  handleEndcall?: () => void;
   setSeconds: Dispatch<SetStateAction<number>>;
+  callType?: string;
+  callerme?: boolean;
 }
 
 interface CallingScreenProps extends IconContainerProps {
   socket: Socket;
 }
 
-const IconContainer: React.FC<IconContainerProps> = ({handleEndcall, socketId, ConnectedUserData, navigation, leave, toggleMic, toggleSpeaker, speakerEnabled, muteEnabled }) => {
+const IconContainer: React.FC<IconContainerProps> = ({ handleEndcall, socketId, ConnectedUserData, navigation, leave, toggleMic, toggleSpeaker, speakerEnabled, muteEnabled }) => {
 
   return (
     <View style={styles.iconContainer}>
@@ -70,7 +72,8 @@ const IconContainer: React.FC<IconContainerProps> = ({handleEndcall, socketId, C
 };
 
 const CallingScreen = forwardRef<{
-  stopTimer: () => void;}, CallingScreenProps>(({ seconds, setSeconds, navigation, leave, toggleMic, ConnectedUserData, toggleSpeaker, socketId, socket }, ref) => {
+  stopTimer: () => void;
+}, CallingScreenProps>(({ seconds, callerme, setSeconds, navigation, leave, toggleMic, ConnectedUserData, toggleSpeaker, socketId, socket, callType }, ref) => {
 
   const [mute, setMute] = useState<boolean>(false);
   const [otherUserMute, setotherUserMute] = useState<boolean>(true)
@@ -82,6 +85,8 @@ const CallingScreen = forwardRef<{
   const timerRef = useRef<NodeJS.Timeout | null>(null); // Ref for the timer
   const appState = useRef(AppState.currentState);
   const [postcallInfo, { isLoading, isError, isSuccess }] = usePostCallInfoMutation()
+  const [postPrivatecallInfo, { }] = useUpdatePrivateCallInfoMutation()
+
   const { user } = useSelector(AuthSelector)
   // const messageCount = useSelector(MessageCountSelector)
   // const dispatch = useDispatch()
@@ -143,12 +148,21 @@ const CallingScreen = forwardRef<{
 
   }
 
-  const handleEndCall = () => {
+  const handleEndCall = async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current); // Clear the timer
     }
     backgroundTimeRef.current = null; // Clear the background time
-    postCallInfotoDB();
+    if (callType === "private") {
+      if (callerme) {
+        await postPrivatecallInfo({ callDuration: seconds, callerId: user?._id })
+
+      } else {
+        await postPrivatecallInfo({ callDuration: seconds, callerId: ConnectedUserData?._id })
+      }
+    } else {
+       postCallInfotoDB();
+    }
     leave(); // Clean up resources
     navigation.navigate('ReviewScreen', { user: ConnectedUserData, socketId: socketId });
   };
@@ -165,7 +179,7 @@ const CallingScreen = forwardRef<{
     return () => backHandler.remove();
   })
 
-  
+
 
 
   useEffect(() => {
@@ -213,15 +227,20 @@ const CallingScreen = forwardRef<{
 
   useEffect(() => {
     // Start the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
     timerRef.current = setInterval(() => {
       setSeconds(prevSeconds => prevSeconds + 1);
     }, 1000);
 
     return () => {
       if (timerRef.current) {
-        clearInterval(timerRef.current); // Clear timer on unmount
+        clearInterval(timerRef.current); // Clear timer on unmount or cleanup
       }
     };
+
   }, []);
 
 
@@ -281,7 +300,7 @@ const CallingScreen = forwardRef<{
       </View>
 
       {/* Action buttons */}
-      <IconContainer handleEndcall={handleEndCall} seconds={seconds} setSeconds={setSeconds} speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} socketId={socketId} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker} />
+      <IconContainer callType={callType} handleEndcall={handleEndCall} seconds={seconds} setSeconds={setSeconds} speakerEnabled={speaker} muteEnabled={mute} ConnectedUserData={ConnectedUserData} navigation={navigation} leave={leave} socketId={socketId} toggleMic={handleToggleMic} toggleSpeaker={handleToggleSpeaker} />
       <Snackbar
         duration={otherUserMute ? 10000 : 2000}
         visible={errorSnackbar}

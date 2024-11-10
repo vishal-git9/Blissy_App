@@ -41,6 +41,7 @@ import { displayCallNotificationAndroid } from '../../common/call/incoming';
 import { BlissyLoader } from '../../common/loader/blissy';
 import { findNewMessage } from '../../utils/sortmessagebyData';
 import useBackHandler from '../../hooks/usebackhandler';
+import { useCreatePrivateCallMutation } from '../../api/callService';
 type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ChatWindow'>;
 interface ProfileScreenProps {
   navigation: NativeStackNavigationProp<RootStackParamList>;
@@ -75,6 +76,7 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
   const [istyping, setIsTyping] = useState<boolean>(false);
   const [refetch,{ isError, isLoading, isSuccess }] = useLazyGetChatlistQuery()
   const [deleteChathistory, { isLoading: isDeleteChatloading, isError: isDeleteChatError, isSuccess: isDeleteChatSuccess }] = useDeleteChatHistoryMutation()
+  const [createPrivateCall,{isLoading:iscreatePrivateCallloading,isError:iscreatePrivateCallError,isSuccess:iscreatePrivateCallSuccess}] = useCreatePrivateCallMutation()
   const [replyMessage, setReplyMessage] = useState<IMessage | null>(null);
   const swipeableRowRef = useRef<Swipeable | null>(null);
   const yValue = useRef(new NativeAnimated.Value(0)).current;
@@ -417,16 +419,27 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
     })).reverse();
   }, [chatlistdata, senderUserId]);
 
-  const startCall = () => {
+  const startCall = useCallback(async ()=>{
+    const callInfobody = {
+      callType: "individual", // individual  or random
+      callerId: user?._id, // caller Id
+      calleeId:Chats ?  Chats?.chatPartner?._id : userDetails?._id, // calleeId
+      callDuration: 0, // duration
+      isMissed: false,
+      isRejected: false,
+      isSuccessful: false,
+    }
+    // displayCallNotificationAndroid({ callId, callerName, hasVideo });
+    socket?.emit('newPrivateCall',{socketId: UserSocketId,userData:user,otherUserId:Chats ? Chats?.chatPartner._id : userDetails?._id})
+    navigation.navigate('privateCall', { user:null,OutgoingCallData:Chats ? Chats?.chatPartner : userDetails,IncomingCallData:undefined,callstate:"OUTGOING" })
+    await createPrivateCall(callInfobody)
+    console.log('Calling...',callInfobody);
+  },[socket])
     // const callId = 'call-12345';
     // const callerName = 'John Doe';
     // const hasVideo = false;
 
-    // displayCallNotificationAndroid({ callId, callerName, hasVideo });
-    navigation.navigate("Outgoing", { ConnectedUserData: Chats?.chatPartner, socketId: UserSocketId })
-
-    console.log('Calling...');
-  };
+   
 
   // console.log(inputText, "inputText------>")
   console.log(UserSocketId, "UserSocketId------>")
@@ -496,11 +509,11 @@ const ChatWindowScreen: React.FC<ProfileScreenProps> = ({ navigation, route }) =
         </View>
 
         <View style={styles.callMoreIconCotainer}>
-          {/* <TouchableOpacity
+          <TouchableOpacity
             onPress={startCall}
           >
             <Ionicons name='call' size={25} color={colors.white} />
-          </TouchableOpacity> */}
+          </TouchableOpacity>
           <TouchableOpacity
           // onPress={() => navigation.navigate('ChatPartnerDetails', { chatPartner: userDetails })}
           >

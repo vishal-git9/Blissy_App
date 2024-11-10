@@ -12,7 +12,6 @@ import NetInfo from '@react-native-community/netinfo';
 import ChatListScreen from '../container/Connection/chatlist';
 import ChatWindowScreen from '../container/Connection/chatwindow';
 import ReviewScreen from '../container/Connection/review';
-import CallListScreen from '../container/Connection/callList';
 import GlobalBackHandler from './Globalbackhandler';
 import VoiceCall from '../container/audioCall/audiocall';
 import { ComingSoon } from '../container/comingsoon/comingsoon';
@@ -34,6 +33,8 @@ import { fonts } from '../constants/fonts';
 import { actuatedNormalize } from '../constants/PixelScaling';
 import withPermissions from '../hooks/permissionsHoc';
 import { AppUpdateModal } from '../common/modals/Appupdate';
+import IncomingCallScreen from '../common/call/incomingcallMain';
+import PrivateVoicecall from '../container/audioCall/privatecall';
 // import { navigationRef } from '../utils/notificationService';
 
 const deepLinksConf = {
@@ -190,7 +191,9 @@ const MainNavigator: React.FC<MainNavigatorProps> = ({
         <Stack.Screen name='ChatPartnerDetails' component={ChatPartnerDetails} />
         <Stack.Screen name="Bugreport" component={BugReportScreen} />
         <Stack.Screen name="Userreview" component={UserreviewScreen} />
-        <Stack.Screen name="Outgoing" component={OutgoingCallScreen} />
+        {/* <Stack.Screen name="Outgoing" component={OutgoingCallScreen} />
+        <Stack.Screen name="IncomingCall" component={IncomingCallScreen} /> */}
+        <Stack.Screen name="privateCall" component={PrivateVoicecall} />
         {/* <Stack.Screen name="appUpdate" component={AppUpdateModal}  options={{headerShown:false,presentation:"modal"}}/> */}
 
       </Stack.Navigator>

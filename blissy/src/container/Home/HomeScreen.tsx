@@ -12,7 +12,7 @@ import {
 } from '../../constants/PixelScaling';
 import notifee, { EventType, AndroidImportance, AndroidVisibility } from '@notifee/react-native';
 import messaging from '@react-native-firebase/messaging';
-import OfferBadge from '../../common/badge';
+import OfferBadge from '../../common/badges/badge';
 import * as Animatable from 'react-native-animatable';
 import { RoundedIconContainer } from '../../common/button/rounded';
 import AutoLoopCarousel from '../../common/cards/review';
@@ -31,7 +31,7 @@ import { PermissionStatus } from 'react-native-permissions';
 import { useGetChatlistQuery, useLazyGetChatlistQuery, useMarkReadMessageMutation } from '../../api/chatService';
 import checkNotificationPermission from '../../common/permissions/checkNotificationPermission';
 import { eventEmitter } from '../../..';
-import { useAddFcmTokenMutation, useGetUserQuery, usePostUserDevieInfoMutation } from '../../api/userService';
+import { useAddFcmTokenMutation, useGetUserQuery, useLazyGetHealersQuery, usePostUserDevieInfoMutation } from '../../api/userService';
 import DeviceInfo from 'react-native-device-info';
 import { getDeviceUniqueId } from '../../utils/getDeviceUniqueId';
 import { playNotificationSound } from '../../common/sound/notification';
@@ -43,6 +43,8 @@ import { Appbackground } from '../../common/animation/appbackground';
 import moment from 'moment';
 import { findNewMessage } from '../../utils/sortmessagebyData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { IncomingCallInterface } from '../../common/interface/interface';
+import { pushPrivateCalldata } from '../../redux/callSlice';
 const screenHeight = Dimensions.get('window').height;
 const screenWidth = Dimensions.get('window').width;
 
@@ -74,8 +76,10 @@ const iconsLabel: iconsLabelI[] = [
   },
 ];
 export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
-  const [data, setData] = useState(HealerMockData.slice(0, 10)); // Initial data for first 10 cards
+  const [data, setData] = useState(HealerMockData); // Initial data for first 10 cards
   const [value, setValue] = useState<string>('random');
+  const initialNotificationHandled = useRef(false); // useRef to persist the value across renders
+
   const { user, fcmToken, isAuthenticated } = useSelector(AuthSelector)
   const { activeUserList } = useSelector(ActiveUserListSelector)
   const dispatch = useDispatch()
@@ -87,6 +91,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   const [postDeviceinfo, { isError: isPostDeviceinfoError, isLoading: isPostDeviceinfoLoading, data: postDeviceinfoData }] = usePostUserDevieInfoMutation()
   const [ getCallinfo, {isFetching: isCallinfoloading, isError: isCallinfoerror, isSuccess: isCallinfoloadingisCallinfosuccess }] = useLazyGetmyCallInfoQuery({})
   const [refetchNewReviews,{ data: appreviewdata, isError: isAppreviewerror, isLoading: isAppreviewLoading }] = useLazyGetTenAppreviewQuery({})
+  const [refetchHealers,{ data: healersData, isError: ishealerserror, isLoading: ishealersLoading}] = useLazyGetHealersQuery({})
   // const [postrandomequote, { }] = useAddmyquotesMutation()
 
   const [postFcmToken, { isLoading: isPostfcmtokenLoading, isError: isPostfcmtokeError, isSuccess: isPostfcmtokeSuccess }] = useAddFcmTokenMutation()
@@ -190,6 +195,13 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     }
 
   }, [chatlistdata, activeUserList])
+
+  const handleCallAcceptNotification = useCallback((calldata:any)=>{
+
+    console.log("call accepted---->",calldata)
+    // navigate directly since it is foreground and background mode navigate it to directly audio call screen
+    navigation.navigate('privateCall',{IncomingCallData:{callerName:calldata?.callerName,profilePic:calldata?.profilePic},OutgoingCallData:undefined,user:null,callstate:"INCOMING"})
+  },[])
 
   useEffect(() => {
 
@@ -354,27 +366,32 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   useEffect(() => {
     const getInitialNotificationDetail = async () => {
       const getInitialNotification = await notifee.getInitialNotification()
+      const channelId = getInitialNotification?.notification.android?.channelId
+      const notificationData = getInitialNotification?.notification?.data
+
+      console.log(getInitialNotification,"getInitialNotification------>",initialNotificationHandled.current)
       if (getInitialNotification) {
-        // refetch().then((res) =>{
-        //   dispatch(pushChatlist(res.data.chatList))
-        // } ).catch((err) => console.log(err)) // no need since app is opened from quit state it will auto fetch the chatlist api
-        if (isAuthenticated) {
+        initialNotificationHandled.current = true;
+        if (isAuthenticated && channelId === "blissy1") {
           navigation.navigate("Chatlist");
-        } else {
+        }else if(isAuthenticated && channelId === "nuggets-call2" && notificationData?.senderData && getInitialNotification.pressAction.id !== "decline-call" ){
+          navigation.navigate('privateCall',{IncomingCallData:{callerName:(notificationData?.senderData as {callerName:string})?.callerName,profilePic:(notificationData?.senderData as {profilePic:string})?.profilePic},OutgoingCallData:undefined,user:null,callstate:"INCOMING"});
+        }
+         else if(!isAuthenticated) {
           navigation.navigate("Login")
         }
-
       }
     }
 
     // event listens for background and foreground mode
     eventEmitter.on('notificationReceived', handleNotificationReceived);
-
+    eventEmitter.on("callAccepted",(notificationData:any)=>handleCallAcceptNotification(notificationData?.senderData))
     getInitialNotificationDetail()
     return () => {
       eventEmitter.off('notificationReceived');
+      eventEmitter.off('callAccepted');
     };
-  }, [activeUserList]);
+  }, []);
 
   useEffect(() => {
 
@@ -416,10 +433,19 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
       const sortedMsg = findNewMessage(data.chatList)
       dispatch(pushChatlist(sortedMsg));
     })
+
+  //   socket?.on('initiatePrivateCall', (data: { matchedUser: UserInterface, callerId: string }) => {
+  //     console.log("initiateCalll--------->",data)
+  //     dispatch(pushPrivateCalldata(data))
+  //   // console.log(data, "data of paired user")
+  // //   processCall()
+  // })
+
     return () => {
       socket?.off("privateMessageSuccessfulAdd")
       socket?.off("messageDelivered")
       socket?.off("messageSeen")
+      // socket?.off("initiatePrivateCall")
     }
 
   }, [chatlistdata, socket]);
@@ -429,6 +455,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
     refetchQuote({},false)
     getCallinfo({},false)
     refetchNewReviews({},false)
+    refetchHealers({},false)
     dispatch(resetMessages())
     socket.on("connect", () => {
       socket.emit("getActiveUserList")
@@ -517,7 +544,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
   // console.log(isError, isCallinfoerror, isPostDeviceinfoError, isPostfcmtokeError, isErrorUser, "isCallinfoloading || isLoadingUser || isquotesLoading || isPostDeviceinfoLoading || isPostfcmtokenLoading")
   return (
     <>
-      {(isCallinfoloading || isLoadingUser || isquotesLoading || isChatlistloading || isPostDeviceinfoLoading || isPostfcmtokenLoading) && <BlissyLoader />}
+      {(isCallinfoloading || isLoadingUser || isquotesLoading || isChatlistloading || isPostDeviceinfoLoading || isPostfcmtokenLoading || ishealersLoading) && <BlissyLoader />}
       <Appbackground>
         {/* // <AnimatedBackground source={{uri:"https://images.unsplash.com/photo-1710563138874-4bac91c14e51?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxOXx8fGVufDB8fHx8fA%3D%3D"}}> */}
         <View style={styles.container}>
@@ -525,10 +552,10 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
           <ToggleButton value={value} setValue={setValue} />
           {value === 'healers' ? (
             <View style={styles.healerContainer}>
-              <OfferBadge />
+              {/* <OfferBadge /> */}
               <Animated.FlatList
                 onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
-                data={data}
+                data={healersData?.data}
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item, index }) => {
 
@@ -544,7 +571,7 @@ export const HomeScreen: React.FC<NavigationStackProps> = ({ navigation }) => {
                   })
 
                   return (<Animated.View style={{ transform: [{ scale }], opacity: opacity }}>
-                    <ProfileCard shouldAnimate={healerAnimate} {...item} />
+                    <ProfileCard navigation={navigation} item={item} />
                   </Animated.View>)
 
                 }}

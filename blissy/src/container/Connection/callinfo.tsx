@@ -146,7 +146,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
     if (option === 'All') {
       setItems(Calls);
     } else {
-      setItems(missedCalls);
+      setItems(missedCalls?.filter((el)=>el.calleeId === user?._id));
     }
   };
 
@@ -157,8 +157,8 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   const handleSearchFriendsQuery = useCallback((text: string) => {
     console.log(text, 'text---->')
     SetsearchQuerytext(text)
-    const Searchfiltered = Calls.filter(user =>
-      user?.UserCallsInfoList[0]?.name.toLowerCase().startsWith(text.toLowerCase())
+    const Searchfiltered = Calls?.filter(user =>
+      user?.UserCallerInfoList[0]?.name.toLowerCase().startsWith(text.toLowerCase()) || user?.UserCalleeInfoList[0]?.name.toLowerCase().startsWith(text.toLowerCase())
     );
     setsearchQueryData(Searchfiltered)
   }, [selectedOption, searchQuerytext])
@@ -215,7 +215,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
       if (selectedOption === "All") {
         return Calls
       } else {
-        return missedCalls
+        return missedCalls?.filter((el)=>el.calleeId === user?._id)
       }
     } else {
       return searchQueryData
@@ -224,7 +224,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
   }, [isSearchActive, Calls, selectedOption, searchQueryData])
 
 
-  console.log(Calls, "missedCalls----->")
+  console.log(missedCalls, "missedCalls----->")
   return (
     <View style={{ flex: 1 }}>
       {/* <HeaderComponent title='Calls' onPress={()=>console.log("back")}/> */}
@@ -260,7 +260,7 @@ const CalllistData: React.FC<NavigationStackProps> = ({ navigation }) => {
             nestedScrollEnabled={true}
             contentContainerStyle={{ minHeight: contentHeight, marginTop: isSearchActive ? actuatedNormalize(10) : actuatedNormalize(0) }}
             onContentSizeChange={(w, h) => setContentHeight(h)}
-            ListEmptyComponent={Calls.length === 0 ? <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' /> : (missedCalls.length === 0 && !isSearchActive) ? <Empty head='Missed Calls' description='You have no missed calls records' /> : <Empty head='Search Users' description='User not found' />}
+            ListEmptyComponent={Calls.length === 0 ? <Empty head='Make Calls' description='You have no call records make random calls and improve your connections' /> : (missedCalls?.filter((el)=>el.calleeId === user?._id).length === 0 && !isSearchActive) ? <Empty head='Missed Calls' description='You have no missed calls records' /> : <Empty head='Search Users' description='User not found' />}
             // style={[defaultStyles.block]}
             // onViewableItemsChanged={({ viewableItems: vItems }) => {
             //   viewableItems.value = vItems;

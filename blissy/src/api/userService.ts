@@ -16,6 +16,14 @@ export const UserApi = API.injectEndpoints({
     
       keepUnusedDataFor: 0,
     }),
+    getHealers: builder.query<any, any>({
+      query: () => ({
+        url: 'user/our-experts',
+        method: 'GET',
+      }),
+    
+      keepUnusedDataFor: 0,
+    }),
     postUser: builder.mutation<any, Partial<UserState>>({
       query: (body) => ({
         url: 'user/update-user',
@@ -46,4 +54,4 @@ export const UserApi = API.injectEndpoints({
   }),
 });
 
-export const {useGetUserQuery,useLazyGetUserQuery,usePostUserMutation,usePostUserDevieInfoMutation,useDeleteFcmTokenMutation,useAddFcmTokenMutation} = UserApi;
+export const {useGetUserQuery,useLazyGetUserQuery,usePostUserMutation,usePostUserDevieInfoMutation,useDeleteFcmTokenMutation,useAddFcmTokenMutation,useLazyGetHealersQuery} = UserApi;

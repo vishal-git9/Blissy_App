@@ -9,33 +9,18 @@ import { actuatedNormalize } from '../../constants/PixelScaling';
 import * as Animatable from 'react-native-animatable';
 import { fonts } from '../../constants/fonts';
 import TalkNowButton from '../button/Talknow';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../AppNavigation/navigatorType';
+import { UserInterface } from '../../redux/uiSlice';
 
 interface Props {
-  name: string;
-  age: number;
-  id: number;
-  gender: string;
-  rating: number;
-  hours: string;
-  bio: string;
-  calls: string;
-  ratingCount: number;
-  imageUrl: string;
-  shouldAnimate?: boolean;
+  item:UserInterface
+  navigation: NativeStackNavigationProp<RootStackParamList>;
 }
 
 const ProfileCard: React.FC<Props> = ({
-  name,
-  age,
-  gender,
-  rating,
-  hours,
-  bio,
-  calls,
-  ratingCount,
-  imageUrl,
-  id,
-  shouldAnimate
+item,
+  navigation
 }) => {
 
   
@@ -48,25 +33,29 @@ const ProfileCard: React.FC<Props> = ({
     //   iterationCount={1}
     //   delay={id * 500}
     // > */}
-      <Card style={styles.card} elevation={5}>
+      <Card style={styles.card} elevation={5} 
+         onPress={() => {
+          navigation.navigate('ChatWindow', {
+            Chats:null,socketId:undefined,userDetails:item,senderUserId:item._id || null});
+          }}>
         <Card.Content>
           <View style={styles.header}>
-            <Image width={50} height={50} blurRadius={10} style={{borderRadius:30}}   source={{ uri: imageUrl }} />
+            <Image width={50} height={50} style={{borderRadius:30}}   source={{ uri: item.profilePic }} />
             <View style={styles.details}>
               <Title style={{ color: colors.white, fontFamily: fonts.NexaBold }}>
-                {name}
+                {item.name}
               </Title>
               <View style={styles.genderContainer}>
                 <Icon
-                  name={gender === 'male' ? 'gender-male' : 'gender-female'}
+                  name={item.gender === 'male' ? 'gender-male' : 'gender-female'}
                   size={24}
-                  color={gender === 'male' ? 'blue' : 'pink'}
+                  color={item.gender === 'male' ? 'blue' : 'pink'}
                 />
-                <Text style={styles.age}>{age}</Text>
+                <Text style={styles.age}>{item.age}</Text>
               </View>
             </View>
           </View>
-          <View style={styles.row}>
+          <View style={[styles.row,{}]}>
             <AntDesign
               style={styles.icon}
               name="user"
@@ -74,7 +63,7 @@ const ProfileCard: React.FC<Props> = ({
               color={colors.white}
             />
             <Paragraph numberOfLines={2} style={styles.bio}>
-              {bio}
+              {item.bio || "healer has not updated his bio"}
             </Paragraph>
           </View>
           <View style={styles.rowBetween}>
@@ -82,14 +71,14 @@ const ProfileCard: React.FC<Props> = ({
               <View style={styles.row}>
                 <Ionicons name="call" size={14} color={colors.white} />
                 <Paragraph style={styles.hours}>
-                  <Text style={styles.callsCount}>{calls} </Text>
+                  <Text style={styles.callsCount}>{item.UserCallsInfoList.length} </Text>
                   Calls completed
                 </Paragraph>
               </View>
               <View style={styles.row}>
                 <AntDesign name="star" size={14} color={colors.yellow} />
                 <Text style={styles.rating}>
-                  {rating} ({ratingCount})
+                  {item?.UserRating[0]?.rating || 0} ({item.UserCallsInfoList.length})
                 </Text>
               </View>
             </View>
@@ -102,9 +91,9 @@ const ProfileCard: React.FC<Props> = ({
         blurType="ultraThinMaterialLight"
         blurAmount={3}
       /> */}
-      <View style={styles.overlay}>
+      {/* <View style={styles.overlay}>
         <TalkNowButton label='Coming Soon..' onPress={() => console.log("first")} />
-      </View>
+      </View> */}
     {/* // </Animatable.View> */}
     </>
   );
@@ -162,7 +151,7 @@ const styles = StyleSheet.create({
     rowGap: actuatedNormalize(5),
   },
   icon: {
-    marginBottom: actuatedNormalize(15),
+    // marginBottom: actuatedNormalize(15),
   },
   callsCount: {
     color: colors.white,

@@ -3,6 +3,7 @@ import { ProfileData } from "../mockdata/healerData";
 import { UserInterface } from "../redux/uiSlice";
 import { Dispatch, SetStateAction } from "react";
 import { ChatList, Message } from "../redux/messageSlice";
+import { IncomingCallInterface } from "../common/interface/interface";
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -22,9 +23,10 @@ export type RootStackParamList = {
   AudioCallScreen: { user: UserInterface | null };
   ComingsoonScreen: { screenName: string }
   ChatPartnerDetails:{chatPartner:UserInterface | null}
-  IncomingCall:{}
+  IncomingCall:{ConnectedUserData:IncomingCallInterface | undefined}
   Bugreport:{}
   Userreview:{}
   Outgoing:{ConnectedUserData:UserInterface | undefined,socketId:string | undefined}
   appUpdate:undefined;
+  privateCall:{user:UserInterface | null ,IncomingCallData:IncomingCallInterface | undefined,OutgoingCallData:UserInterface | null,callstate:string}
 };
